@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
+import About from './pages/About';
 import Dashboard from './pages/Dashboard';
 import Recommendations from './pages/Recommendations';
 import Notices from './pages/Notices';
@@ -48,6 +49,7 @@ function App() {
 
         {/* Student Routes */}
        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
+       <Route path="/About" element={<LayoutWrapper><About/></LayoutWrapper>} />
         <Route 
           path="/profile" 
           element={

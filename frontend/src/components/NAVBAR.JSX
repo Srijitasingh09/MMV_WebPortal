@@ -11,7 +11,7 @@ const SubSubMenu = ({ label, children }) => {
 
   return (
     <div
-  className="relative flex items-stretch"
+  className="relative"
   onMouseEnter={() => setIsOpen(true)}
   onMouseLeave={() => setIsOpen(false)}
 >
@@ -223,7 +223,6 @@ const Navbar = () => {
             { label: "Proctorial Board", children: [
               { label: "Chief Proctor", path: "/administration/proctorial/chief" },
               { label: "University Board", path: "/administration/proctorial/uniboard" },
-              { label: "MMV Board", path: "/administration/proctorial/mmvboard" },
             ]},
             { label: "Controller of Examination", children: [
               { label: "University", path: "/administration/examination/universityexam" },
