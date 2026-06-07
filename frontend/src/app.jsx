@@ -50,7 +50,7 @@ function App() {
         {/* Student Routes */}
        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
        <Route path="/About" element={<LayoutWrapper><About/></LayoutWrapper>} />
-        {/* <Route 
+        <Route 
           path="/profile" 
           element={
            
