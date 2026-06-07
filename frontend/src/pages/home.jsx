@@ -48,9 +48,9 @@ const About = () => (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {[
           ['1929', 'Year Established'],
-          ['40+', 'Departments'],
-          ['15,000+', 'Students Enrolled'],
-          ['500+', 'Faculty Members'],
+          ['30+', 'Departments'],
+          ['2,500+', 'Students Enrolled'],
+          ['200+', 'Faculty Members'],
         ].map(([n, l]) => (
           <div key={l} className="bg-[#f4f7fd] rounded-2xl py-7 px-4">
             <div className="text-2xl font-bold text-[#406BC7] mb-1">{n}</div>
