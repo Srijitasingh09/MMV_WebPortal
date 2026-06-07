@@ -1,260 +1,344 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+
+const Hero = () => (
+  <section className="relative w-[100%] h-[80vh] overflow-hidden">
+
+    <div
+      className="absolute inset-0 bg-contain bg-no-repeat bg-center"
+      style={{ backgroundImage:"url('/bhu/web_collage.png')" }}
+    />
+
+    {/* Keyframe injection */}
+    <style>{`
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lato:wght@300;400;600&display=swap');
+      @keyframes hero-zoom {
+        0%   { transform: scale(0.88);  }
+        20%  {  }
+        100% { transform: scale(1.0); }
+      }
+      .animate-hero-zoom {
+        animation: hero-zoom 4s ease forwards;
+      }
+    `}</style>
+  </section>
+);
+
 
 // ============================================
-// SLIDESHOW SECTION
-// Cycles through college photos automatically
+// ABOUT — Brief intro to the portal & college
 // ============================================
-const slides = [
-  {
-    image: '/mmvimage.jpeg',
-    caption: 'Mahila Maha Vidyalaya — Est. 1929',
-    position: 'center center',
-  },
-  {
-    image: '/mmvimage2.jpeg',
-    caption: 'Women\'s College, Banaras Hindu University',
-    position:'center center',
-  },
-  {
-    image: '/mmvimage3.jpeg',
-    caption: 'A Legacy of Excellence in Women\'s Education',
-    position: 'center center',
-  },
-];
+const About = () => (
+  <section className="bg-white py-20 px-6">
+    <div className="max-w-5xl mx-auto text-center">
+      <span className="inline-block bg-[#EEF3FC] text-[#2d54a8] text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5">
+        About the Portal
+      </span>
+      <h2 className="text-4xl font-semibold text-[#1a3a6b] mb-6 leading-snug"
+          style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+        Your Complete Guide to MMV
+      </h2>
+      <p className="text-gray-500 text-[15px] leading-relaxed max-w-3xl mx-auto mb-12">
+        The MMV Student Portal is a centralized information hub for all students of Mahila Maha
+        Vidyalaya, Banaras Hindu University. Whether you're looking for your department's
+        syllabus, hostel information, administrative contacts, or the latest notices —
+        everything is organized and accessible in one place.
+      </p>
 
-const Slideshow = () => {
-  // currentIndex tells us which photo is showing right now
-  const [currentIndex, setCurrentIndex] = useState(0);
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          ['1929', 'Year Established'],
+          ['40+', 'Departments'],
+          ['15,000+', 'Students Enrolled'],
+          ['500+', 'Faculty Members'],
+        ].map(([n, l]) => (
+          <div key={l} className="bg-[#f4f7fd] rounded-2xl py-7 px-4">
+            <div className="text-2xl font-bold text-[#406BC7] mb-1">{n}</div>
+            <div className="text-xs text-gray-500 uppercase tracking-wider">{l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
 
-  // useEffect runs code when component loads
-  // Here it sets up a timer that changes the slide every 4 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      // % slides.length makes it loop back to 0 after last slide
-      setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 4000);
 
-    // cleanup — stops the timer when component is removed
-    return () => clearInterval(timer);
-  }, []);
+// ============================================
+// SECTION COMPONENT — reusable layout block
+// ============================================
+const FeatureSection = ({ id, title, description, points, image, reverse, accentColor, tagBg, tagText }) => (
+  <section id={id} className={`py-20 px-6 ${reverse ? 'bg-white' : 'bg-[#f4f7fd]'}`}>
+    <div className={`max-w-5xl mx-auto flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} gap-14 items-center`}>
 
-  return (
-    
-    <div style={{position: 'relative', width: '100%', height: '400px'}}>
+      {/* Visual placeholder */}
+      <div className="md:w-5/12 w-full">
+        <div className="rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+          {image
+            ? <img src={image} alt={title} className="w-full h-100 object-cover" />
+            : (
+              <div className={`w-full h-64 flex items-center justify-center text-6xl`}
+                   style={{ background: tagBg }}>
+                {points[0]?.icon || '📄'}
+              </div>
+            )
+          }
+        </div>
+      </div>
 
-      <img
-        src={slides[currentIndex].image}
-        alt={slides[currentIndex].caption}
-       style={{
-  width: '100%',
-  height: '100%',
-  objectFit: 'cover',
-  objectPosition: slides[currentIndex].position,
-}}
-      />
+      {/* Text */}
+      <div className="md:w-7/12 w-full">
+        <span className="inline-block text-3xl font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5 leading-snug"
+              style={{ background: tagBg, color: tagText, fontFamily: "'Cormorant Garamond', serif"}}>
+          {title}
+        </span>
+        <p className="text-gray-500 text-[14px] leading-relaxed mb-6">
+          {description}
+        </p>
+        <ul className="space-y-3">
+          {points.map((p, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="text-xl leading-none mt-0.5">{p.icon}</span>
+              <div>
+                <span className="text-sm font-semibold text-[#1a3a6b]">{p.label}: </span>
+                <span className="text-sm text-gray-500">{p.detail}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </section>
+);
 
-      <div style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'rgba(0,0,0,0.3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-      }}>
-        <h2 style={{color: 'white', fontSize: '28px', fontWeight: '600'}}>
-          {slides[currentIndex].caption}
-        </h2>
-        <p style={{color: 'white', fontSize: '14px', marginTop: '8px'}}>
-          Empowering Women Through Education
+// ============================================
+// FACILITIES SECTION
+// ============================================
+const Facilities = () => (
+  <section id="facilities" className="py-20 px-6 bg-white">
+    <div className="max-w-5xl mx-auto">
+      <div className="text-center mb-14">
+        <span className="inline-block bg-[#F5EEFF] text-[#6b3fa0] text-3xl font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Campus Facilities & Resources
+        </span>
+        <p className="text-gray-500 text-[14px] leading-relaxed max-w-2xl mx-auto">
+          MMV provides a comprehensive range of campus facilities to support students' academic,
+          physical, and personal well-being. The Facilities section gives detailed information
+          about each resource available on campus.
         </p>
       </div>
 
-      <div style={{
-        position: 'absolute',
-        bottom: '16px',
-        left: 0,
-        right: 0,
-        display: 'flex',
-        justifyContent: 'center',
-        gap: '8px',
-      }}>
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            style={{
-              width: '12px',
-              height: '12px',
-              borderRadius: '50%',
-              background: index === currentIndex ? 'white' : 'rgba(255,255,255,0.5)',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        {[
+          { icon: '📖', label: 'Central Library', detail: 'Over 1 lakh books, journals, and digital resources.' },
+          { icon: '🏠', label: 'Hostels', detail: 'On-campus residential facilities with mess, 24/7 security, and Wi-Fi.' },
+          { icon: '⚽', label: 'Sports Complex', detail: 'Courts for badminton, volleyball, athletics track, and yoga centre.' },
+          { icon: '🔬', label: 'Research Labs', detail: 'Departmental labs equipped for Science, Computers, and Language research.' },
+          { icon: '🏥', label: 'Health Centre', detail: 'On-campus medical facility with a resident doctor and first-aid support.' },
+          { icon: '🎭', label: 'Cultural Hall', detail: 'Auditorium for seminars, cultural programmes, and guest lectures.' },
+          { icon: '💻', label: 'Computer Labs', detail: 'High-speed internet, licensed software, and printing facilities.' },
+          { icon: '🍽️', label: 'Canteen', detail: 'Subsidised meals and snacks for students within the campus.' },
+        ].map((f) => (
+          <div key={f.label}
+               className="bg-[#f4f7fd] rounded-2xl p-5 border border-[#406BC7] transition-all duration-200 group">
+            <div className="text-3xl mb-3">{f.icon}</div>
+            <div className="text-sm font-semibold text-[#1a3a6b] mb-1 transition-colors">
+              {f.label}
+            </div>
+            <div className="text-xs text-gray-500 leading-relaxed">{f.detail}</div>
+          </div>
         ))}
       </div>
-
     </div>
-  );
-  
-};
+  </section>
+);
 
 
 // ============================================
-// ABOUT SECTION
-// College description with info
+// ACADEMICS SECTION
 // ============================================
-const AboutSection = () => {
-  return (
-    <div className="bg-white py-12 px-6">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
+const Academics = () => (
+  <FeatureSection
+    id="academics"
+    image="/bhu/academics.png"
+    title="Academic Information"
+    description="The Academics section covers all academic resources for every department at MMV. Students can find their semester syllabus, examination schedules, and updates related to the NEP 2020 curriculum — organized by department for easy navigation."
+    points={[
+      { icon: '📘', label: 'Syllabus', detail: 'Semester syllabus for all UG, PG, and Ph.D. programmes.' },
+      { icon: '🗓️', label: 'Annual Calender', detail: 'Information about annual holidays and academic calender updated each semester.' },
+      { icon: '📝', label: 'Exam Schedule', detail: 'Internal assessment and university examination date sheets.' },
+      { icon: '📐', label: 'NEP 2020', detail: 'Revised curriculum details and credit structure under NEP guidelines.' },
+    ]}
+    reverse={false}
+    tagBg="#d0daed"
+    tagText="#2d54a8"
+  />
+);
 
-        {/* LEFT — Photo */}
-        <div className="md:w-1/2">
-          <img
-            src="/mmvimage3.jpeg"
-            alt="MMV Building"
-            className="rounded-lg shadow-md w-full object-cover h-72"
-          />
-        </div>
 
-        {/* RIGHT — Text */}
-        <div className="md:w-1/2">
-          <h2 className="text-2xl font-semibold text-[#174873] mb-4">
-            About Mahila Maha Vidyalaya
-          </h2>
-          <p className="text-gray-600 text-sm leading-relaxed">
-            Mahila Maha Vidyalaya (MMV), the Women's College of Banaras Hindu 
-            University, was established in 1929 by Pandit Madan Mohan Malaviya 
-            to promote higher education and empowerment of women.
-          </p>
-          <p className="text-gray-600 text-sm leading-relaxed mt-3">
-            Located within the BHU campus in Varanasi, the college was founded 
-            with the vision of providing quality education and equal opportunities 
-            to women. MMV offers undergraduate, postgraduate, and research programs 
-            in various disciplines.
-          </p>
-          <p className="text-gray-600 text-sm leading-relaxed mt-3">
-            The college focuses on academic excellence, skill development, research, 
-            cultural activities, sports, and personality development — nurturing 
-            confident, knowledgeable, and socially responsible women.
-          </p>
-         
-        </div>
+// ============================================
+// ADMINISTRATION SECTION
+// ============================================
+const Administration = () => (
+  <FeatureSection
+    id="administration"
+    image="/bhu/administration.png"
+    title="College Administration & Governance"
+    description="The Administration section provides students with official information about the college's governance structure. This includes contacts for the Principal's office, administrative departments, committees, and institutional policies — making it easy to know who to reach for any matter."
+    points={[
+      { icon: '🏛️', label: "Principal's Office", detail: 'Contact details, messages, and official communications.' },
+      { icon: '📋', label: 'Controller of Examination', detail: 'Any queries related with semester examination ' },
+      { icon: '📞', label: 'Staff Directory', detail: 'Administrative and teaching staff contact information.' },
+      { icon: '📜', label: 'Dean of Students', detail: 'Student conduct rules, attendance policies, and college guidelines.' },
+    ]}
+    reverse={true}
+    tagBg="#dbf2e6"
+    tagText="#1a8a5c"
+  />
+);
 
+
+// ============================================
+// NOTICES SECTION
+// ============================================
+const Notices = () => (
+  <FeatureSection
+    id="notices"
+    image="/bhu/notices.png"
+    title="Latest Announcements & Circulars"
+    description="The Notices section is the official communication board of MMV. All important institutional announcements — including exam notifications, admission updates, event schedules, fee deadlines, and urgent circulars — are posted here and organized by category and date."
+    points={[
+      { icon: '🔴', label: 'Urgent Notices', detail: 'Time-sensitive updates like exam date changes or fee deadlines.' },
+      { icon: '🎓', label: 'Admissions', detail: 'Open application windows for UG, PG, and Research programmes.' },
+      // { icon: '🎭', label: 'Events', detail: 'Cultural programmes, seminars, workshops, and sports events.' },
+      { icon: '📄', label: 'Circulars', detail: 'Official orders from BHU administration and MMV management.' },
+    ]}
+    reverse={false}
+    accentColor="#c07d18"
+    tagBg="#faefdb"
+    tagText="#c07d18"
+  />
+);
+
+
+// ============================================
+// AI ASSISTANT SECTION
+// ============================================
+const AIAssistant = () => (
+  <section id="ai-assistant" className="py-20 px-6 bg-[#f4f7fd]">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-14 items-center">
+
+      {/* Text */}
+      <div className="md:w-7/12 w-full">
+        <span className="inline-block bg-[#E6E6FF] text-[#2d54a8] text-3xl font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5 leading-snug"
+            style={{ fontFamily: "'Cormorant Garamond', serif" }}>
+          Get Instant Answers with the MMV AI-Bot
+        </span>
+        <p className="text-gray-500 text-[14px] leading-relaxed mb-6">
+          The MMV AI Assistant is a conversational chatbot built specifically for students
+          of Mahila Maha Vidyalaya. Instead of searching through multiple pages, simply
+          type your question and get an accurate answer within seconds.
+        </p>
+        <ul className="space-y-3">
+          {[
+            { icon: '💬', label: 'Natural Language', detail: 'Ask questions in plain English — no need for specific keywords.' },
+            { icon: '🕐', label: 'Available 24/7', detail: 'Get answers anytime — outside office hours, during exams, anytime.' },
+            { icon: '🏫', label: 'MMV-Specific', detail: 'Trained on MMV and BHU information — not generic internet answers.' },
+          ].map((p, i) => (
+            <li key={i} className="flex items-start gap-3">
+              <span className="text-xl leading-none mt-0.5">{p.icon}</span>
+              <div>
+                <span className="text-sm font-semibold text-[#1a3a6b]">{p.label}: </span>
+                <span className="text-sm text-gray-500">{p.detail}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 text-xs text-gray-400 italic">
+          Navigate to the AI Assistant section from the portal menu to start a conversation.
+        </p>
       </div>
+
+      {/* Visual */}
+      <div className="md:w-5/12 w-full">
+        <div className="bg-white rounded-2xl p-6 border-7 border-[#E6E6FF]-100 shadow-sm">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-full bg-[#EEF3FC] flex items-center justify-content text-lg">🤖</div>
+              <div className="text-sm font-semibold text-[#1a3a6b]">MMVerse</div>
+          </div>
+          <div className="space-y-3">
+            {[
+              { from: 'user', text: 'What are the Cyber library timings?' },
+              { from: 'bot', text: 'The Cyber Library is open Monday–Saturday, 8:00 AM to 5:00 AM.' },
+              { from: 'user', text: 'Where do I get my hostel allotment form?' },
+              { from: 'bot', text: 'Hostel allotment forms are available at the Hostel Office in the MMV Campus. You can also find the details in the Facilities section of this portal.' },
+            ].map((m, i) => (
+              <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`text-xs rounded-2xl px-4 py-2.5 max-w-[80%] leading-relaxed
+                  ${m.from === 'user'
+                    ? 'bg-[#406BC7] text-white rounded-br-sm'
+                    : 'bg-[#EEF3FC] text-[#1a3a6b] rounded-bl-sm'}`}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 flex gap-2">
+            <div className="flex-1 bg-gray-50 rounded-lg px-4 py-2.5 text-xs text-gray-400 border-3 border-[#2d54a8]-200">
+              Ask a question...
+            </div>
+            <div className="w-8 h-8 bg-[#406BC7] rounded-lg flex items-center justify-center text-white text-xs mt-0.5">→</div>
+          </div>
+        </div>
+      </div>
+
     </div>
-  );
-};
+  </section>
+);
 
 
 // ============================================
-// QUICK LINKS SECTION
-// Cards linking to important pages
+// SECTION NAV — sticky page index
 // ============================================
-const quickLinks = [
-  { title: 'Notices', desc: 'Latest announcements and updates', path: '/notices', icon: '📋' },
-  { title: 'Academics', desc: 'Syllabus, timetable and NEP', path: '/academics', icon: '📚' },
-  { title: 'Facilities', desc: 'Hostels, library, sports and more', path: '/facilities', icon: '🏛️' },
-  { title: 'AI Assistant', desc: 'Get instant answers to your questions', path: '/ai-assistant', icon: '🤖' },
+const sections = [
+  { id: 'academics', label: 'Academics' },
+  { id: 'administration', label: 'Administration' },
+  { id: 'notices', label: 'Notices' },
+  { id: 'facilities', label: 'Facilities' },
+  { id: 'ai-assistant', label: 'AI Assistant' },
 ];
 
-const QuickLinks = () => {
-  return (
-    <div className="bg-gray-50 py-10 px-6">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-xl font-semibold text-[#174873] mb-6 text-center">
-          Quick Access
-        </h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {quickLinks.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="bg-white rounded-lg p-5 shadow-sm border border-gray-100
-                         hover:shadow-md hover:border-[#406BC7] transition-all duration-200
-                         text-center group"
-            >
-              <div className="text-3xl mb-2">{item.icon}</div>
-              <h3 className="text-[#174873] font-medium text-sm group-hover:text-[#406BC7]">
-                {item.title}
-              </h3>
-              <p className="text-gray-500 text-xs mt-1">{item.desc}</p>
-            </Link>
-          ))}
-        </div>
-      </div>
+const SectionNav = () => (
+  <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
+    <div className="max-w-5xl mx-auto px-6 flex gap-1 overflow-x-auto scrollbar-hide py-0">
+      {sections.map((s) => (
+        <a
+          key={s.id}
+          href={`#${s.id}`}
+          className="flex-shrink-0 text-xs font-semibold text-gray-500 hover:text-[#406BC7] px-4 py-3.5 border-b-2 border-transparent hover:border-[#406BC7] transition-all duration-150 uppercase tracking-wider"
+        >
+          {s.label}
+        </a>
+      ))}
     </div>
-  );
-};
+  </nav>
+);
 
 
 // ============================================
-// FOOTER
-// Contact info at the bottom of every page
+// HOME PAGE
 // ============================================
-const Footer = () => {
-  return (
-    <footer className="bg-[#174873] text-white mt-10">
-      <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-
-        {/* Column 1 — About */}
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Mahila Maha Vidyalaya</h3>
-          <p className="text-blue-200 text-sm leading-relaxed">
-            Women's College, Banaras Hindu University. 
-            Established in 1929 by Pandit Madan Mohan Malaviya.
-          </p>
-        </div>
-
-        {/* Column 2 — Quick Links */}
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Quick Links</h3>
-          <ul className="space-y-2">
-            <li><Link to="/about" className="text-blue-200 text-sm hover:text-white">About MMV</Link></li>
-            <li><Link to="/notices" className="text-blue-200 text-sm hover:text-white">Notices</Link></li>
-            <li><Link to="/academics" className="text-blue-200 text-sm hover:text-white">Academics</Link></li>
-            <li><Link to="/contact" className="text-blue-200 text-sm hover:text-white">Contact Us</Link></li>
-          </ul>
-        </div>
-
-        {/* Column 3 — Contact */}
-        <div>
-          <h3 className="text-lg font-semibold mb-3">Contact Us</h3>
-          <ul className="space-y-2 text-blue-200 text-sm">
-            <li>📍 MMV Campus, BHU, Varanasi — 221005</li>
-            <li>📞 +91-XXXXX-XXXXX</li>
-            <li>✉️ mmv@bhu.ac.in</li>
-          </ul>
-        </div>
-
-      </div>
-
-      {/* Bottom bar */}
-      <div className="border-t border-blue-800 py-3 text-center text-blue-300 text-xs">
-        © 2026 Mahila Maha Vidyalaya, Banaras Hindu University. All rights reserved.
-      </div>
-
-    </footer>
-  );
-};
-
-
-// ============================================
-// MAIN HOME PAGE
-// Puts all sections together
-// ============================================
-const Home = () => {
-  return (
-    <div>
-      <Slideshow />
-      <QuickLinks />
-      <AboutSection />
-      <Footer />
-    </div>
-  );
-};
+const Home = () => (
+  <div className="font-[Lato]">
+    <Hero />
+    <About />
+    <SectionNav />
+    <Facilities />
+    <Academics />
+    <Administration />
+    <Notices />
+    <AIAssistant />
+  </div>
+);
 
 export default Home;

@@ -3,21 +3,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
-import Recommendations from './pages/Recommendations';
+// import Recommendations from './pages/Recommendations';
 import Notices from './pages/Notices';
-import Facilities from './pages/Facilities';
-import CollegeInfo from './pages/CollegeInfo';
+// import Facilities from './pages/Facilities';
+// import CollegeInfo from './pages/CollegeInfo';
 import LoginPage from './pages/LoginPage';
-import Profile from './pages/Profile';
+// import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
-import CalendarPage from './pages/CalendarPage';
-import AdministrationPage from './pages/AdministrationPage';
-import AcademicNEP from './pages/academics/AcademicNEP';
-import AcademicSyllabus from './pages/academics/AcademicSyllabus';
-import AcademicElectives from './pages/academics/AcademicElectives';
-import AcademicSectionIncharge from './pages/academics/AcademicSectionIncharge';
-import AcademicSwayam from './pages/academics/AcademicSwayam';
-import AcademicsHub from './pages/academics/AcademicsHub';
+// import CalendarPage from './pages/CalendarPage';
+// import AdministrationPage from './pages/AdministrationPage';
+// import AcademicNEP from './pages/academics/AcademicNEP';
+// import AcademicSyllabus from './pages/academics/AcademicSyllabus';
+// import AcademicElectives from './pages/academics/AcademicElectives';
+// import AcademicSectionIncharge from './pages/academics/AcademicSectionIncharge';
+// import AcademicSwayam from './pages/academics/AcademicSwayam';
+// import AcademicsHub from './pages/academics/AcademicsHub';
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const token = localStorage.getItem('token');
@@ -48,22 +48,22 @@ function App() {
 
         {/* Student Routes */}
        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
-        <Route 
+        {/* <Route 
           path="/profile" 
           element={
            
               <LayoutWrapper><Profile /></LayoutWrapper>
             
           } 
-        />
-        <Route 
+        /> */}
+        {/* <Route 
           path="/recommendations" 
           element={
           
               <LayoutWrapper><Recommendations /></LayoutWrapper>
            
           } 
-        />
+        /> */}
         <Route 
           path="/notices" 
           element={
@@ -72,7 +72,7 @@ function App() {
            
           } 
         />
-        <Route 
+        {/* <Route 
           path="/facilities" 
           element={
             
@@ -103,8 +103,8 @@ function App() {
               <LayoutWrapper><Facilities /></LayoutWrapper>
      
           } 
-        />
-        <Route
+        /> */}
+        {/* <Route
           path="/college-info"
           element={
     
@@ -119,8 +119,8 @@ function App() {
               <LayoutWrapper><CalendarPage /></LayoutWrapper>
           
           }
-        />
-        <Route
+        />n */}
+        {/* <Route
           path="/administration"
           element={
        
@@ -143,10 +143,10 @@ function App() {
               <LayoutWrapper><AdministrationPage /></LayoutWrapper>
    
           }
-        />
+        /> */}
 
         {/* Academics Routes */}
-        <Route path="/academics" element={<LayoutWrapper><AcademicsHub /></LayoutWrapper>} />
+        {/* <Route path="/academics" element={<LayoutWrapper><AcademicsHub /></LayoutWrapper>} />
         <Route path="/academics/nep" element={<LayoutWrapper><AcademicNEP /></LayoutWrapper>} />
         <Route path="/academics/syllabus" element={<LayoutWrapper><AcademicSyllabus /></LayoutWrapper>} />
         <Route path="/academics/syllabus/:category" element={<LayoutWrapper><AcademicSyllabus /></LayoutWrapper>} />
@@ -154,7 +154,7 @@ function App() {
         <Route path="/academics/electives/:category" element={<LayoutWrapper><AcademicElectives /></LayoutWrapper>} />
         <Route path="/academics/section-incharge" element={<LayoutWrapper><AcademicSectionIncharge /></LayoutWrapper>} />
         <Route path="/academics/section-incharge/:category" element={<LayoutWrapper><AcademicSectionIncharge /></LayoutWrapper>} />
-        <Route path="/academics/swayam" element={<LayoutWrapper><AcademicSwayam /></LayoutWrapper>} />
+        <Route path="/academics/swayam" element={<LayoutWrapper><AcademicSwayam /></LayoutWrapper>} /> */}
 
         {/* Admin Routes */}
         <Route 

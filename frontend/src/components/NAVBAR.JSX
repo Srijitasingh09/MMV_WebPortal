@@ -147,7 +147,7 @@ const Navbar = () => {
       {/* ---- TOP BAR ---- */}
       <div className="bg-[#0f3358] text-xs text-blue-200 px-6 py-1
                       flex justify-end gap-6">
-        <span>Banaras Hindu University</span>
+        {/* <span>Banaras Hindu University</span> */}
         <a href="/login" className="text-[#0f3358] hover:text-white">
           Admin
         </a>
@@ -181,9 +181,9 @@ const Navbar = () => {
             <h1 className="text-white text-lg font-medium">
               Mahila Maha Vidyalaya
             </h1>
-            <p className="text-blue-200 text-xs">
+            {/* <p className="text-blue-200 text-xs">
               Banaras Hindu University, Varanasi — Est. 1929
-            </p>
+            </p> */}
           </div>
            <img
             src="/mmvlogo.jpeg"
