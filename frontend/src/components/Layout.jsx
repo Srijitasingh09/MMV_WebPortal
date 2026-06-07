@@ -3,7 +3,7 @@ import Navbar from './Navbar';
 import Footer from "./Footer";
 const Layout = ({ children }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="max-h-screen bg-gray-50">
       <Navbar />
       <main className="p-0">
         {children}
