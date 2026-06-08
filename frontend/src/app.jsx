@@ -5,12 +5,12 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Dashboard from './pages/Dashboard';
 // import Recommendations from './pages/Recommendations';
-import Notices from './pages/Notices';
+// import Notices from './pages/Notices';
 // import Facilities from './pages/Facilities';
 // import CollegeInfo from './pages/CollegeInfo';
-import LoginPage from './pages/LoginPage';
+// import LoginPage from './pages/LoginPage';
 // import Profile from './pages/Profile';
-import AdminDashboard from './pages/AdminDashboard';
+// import AdminDashboard from './pages/AdminDashboard';
 // import CalendarPage from './pages/CalendarPage';
 // import AdministrationPage from './pages/AdministrationPage';
 // import AcademicNEP from './pages/academics/AcademicNEP';
@@ -19,21 +19,22 @@ import AdminDashboard from './pages/AdminDashboard';
 // import AcademicSectionIncharge from './pages/academics/AcademicSectionIncharge';
 // import AcademicSwayam from './pages/academics/AcademicSwayam';
 // import AcademicsHub from './pages/academics/AcademicsHub';
+
 // Protected Route Component
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const token = localStorage.getItem('token');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+// const ProtectedRoute = ({ children, adminOnly = false }) => {
+//   const token = localStorage.getItem('token');
+//   const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+//   if (!token) {
+//     return <Navigate to="/login" replace />;
+//   }
 
-  if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+//   if (adminOnly && !isAdmin) {
+//     return <Navigate to="/" replace />;
+//   }
 
-  return children;
-};
+//   return children;
+// };
 
 // Layout Wrapper to conditionally show Layout
 const LayoutWrapper = ({ children }) => {
@@ -45,7 +46,7 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* <Route path="/login" element={<LoginPage />} /> */}
 
         {/* Student Routes */}
        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
@@ -66,14 +67,14 @@ function App() {
            
           } 
         /> */}
-        <Route 
+        {/* <Route 
           path="/notices" 
           element={
       
               <LayoutWrapper><Notices /></LayoutWrapper>
            
           } 
-        />
+        /> */}
         {/* <Route 
           path="/facilities" 
           element={
@@ -159,14 +160,14 @@ function App() {
         <Route path="/academics/swayam" element={<LayoutWrapper><AcademicSwayam /></LayoutWrapper>} /> */}
 
         {/* Admin Routes */}
-        <Route 
+        {/* <Route 
           path="/admin" 
           element={
             <ProtectedRoute adminOnly={true}>
               <LayoutWrapper><AdminDashboard /></LayoutWrapper>
             </ProtectedRoute>
           } 
-        />
+        /> */}
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
