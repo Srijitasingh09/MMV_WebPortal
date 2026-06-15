@@ -10,20 +10,20 @@ import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 
 // Protected Route Component
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const token = localStorage.getItem('token');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+// const ProtectedRoute = ({ children, adminOnly = false }) => {
+//   const token = localStorage.getItem('token');
+//   const isAdmin = localStorage.getItem('isAdmin') === 'true';
 
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+//   if (!token) {
+//     return <Navigate to="/login" replace />;
+//   }
 
-  if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />;
-  }
+//   if (adminOnly && !isAdmin) {
+//     return <Navigate to="/" replace />;
+//   }
 
-  return children;
-};
+//   return children;
+// };
 
 // Layout Wrapper to conditionally show Layout
 const LayoutWrapper = ({ children }) => {
@@ -35,7 +35,7 @@ function App() {
     <Router>
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
+        {/* <Route path="/login" element={<LoginPage />} /> */}
 
         {/* Student Routes */}
        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
@@ -59,7 +59,7 @@ function App() {
               <LayoutWrapper><AdminDashboard /></LayoutWrapper>
             </ProtectedRoute>
           } 
-        />
+        /> */}
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
