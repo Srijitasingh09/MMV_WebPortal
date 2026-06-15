@@ -1,10 +1,10 @@
 import React from 'react';
 
 const Hero = () => (
-  <section className="relative w-[100%] h-[80vh] overflow-hidden">
+  <section className="relative w-full h-[600px] overflow-hidden">
 
     <div
-      className="absolute inset-0 bg-contain bg-no-repeat bg-center"
+      className="absolute inset-0 bg-cover bg-no-repeat bg-center"
       style={{ backgroundImage:"url('/bhu/web_collage.png')" }}
     />
 
