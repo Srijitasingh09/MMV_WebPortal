@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Bell, Calendar, Plus, Send, CheckCircle, BookOpen, Users, Paperclip, Trash2, Landmark, ArrowUp, ArrowDown, ImagePlus, Building2, MessageSquare } from 'lucide-react';
 import AdminAcademics from '../components/AdminAcademics';
+import { useNavigate } from "react-router-dom";
+
+
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('notice');
@@ -26,6 +29,13 @@ const AdminDashboard = () => {
   const [collegeInfoFilter, setCollegeInfoFilter] = useState('All');
 
   const [notice, setNotice] = useState({ title: '', content: '', category: 'General' });
+  const navigate = useNavigate();
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("isAdmin");
+  navigate("/login");
+};
   const [courseForm, setCourseForm] = useState({
     degree: 'B.Sc.',
     course: 'Computer Science',
@@ -610,6 +620,16 @@ const AdminDashboard = () => {
       setCollegeImagePreview('');
       return;
     }
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    navigate("/login");
+    return;
+  }
+
+  fetchAdminData().catch(() => {
+    alert("Unable to load admin data.");
+  });
     const objectUrl = URL.createObjectURL(collegeImage);
     setCollegeImagePreview(objectUrl);
     return () => URL.revokeObjectURL(objectUrl);
@@ -706,16 +726,22 @@ const AdminDashboard = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-primary">Admin Control Panel</h1>
-          <p className="text-muted mt-1">Manage university announcements and campus life.</p>
+         <div>
+           <h1 className="text-3xl font-bold text-primary">
+            Admin Control Panel
+          </h1>
+          <p className="text-muted mt-1">
+            Manage university announcements and campus life.
+          </p>
         </div>
-        {success && (
-            <div className="flex items-center space-x-2 text-green-600 bg-green-50 px-4 py-2 rounded-xl animate-bounce">
-                <CheckCircle size={18} />
-                <span className="text-sm font-bold uppercase tracking-widest">{success}</span>
-            </div>
-        )}
+
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+        >
+          Logout
+        </button>
+       
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-3">
