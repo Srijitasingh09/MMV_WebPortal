@@ -1,5 +1,5 @@
 // import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import React from 'react'
 import { useState } from 'react'
 
@@ -141,16 +141,39 @@ const DropdownMenu = ({ title, items }) => {
 // THE FULL NAVBAR
 // ============================================
 const Navbar = () => {
+  const navigate = useNavigate();
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const token = localStorage.getItem('token');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('isAdmin');
+    navigate('/login');
+  };
+
   return (
     <div className="relative z-[999]">       
 
       {/* ---- TOP BAR ---- */}
       <div className="bg-[#0f3358] text-xs text-blue-200 px-6 py-1
                       flex justify-end gap-6">
-        {/* <span>Banaras Hindu University</span> */}
-        <a href="/login" className="text-[#0f3358] hover:text-white">
-          Admin
-        </a>
+        {token && isAdmin ? (
+          <div className="flex items-center gap-4">
+            <Link to="/admin" className="text-blue-200 hover:text-white">
+              Admin Panel
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="bg-red-600 text-white px-3 py-0.5 rounded hover:bg-red-700 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <a href="/login" className="text-[#0f3358] hover:text-white">
+            Admin Login
+          </a>
+        )}
       </div>
 
       {/* ---- COLLEGE HEADER ---- */}
