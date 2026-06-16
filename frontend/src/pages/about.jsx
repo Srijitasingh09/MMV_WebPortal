@@ -39,7 +39,7 @@ const Slideshow = () => {
   );
 
   const goTo = (nextIndex) => {
-    if (prefersReducedMotion.current) {
+    if (prefersReducedMotion.current) {      
       currentRef.current = nextIndex;
       setDisplayedIndex(nextIndex);
       return;
@@ -66,7 +66,7 @@ const Slideshow = () => {
       style={{
         position: 'relative',
         width: '100%',
-        height: 'clamp(220px, 45vw, 400px)',
+        height: 'clamp(400px, 65vw, 600px)',
         overflow: 'hidden',
       }}
     >
@@ -90,7 +90,7 @@ const Slideshow = () => {
       >
         <h1 style={{
           fontFamily: "'Cormorant Garamond', Georgia, serif",
-          fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)',
+          fontSize: 'clamp(2.6rem, 4.5vw, 3.6rem)',
           fontWeight: 300,
           letterSpacing: '0.04em',
           marginBottom: '10px',
@@ -184,8 +184,8 @@ const IntroSection = () => {
           <img
             src="/mmvimage2.jpeg"
             alt="MMV gate"
-            className="w-full object-cover md:w-[480px] md:h-[480px]"
-            style={{ height: 'clamp(280px, 40vw, 480px)',
+            className="w-full object-cover md:w-[520px] md:h-[520px]"
+            style={{ height: 'clamp(380px, 55vw, 580px)',
                      objectPosition:'top center'
              }}
           />

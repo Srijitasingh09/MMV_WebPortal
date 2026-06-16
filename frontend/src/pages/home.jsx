@@ -1,11 +1,11 @@
 import React from 'react';
 
 const Hero = () => (
-  <section className="relative w-[100%] h-[80vh] overflow-hidden">
+  <section className="relative w-[100%] h-[160vh] overflow-hidden">
 
     <div
-      className="absolute inset-0 bg-contain bg-no-repeat bg-center"
-      style={{ backgroundImage:"url('/bhu/web_collage.png')" }}
+      className="absolute inset-0 bg-contain bg-no-repeat"
+      style={{ backgroundImage:"url('/bhu/web (3).png')" }}
     />
 
     {/* Keyframe injection */}
@@ -28,7 +28,7 @@ const Hero = () => (
 // ABOUT — Brief intro to the portal & college
 // ============================================
 const About = () => (
-  <section className="bg-white py-20 px-6">
+  <section className="bg-white py-10 px-6">
     <div className="max-w-5xl mx-auto text-center">
       <span className="inline-block bg-[#EEF3FC] text-[#2d54a8] text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5">
         About the Portal
@@ -67,7 +67,7 @@ const About = () => (
 // SECTION COMPONENT — reusable layout block
 // ============================================
 const FeatureSection = ({ id, title, description, points, image, reverse, accentColor, tagBg, tagText }) => (
-  <section id={id} className={`py-20 px-6 ${reverse ? 'bg-white' : 'bg-[#f4f7fd]'}`}>
+  <section id={id} className={`py-10 px-6 ${reverse ? 'bg-white' : 'bg-[#f4f7fd]'}`}>
     <div className={`max-w-5xl mx-auto flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} gap-14 items-center`}>
 
       {/* Visual placeholder */}
@@ -114,7 +114,7 @@ const FeatureSection = ({ id, title, description, points, image, reverse, accent
 // FACILITIES SECTION
 // ============================================
 const Facilities = () => (
-  <section id="facilities" className="py-20 px-6 bg-white">
+  <section id="facilities" className="py-10 px-6 bg-white">
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-14">
         <span className="inline-block bg-[#F5EEFF] text-[#6b3fa0] text-3xl font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5"
@@ -164,7 +164,7 @@ const Academics = () => (
     title="Academic Information"
     description="The Academics section covers all academic resources for every department at MMV. Students can find their semester syllabus, examination schedules, and updates related to the NEP 2020 curriculum — organized by department for easy navigation."
     points={[
-      { icon: '📘', label: 'Syllabus', detail: 'Semester syllabus for all UG, PG, and Ph.D. programmes.' },
+      { icon: '📘', label: 'Syllabus', detail: 'Semester syllabus for all UG & PG programmes.' },
       { icon: '🗓️', label: 'Annual Calender', detail: 'Information about annual holidays and academic calender updated each semester.' },
       { icon: '📝', label: 'Exam Schedule', detail: 'Internal assessment and university examination date sheets.' },
       { icon: '📐', label: 'NEP 2020', detail: 'Revised curriculum details and credit structure under NEP guidelines.' },
@@ -225,7 +225,7 @@ const Notices = () => (
 // AI ASSISTANT SECTION
 // ============================================
 const AIAssistant = () => (
-  <section id="ai-assistant" className="py-20 px-6 bg-[#f4f7fd]">
+  <section id="ai-assistant" className="py-10 px-6 bg-[#f4f7fd]">
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-14 items-center">
 
       {/* Text */}
@@ -311,7 +311,7 @@ const sections = [
 const SectionNav = () => (
   <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">
     <div className="max-w-5xl mx-auto px-6 flex gap-1 overflow-x-auto scrollbar-hide py-0">
-      {sections.map((s) => (
+      {/* {sections.map((s) => (
         <a
           key={s.id}
           href={`#${s.id}`}
@@ -319,7 +319,7 @@ const SectionNav = () => (
         >
           {s.label}
         </a>
-      ))}
+      ))} */}
     </div>
   </nav>
 );
@@ -333,10 +333,11 @@ const Home = () => (
     <Hero />
     <About />
     <SectionNav />
-    <Facilities />
+    {/* <Facilities /> */}
     <Academics />
     <Administration />
     <Notices />
+    <Facilities />
     <AIAssistant />
   </div>
 );
