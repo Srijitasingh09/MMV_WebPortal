@@ -21,7 +21,7 @@ const SubSubMenu = ({ label, children }) => {
         {label}
         <span className="text-xs ml-4">►</span>
       </div>
-
+                                             
       {isOpen && (
         <div className="absolute top-0 left-full bg-[#406BC7]
                         shadow-lg min-w-48 z-[999] border border-blue-900">
@@ -52,7 +52,7 @@ const SubMenu = ({ label, children }) => {
     <div
       className="relative"
       onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      onMouseLeave={() => setIsOpen(false)}   
     >
       <div className="flex items-center justify-between px-2 py-1
                       text-sm text-white hover:bg-[#2d54a8]
@@ -98,10 +98,10 @@ const DropdownMenu = ({ title, items }) => {
   return (
     <div
       className="relative"
-      onMouseEnter={() => setIsOpen(true)}
+      onMouseEnter={() => setIsOpen(true)}   
       onMouseLeave={() => setIsOpen(false)}
     >
-     <button className="flex items-center gap-1 px-3 py-1 text-gray-700
+     <button className="flex items-center gap-1 px-3 py-1 text-white
                    text-1.5xl font-medium hover:bg-[#406BC7] 
                    hover:text-white transition-colors duration-200 
                    h-full">
@@ -152,7 +152,7 @@ const Navbar = () => {
   };
 
   return (
-    <div className="relative z-[999]">
+    <div className="relative z-[999]">       
 
       {/* ---- TOP BAR ---- */}
       <div className="bg-[#0f3358] text-xs text-blue-200 px-6 py-1
@@ -177,64 +177,71 @@ const Navbar = () => {
       </div>
 
       {/* ---- COLLEGE HEADER ---- */}
-      <div className="bg-[#174873] px-4 py-1 flex items-center justify-between">
+      <div className="bg-white px-4 py-1 flex items-center justify-between ">
        
         {/* RIGHT SIDE - BHU Logo */}
-       <div className="flex items-center gap-2 pl-0">
-  <img
-    src="/bhulogo.png"
-    alt="BHU Logo"
-    className="w-12 h-12 rounded-full object-contain bg-white"
-  />
+       <div className="flex items-end gap-2 pl-0">
+       <img
+       src="/bhu/logo_bhu.png"
+       alt="BHU Logo"
+       className="h-18 rounded-full object-contain bg-white"
+  />  
 
-  <div className="flex flex-col">
+  {/* <div className="flex flex-col">
     <h1 className="text-white text-lg font-medium">
       Banaras Hindu University
-    </h1>
+    </h1> */}
 
     {/* <p className="text-blue-200 text-xs">
       Varanasi — 221005
     </p> */}
-  </div>
+  {/* </div> */}
 </div>
+        {/* <div className="bg-white px-4 py-1 flex items-center justify-between">
+       
+        # website logo
+       <div className="flex items-center gap-2 pl-0">
+       <img
+       src="/bhu/logo.png"
+       alt="BHU Logo"
+       className="h-54 rounded-full object-contain bg-white"
+  /> 
+  </div>
+  </div> */}
+      
          {/* LEFT SIDE - MMV Logo + Name */}
-         <div className="flex items-center gap-4">
-         
+         <div className="flex items-center gap-1">
           <div>
-            <h1 className="text-white text-lg font-medium">
+            <h1 className="text-gray-700 text-lg font-3xs">
               Mahila Maha Vidyalaya
             </h1>
-            {/* <p className="text-blue-200 text-xs">
-              Banaras Hindu University, Varanasi — Est. 1929
-            </p> */}
           </div>
-           <img
+          <img
             src="/mmvlogo.jpeg"
             alt="MMV Logo"
-            className="w-12 h-12 rounded-full object-contain bg-white"
+            className="w-20 h-18 rounded-full object-contain bg-white"
           />
         </div>
-
-
+        
       </div>
 
-      {/* ---- NAVIGATION BAR ---- */}
-      <nav className="bg-white flex px-2 border-b border-gray-200 relative justify-between">
+       {/* ---- NAVIGATION BAR ---- */}
+      <nav className="bg-[#0f3358] flex px-2 border-b border-gray-200 relative justify-end">
         {/* Added Logo */}
-        <img 
+        {/* <img 
         src="./mmv_saarthi_logo.png" 
         alt="mmv-saarthi-logo"
-        className='h-12 pl-0' />
+        className='h-12 pl-0' /> */}
 
-        <div className='flex relative justify-between '>
+        <div className='flex relative justify-end'>
           <Link to="/"
-            className="px-5 py-3 text-gray-700 text-1.5xl font-medium
+            className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             Home
           </Link>
           <Link to="/about"
-            className="px-5 py-3 text-gray-700 text-1.5xl font-medium
+            className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             About MMV
@@ -258,7 +265,7 @@ const Navbar = () => {
               { label: "MMV Office Staff", path: "/administration/staff" },
             ]}
           />
-
+                                             
           <DropdownMenu
             title="Academics"
             items={[
@@ -304,7 +311,7 @@ const Navbar = () => {
                 { label: "University Sports Board", path: "/facilities/sports/universitysports" },
                 { label: "MMV Sports Board", path: "/facilities/sports/mmvsports" },
                 { label: "Open Gym", path: "/facilities/sports/gym" },
-              ]},
+              ]},                             
               { label: "Well-Being", children: [
                 { label: "WBSC", path: "/facilities/wellbeing/wbsc" },
                 { label: "MMV Pahal", path: "/facilities/wellbeing/mmvwell" },
@@ -344,21 +351,21 @@ const Navbar = () => {
           />
 
           <Link to="/notices"
-            className="px-5 py-3 text-gray-700 text-1.5xl font-medium
+            className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             Notices
           </Link>
 
           <Link to="/ai-assistant"
-            className="px-5 py-3 text-gray-700 text-1.5xl font-medium
+            className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             AI Assistant
           </Link>
 
           <Link to="/contact"
-            className="px-5 py-3 text-gray-700 text-1.5xl font-medium
+            className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             Contact
