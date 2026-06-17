@@ -9,7 +9,7 @@ const pages = {
   'dean':                       { title: 'Dean of Students',                      pageType: 'photo-description' },
   'advisor':                    { title: 'Student Advisor',                       pageType: 'photo-description' },
   'staff':                      { title: 'MMV Office Staff',                      pageType: 'description-table',
-    tableColumns: ['Name', 'Designation', 'Department', 'Contact'] },
+    tableColumns: ['Name', 'Designation', 'Department', 'Contact PDF'] },
   'proctorial/chief':           { title: 'Chief Proctor',                         pageType: 'photo-description' },
   'proctorial/uniboard':        { title: 'University Proctorial Board',           pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Contact'] },
