@@ -539,7 +539,24 @@ const handleDeletePdf = async (pdfId) => {
                 {rows.map((row, idx) => (
                   <tr key={idx} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
                     {columns.map(col => (
-                      <td key={col} className="px-4 py-3 text-gray-700">{row[col] || '—'}</td>
+                      <td key={col} className="px-4 py-3 text-gray-700">
+                        {row[col]
+                          ? row[col].startsWith('/uploads/') || row[col].startsWith('http')
+                            ? 
+                              (
+                               <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm">
+                                <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                </svg>
+                                View PDF
+                              </a>
+                              )
+                            : row[col]
+                          : '—'}
+                      </td>
                     ))}
                     {isAdmin && <td />}
                     {isAdmin && (
@@ -555,13 +572,77 @@ const handleDeletePdf = async (pdfId) => {
                 {isAdmin && columns.length > 0 && (
                   <tr className="border-t-2 border-gray-200 bg-gray-50">
                     {columns.map(col => (
-                      <td key={col} className="px-4 py-2">
-                        <input
-                          value={newRow[col] || ''}
-                          onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                          placeholder={col}
-                          className="w-full px-2 py-1 border border-blue-200 rounded text-sm outline-none"
-                        />
+                        <td key={col} className="px-4 py-2">
+                          {col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
+                            <div className="space-y-1">
+                              {/* Show upload button if no value yet */}
+                              {!newRow[col] ? (
+                                <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
+                                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                  </svg>
+                                  Upload PDF
+                                 <input
+                                   type="file"
+                                   accept=".pdf"
+                                   className="hidden"
+                                  onChange={async (e) => {                               
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+                                  try {
+                                    const form = new FormData();
+                                    form.append('section', section || '');
+                                    form.append('category', subsection || '');
+                                    form.append('sub_category', '');
+                                    form.append('files', file);
+
+                                    // Debug — remove after fixing
+                                    console.log('Sending:', { section, subsection, fileName: file.name });
+                                
+                                    const res = await axios.post(
+                                      `${API}/admin/facility-content/upload-pdf`, form,
+                                      { headers: { Authorization: `Bearer ${token}` } }
+                                    );
+                                    const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
+                                    if (pdfUrl) {
+                                      setNewRow(prev => ({ ...prev, [col]: pdfUrl }));
+                                    } else {
+                                      alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                                    }
+                                  } catch (err) {
+                                    alert('Upload failed: ' + JSON.stringify(err.response?.data));
+                                   }
+                                 }}
+                                  />
+                                </label>
+                              ) : (
+                              /* Show filename + remove option if uploaded */
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-green-600 truncate max-w-[80px]">✓ Uploaded</span>
+                                <button
+                                  onClick={() => setNewRow({ ...newRow, [col]: '' })}
+                                  className="text-red-400 text-xs hover:text-red-600">
+                                  ✕
+                                </button>
+                              </div>
+                            )}
+                            {/* Also allow manual URL paste */}
+                            <input
+                              value={newRow[col] || ''}
+          onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+          placeholder="or paste URL"
+          className="w-full px-2 py-1 border border-blue-200 rounded text-xs outline-none"
+                            />
+                          </div>
+                        ) : (
+                          /* Normal text input for non-PDF columns */
+                          <input
+                            value={newRow[col] || ''}
+                            onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+                            placeholder={col}
+                             className="w-full px-2 py-1 border border-blue-200 rounded text-sm outline-none"
+                          />
+                        )}
                       </td>
                     ))}
                     {isAdmin && <td />}
