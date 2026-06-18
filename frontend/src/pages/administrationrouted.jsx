@@ -3,17 +3,62 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
-  'vc':                         { title: 'Vice Chancellor',                       pageType: 'photo-description' },     
-  'principal':                  { title: 'MMV Principal',                         pageType: 'photo-description' },
-  'dean':                       { title: 'Dean of Students',                      pageType: 'photo-description' },
-  'advisor':                    { title: 'Student Advisor',                       pageType: 'photo-description' },
-  'staff':                      { title: 'MMV Office Staff',                      pageType: 'table',
-    tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work', 'Photo PHOTO'] },
-  'proctorial/chief':           { title: 'Chief Proctor',                         pageType: 'photo-description' },
-  'proctorial/uniboard':        { title: 'University Proctorial Board',           pageType: 'table',
-    tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] },
-  'examination/universityexam': { title: 'Controller of Examination — University', pageType: 'photo-description' },
-  'examination/mmvexam':        { title: 'Controller of Examination — MMV',       pageType: 'photo-description' },
+  'vc': { title: 'Vice Chancellor', 
+          pageType: 'photo-description', 
+          profileName: 'Prof. Ajit Kumar Chaturvedi',
+          profileDesignation: 'Vice Chancellor',
+          profilePhone: '+91(542)2368938 (Off); 2368339 (Res)',
+          profileEmail: 'vc@bhu.ac.in',
+          profileUniversity: 'Banaras Hindu University',
+          profileAddress: 'Varanasi - 221005, U.P., India'
+        },  
+
+  'principal':{ title: 'MMV Principal',                         
+                pageType: 'photo-description',
+                profileName: 'Prof. Rita Singh',
+                profileDesignation: 'Principal',
+                profilePhone: '+91 8004930511',
+                profileEmail: 'principalmmv@bhu.ac.in',
+                profileUniversity: 'Mahila Mahavidyalaya, BHU',
+                profileAddress: 'Varanasi - 221005, U.P., India' },
+
+  'dean': { title: 'Dean of Students',                      
+            pageType: 'photo',
+            profileName: 'Prof. Ranjan Kumar Singh',
+            profileDesignation: 'Dean of Students & Professor, Department of Physics, Institute Of Sciences',
+            profilePhone: '+91 9453040923',
+            profileEmail: 'dean_students@bhu.ac.in',
+            profileUniversity: 'Banaras Hindu University',
+            profileAddress: 'Varanasi - 221005, U.P., India' },
+
+  'advisor':{ title: 'Student Advisor',                       
+              pageType: 'photo',
+              profileName: 'Dr. Rukmini Jaiswal',
+              profileDesignation: 'Student Advisor & Assistant Professor, Department of Kathak, Mahila Mahavidyalaya',
+              profilePhone: '+91 8511504765',
+              profileEmail: 'rukminimmv@bhu.ac.in',
+              profileUniversity: 'Banaras Hindu University',
+              profileAddress: 'Varanasi - 221005, U.P., India' 
+            },
+
+  'staff':{ title: 'MMV Office Staff',                      
+            pageType: 'table',
+            tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work', 'Photo'] 
+          },
+
+  'proctorial/chief': { title: 'Chief Proctor', 
+                        pageType: 'photo-description' 
+                      },
+
+  'proctorial/uniboard':{ title: 'University Proctorial Board',           
+                          pageType: 'table',
+                          tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
+                        },
+
+  'examination/universityexam':{  title: 'Controller of Examination — University', 
+                                  pageType: 'photo-description' },
+  'examination/mmvexam':{ title: 'Controller of Examination — MMV',       
+                          pageType: 'photo-description' },
 };
 
 const AdministrationRouted = () => {
@@ -33,8 +78,14 @@ const AdministrationRouted = () => {
       pageType={page.pageType}
       tableColumns={page.tableColumns || []}
       photoAlign={page.photoAlign || 'center'}
-      photoCols={1}         
-      photoHeight={500}   
+      photoCols={page.photoCols || 1}         
+      photoHeight={page.photoHeight || 450}  
+      profileName={page.profileName}
+      profileDesignation={page.profileDesignation}
+      profileEmail={page.profileEmail}
+      profilePhone={page.profilePhone}
+      profileUniversity={page.profileUniversity}
+      profileAddress={page.profileAddress} 
     />
   );
 };

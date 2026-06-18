@@ -11,11 +11,18 @@ const GenericContentPage = ({
   title,
   backPath,
   backLabel,
+  profileName = '',
+  profileDesignation = '',
+  profileEmail = '',
+  profilePhone = '',
+  profileUniversity = '',
+  profileAddress = '',
   pageType = 'description', // 'photo-description' | 'description' | 'pdf-list' | 'table' | 'description-table' | 'photo-description-table'
   tableColumns = [],  
   photoAlign = 'left',  
   photoCols = 2,        // how many photos per row (1, 2, 3)
   photoHeight = 200,      // predefined columns if pageType includes 'table'
+  photoWidth = 200,
   slideshowHeight = 360,
   slideshowMaxWidth = '100%',
 }) => {
@@ -48,6 +55,7 @@ const GenericContentPage = ({
     setLoading(true);
     try {
       // fetch description/photo/pdf content
+      console.log("Photos:", data?.photos);
       const res = await axios.get(
         `${API}/facility-content`,
         { params: { section, category: subsection } }
@@ -136,37 +144,40 @@ const GenericContentPage = ({
 
   // ── UPLOADS ──
   const handleImageUpload = async (e) => {
-    const files = e.target.files; if (!files || files.length === 0) return;
+    const files = e.target.files; 
+    if (!files || files.length === 0) return;
     const form = new FormData();
     form.append('section', section);
     form.append('category', subsection);
     form.append('sub_category', '');
-   for (let file of files) {
-   form.append("files", file);
-   }
+    for (let file of files) {
+      form.append("files", file);
+    }
     await axios.post(`${API}/admin/facility-content/upload-photo`, form,
       { headers: { Authorization: `Bearer ${token}` } });
     await fetchData();
-    imageRef.current.value = '';
+    if (imageRef.current) {
+      imageRef.current.value = '';
+    }
   };
 
   const handleDeletePhoto = async (photoId) => {
-  if (!window.confirm('Delete this photo?')) return;
-  try {
-    await axios.delete(`${API}/admin/facility-content/photo/${photoId}`,
-      { headers: { Authorization: `Bearer ${token}` } });
-    await fetchData();
-  } catch { alert('Delete failed'); }
-};
+    if (!window.confirm('Delete this photo?')) return;
+    try {
+      await axios.delete(`${API}/admin/facility-content/photo/${photoId}`,
+        { headers: { Authorization: `Bearer ${token}` } });
+      await fetchData();
+    } catch { alert('Delete failed'); }
+  };
 
-const handleDeletePdf = async (pdfId) => {
-  if (!window.confirm('Delete this PDF?')) return;
-  try {
-    await axios.delete(`${API}/admin/facility-content/pdf/${pdfId}`,
-      { headers: { Authorization: `Bearer ${token}` } });
-    await fetchData();
-  } catch { alert('Delete failed'); }
-};
+  const handleDeletePdf = async (pdfId) => {
+    if (!window.confirm('Delete this PDF?')) return;
+    try {
+      await axios.delete(`${API}/admin/facility-content/pdf/${pdfId}`,
+        { headers: { Authorization: `Bearer ${token}` } });
+      await fetchData();
+    } catch { alert('Delete failed'); }
+  };
 
   const handlePdfUpload = async (e) => {
     const files = e.target.files; if (!files || files.length === 0) return;
@@ -175,7 +186,7 @@ const handleDeletePdf = async (pdfId) => {
     form.append('category', subsection);
     form.append('sub_category', '');
     for (let file of files) {
-    form.append("files", file);
+      form.append("files", file);
     }
     await axios.post(`${API}/admin/facility-content/upload-pdf`, form,
       { headers: { Authorization: `Bearer ${token}` } });
@@ -214,14 +225,14 @@ const handleDeletePdf = async (pdfId) => {
             </>
           )}
           {(hasDesc || hasPdf) && (
-           <>
-           <input type="file" accept=".pdf" multiple ref={pdfRef} className="hidden" onChange={handlePdfUpload} />
-            <button onClick={() => pdfRef.current?.click()}
-            className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium">
-            Upload PDF
-           </button>
-        </>
-        )}
+            <>
+              <input type="file" accept=".pdf" multiple ref={pdfRef} className="hidden" onChange={handlePdfUpload} />
+              <button onClick={() => pdfRef.current?.click()}
+                className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium">
+                Upload PDF
+              </button>
+            </>
+          )}
           {hasDesc && !isEditing && (
             <button onClick={() => setIsEditing(true)}
               className="px-4 py-2 border-2 border-[#174873] text-[#174873] rounded-lg text-sm font-medium">
@@ -232,207 +243,261 @@ const handleDeletePdf = async (pdfId) => {
       )}
 
       {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
-    {(hasPhoto || hasDesc || hasSlideshow) && (
-      <div className={`grid grid-cols-1 gap-6 ${
-      (hasPhoto || hasSlideshow) && (data.photo_url || data.photos?.length) && hasDesc
-      ? photoAlign === 'center' ? '' : 'lg:grid-cols-3'
-      : ''
-  }`}>
+      {(hasPhoto || hasDesc || hasSlideshow) && (
+        <div className={`grid grid-cols-1 gap-6 ${
+          (hasPhoto || hasSlideshow) && (data.photo_url || data.photos?.length) && 
+          hasDesc ? photoAlign === 'center' ? '' : 'lg:grid-cols-3': ''
+        }`}>
 
-    {/* SLIDESHOW */}
-    {hasSlideshow && (
-      <div className={`
-        ${photoAlign === 'left'  ? 'lg:col-span-1 order-1' : ''}
-        ${photoAlign === 'right' ? 'lg:col-span-1 order-2' : ''}
-        ${photoAlign === 'center' ? 'lg:col-span-3' : ''}
-      `}>
-       <SlideshowBlock
-        photos={data.photos || []}
-        isAdmin={isAdmin}
-        onDelete={handleDeletePhoto}
-        height={slideshowHeight}
-        maxWidth={slideshowMaxWidth}
-      />
-      </div>
-    )}
+          {/* SLIDESHOW */}
+          {hasSlideshow && (
+            <div className={`
+              ${photoAlign === 'left'  ? 'lg:col-span-1 order-1' : ''}
+              ${photoAlign === 'right' ? 'lg:col-span-1 order-2' : ''}
+              ${photoAlign === 'center' ? 'lg:col-span-3' : ''}
+            `}>
+              <SlideshowBlock
+                photos={data.photos || []}
+                isAdmin={isAdmin}
+                onDelete={handleDeletePhoto}
+                height={slideshowHeight}
+                maxWidth={slideshowMaxWidth}
+              />
+            </div>
+          )}
 
-    {/* SINGLE PHOTO */}
-    {/* PHOTOS */}
-    {hasPhoto && data.photos?.length > 0 && (
-      <div className={`
-        ${!hasDesc ? 'lg:col-span-3' : ''}
-        ${hasDesc && photoAlign === 'left'  ? 'lg:col-span-1 order-1' : ''}
-        ${hasDesc && photoAlign === 'right' ? 'lg:col-span-1 order-2' : ''}
-        ${hasDesc && photoAlign === 'center' ? 'lg:col-span-3' : ''}
-      `}>
-        <div className={`grid gap-3 ${
-                photoCols === 1 ? 'grid-cols-1' :
-                photoCols === 3 ? 'grid-cols-1 sm:grid-cols-3' :
-                'grid-cols-1 sm:grid-cols-2'
-              }`}>
-                {data.photos.map(photo => (
-                  <div key={photo.id} className="relative group rounded-xl overflow-hidden border border-blue-100">
-                    <img src={`${API}${photo.photo_url}`} alt={photo.photo_name}
-                      className="w-full object-cover" style={{ height: photoHeight, objectPosition: 'top center' }} />
-                {isAdmin && (
-                  <button onClick={() => handleDeletePhoto(photo.id)}
-                    className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                    ✕ Delete
-                  </button>
+          {/* SINGLE PHOTO */}
+          {/* PHOTOS */}
+          {hasPhoto && data.photos?.length > 0 && (
+            <div className={`
+              ${!hasDesc ? 'lg:col-span-3' : ''}
+              ${hasDesc && photoAlign === 'left'  ? 'lg:col-span-1 order-1' : ''}
+              ${hasDesc && photoAlign === 'right' ? 'lg:col-span-1 order-2' : ''}
+              ${hasDesc && photoAlign === 'center' ? 'lg:col-span-3' : ''}
+            `}>
+              <div className="flex justify-center">
+                {data.photos?.[0] && (
+                  <div className="relative border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl w-4xl text-center">
+                    <img
+                      src={`${API}${data.photos[data.photos.length - 1].photo_url}`}
+                      alt={data.photos[data.photos.length - 1].photo_name}
+                      className="object-cover  mx-auto rounded-lg"
+                      style={{
+                        width: '350px',
+                        height: '400px',
+                        objectPosition: 'top center'
+                      }}
+                    />
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeletePhoto(data.photos[0].id)}
+                        className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-sm rounded"
+                      >
+                        ✕
+                      </button>
+                    )}
+
+                    {/* PROFILE CARD */}
+                    {profileName && (
+                      <div className="bg-[#eef6ff] p-4 mx-auto text-center">
+                        <div className="text-center">
+                          <h2 className="text-4xl font-bold text-[#174873]">
+                            {profileName}
+                          </h2>
+
+                          <p className="text-2xl font-semibold text-[#174873] mt-2">
+                            {profileDesignation}
+                          </p>
+
+                          {profileUniversity && (
+                            <p className="text-lg text-gray-800 mt-3">
+                              {profileUniversity}
+                            </p>
+                          )}
+
+                          {profileAddress && (
+                            <p className="text-sm text-gray-700 mt-1">
+                              {profileAddress}
+                            </p>
+                          )}
+
+                          <div className="mt-5 space-y-2">
+                            {profilePhone && (
+                              <p>
+                                <span className="font-semibold">Contact:</span>{" "}
+                                {profilePhone}
+                              </p>
+                            )}
+                            {profileEmail && (
+                              <p>
+                                <span className="font-semibold">Email:</span>{" "}
+                                {profileEmail}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
 
-    {hasDesc && (
-      <div className={`${
-        (hasPhoto || hasSlideshow) && (data.photo_url || data.photos?.length)
-          ? photoAlign === 'right' ? 'lg:col-span-2 order-1'
-          : photoAlign === 'center' ? 'w-full'
-          : 'lg:col-span-2 order-2'
-          : 'lg:col-span-3'
-      }`}>
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 min-h-[180px]">
+          {hasDesc && (
+            <div className={`${
+              (hasPhoto || hasSlideshow) && (data.photo_url || data.photos?.length)
+                ? photoAlign === 'right' ? 'lg:col-span-2 order-1'
+                : photoAlign === 'center' ? 'w-full'
+                : 'lg:col-span-2 order-2'
+                : 'lg:col-span-3'
+            }`}>
+
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 px-12 ml-5 w-full min-h-180px">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
                       value={editDesc}
                       onChange={e => setEditDesc(e.target.value)}
                       rows={8}
-                      className="w-full p-4 border border-gray-200 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-[#174873]/20"
+                      className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-[#174873]/20"
                       placeholder="Enter description, contact info, about this section..."
                     />
-                    <div className="flex gap-3">
+                    <div className="flex gap-4">
                       <button onClick={handleSave} disabled={saving}
                         className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
                         {saving ? 'Saving...' : 'Save'}
                       </button>
                       <button onClick={() => setIsEditing(false)}
-                        className="px-4 py-2 text-gray-500 text-sm">Cancel</button>
+                        className="px-4 py-2 text-gray-500 text-sm">
+                          Cancel
+                      </button>
                     </div>
                   </div>
                 ) : (
-                (() => {
-                  const raw = data.description || '';
-                  if (!raw.trim()) {
-                    return (
-                      <p className="italic text-gray-400 text-center">
-                        {isAdmin ? 'No content yet. Click Edit Description.' : 'Content coming soon.'}
-                      </p>
-                    );
-                  }
+                  (() => {
+                    const raw = data.description || '';
+                    if (!raw.trim()) {
+                      return (
+                        <p className="italic text-gray-400 text-center ">
+                          {isAdmin ? 'No content yet. Click Edit Description.' : 'Content coming soon.'}
+                        </p>
+                      );
+                    }
 
-                  const lines = raw.split('\n');
-                  const elements = [];
-                  let bulletBuffer = [];
-                  let firstLine = true;
+                    const lines = raw.split('\n');
+                    const elements = [];
+                    let bulletBuffer = [];
+                    let firstLine = true;
                 
-                  const flushBullets = () => {
-                    if (bulletBuffer.length > 0) {
-                      elements.push(
-                        <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base pl-2">
-                          {bulletBuffer.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
-                      );
-                      bulletBuffer = [];
-                    }
-                  };
+                    const flushBullets = () => {
+                      if (bulletBuffer.length > 0) {
+                        elements.push(
+                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base ">
+                            {bulletBuffer.map((b, i) => (
+                              <li key={i}>{b}</li>
+                            ))}
+                          </ul>
+                        );
+                        bulletBuffer = [];
+                      }
+                    };
 
-                  lines.forEach((line, idx) => {
-                    const trimmed = line.trim();
+                    lines.forEach((line, idx) => {
+                      const trimmed = line.trim();
 
-                    // blank line → spacer
-                    if (trimmed === '') {
+                      // blank line → spacer
+                      if (trimmed === '') {
+                        flushBullets();
+                        elements.push(<div key={`sp-${idx}`} className="h-2" />);
+                          return;
+                      }
+
+                      // very first non-blank line → big centered heading
+                      if (firstLine) {
+                        firstLine = false;
+                        flushBullets();
+                        elements.push(
+                          <h2 key={idx} className="text-2xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
+                            {trimmed}
+                          </h2>
+                        );
+                        return;
+                      }
+
+                      // ## Subheading
+                      if (trimmed.startsWith('## ')) {
+                        flushBullets();
+                        elements.push(
+                          <h3 key={idx} className="text-lg font-semibold text-[#174873] mt-4">
+                            {trimmed.slice(3)}
+                          </h3>
+                        );
+                        return;
+                      }
+
+                      // ### Smaller subheading
+                      if (trimmed.startsWith('### ')) {
+                        flushBullets();
+                        elements.push(
+                          <h4 key={idx} className="text-base font-semibold text-gray-800 mt-3">
+                            {trimmed.slice(4)}
+                          </h4>
+                        );
+                        return;
+                      }
+
+                      // - Bullet point
+                      if (trimmed.startsWith('- ')) {
+                        bulletBuffer.push(trimmed.slice(2));
+                        return;
+                      }
+
+                      // **Bold line** (entire line wrapped in **)
+                      if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4) {
+                        flushBullets();
+                        elements.push(
+                          <p key={idx} className="text-gray-800 font-semibold text-base text-left">
+                            {trimmed.slice(2, -2)}
+                          </p>
+                        );
+                        return;
+                      }
+ 
+                      // > Highlighted note / callout box
+                      if (trimmed.startsWith('> ')) {
+                        flushBullets();
+                        elements.push(
+                          <div key={idx} className="bg-[#174873]/8 border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm">
+                            {trimmed.slice(2)}
+                          </div>
+                        );
+                        return;
+                      }
+
+                      // --- Divider line
+                      if (trimmed === '---') {
+                        flushBullets();
+                        elements.push(
+                          <hr key={idx} className="border-gray-200 my-2" />
+                        );
+                        return;
+                      }
+
+                      // Plain paragraph
                       flushBullets();
-                      elements.push(<div key={`sp-${idx}`} className="h-2" />);
-                      return;
-                    }
-
-                 // very first non-blank line → big centered heading
-                    if (firstLine) {
-                      firstLine = false;
-                      flushBullets();
                       elements.push(
-                        <h2 key={idx} className="text-2xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
+                        <p key={idx} className="text-gray-700 text-base leading-relaxed text-left">
                           {trimmed}
-                        </h2>
+                        </p>
                       );
-                      return;
-                    }
+                    });
 
-                    // ## Subheading
-                    if (trimmed.startsWith('## ')) {
                     flushBullets();
-                    elements.push(
-                      <h3 key={idx} className="text-lg font-semibold text-[#174873] mt-4">
-                        {trimmed.slice(3)}
-                      </h3>
-                    );
-                    return;
-                  }
-
-                  // ### Smaller subheading
-                  if (trimmed.startsWith('### ')) {
-                  flushBullets();
-                  elements.push(
-                    <h4 key={idx} className="text-base font-semibold text-gray-800 mt-3">
-                      {trimmed.slice(4)}
-                    </h4>
-                  );
-                  return;
-                }
-
-                // - Bullet point
-                if (trimmed.startsWith('- ')) {
-                  bulletBuffer.push(trimmed.slice(2));
-                  return;
-                }
-
-                // **Bold line** (entire line wrapped in **)
-                if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4) {
-                  flushBullets();
-                  elements.push(
-                    <p key={idx} className="text-gray-800 font-semibold text-base text-left">
-                      {trimmed.slice(2, -2)}
-                    </p>
-                  );
-                  return;
-                }
-
-                // > Highlighted note / callout box
-                if (trimmed.startsWith('> ')) {
-                  flushBullets();
-                  elements.push(
-                      <div key={idx} className="bg-[#174873]/8 border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm">
-                        {trimmed.slice(2)}
-                      </div>
-                    );
-                    return;
-                  }
-
-                  // --- Divider line
-                  if (trimmed === '---') {
-                    flushBullets();
-                    elements.push(<hr key={idx} className="border-gray-200 my-2" />);
-                    return;
-                  }
-
-                  // Plain paragraph
-                    flushBullets();
-                    elements.push(
-                      <p key={idx} className="text-gray-700 text-base leading-relaxed text-left">
-                        {trimmed}
-                      </p>
-                    );
-                  });
-
-                  flushBullets();
-                  return <div className="space-y-2">{elements}</div>;
-                })()
+                    return  <div className="space-y-2">
+                              {elements}
+                            </div>;
+                  })()
                 )}
               </div>
             </div>
@@ -441,54 +506,52 @@ const handleDeletePdf = async (pdfId) => {
       )}
 
       {/* ── PDF VIEWER ── */}
-      
-{data.pdfs?.length > 0 && (
-  <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-    <div className="bg-[#174873] px-6 py-4">
-      <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
-    </div>
-
-    <div className="divide-y divide-gray-200">
-      {data.pdfs.map(pdf => (
-        <div key={pdf.id} className="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
-          <div className="flex items-center gap-4 flex-1">
-            <svg
-              className="w-6 h-6 text-red-500 flex-shrink-0"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path d="M8.5 3.5a2 2 0 0 1 4 0V4h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3.5a2 2 0 0 1 2-2zm0 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 0-.5.5V5.5h1zm4 0v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 0-.5.5V5.5h1z" />
-            </svg>
-
-            <div className="flex-1">
-              
-              <a  href={`${API}${pdf.pdf_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#174873] font-medium hover:text-[#406BC7] hover:underline break-all"
-              >
-                {pdf.pdf_name}
-              </a>
-              <p className="text-xs text-gray-500 mt-1">
-                Click to open in new tab
-              </p>
-            </div>
+      {data.pdfs?.length > 0 && (
+        <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="bg-[#174873] px-6 py-4">
+            <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
           </div>
 
-          {isAdmin && (
-            <button
-              onClick={() => handleDeletePdf(pdf.id)}
-              className="ml-4 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium"
-              title="Delete PDF"
-            >
-              Delete
-            </button>
-          )}
+          <div className="divide-y divide-gray-200">
+            {data.pdfs.map(pdf => (
+              <div key={pdf.id} className="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                <div className="flex items-center gap-4 flex-1">
+                  <svg
+                    className="w-6 h-6 text-red-500 shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M8.5 3.5a2 2 0 0 1 4 0V4h1a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-10a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1V3.5a2 2 0 0 1 2-2zm0 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 0-.5.5V5.5h1zm4 0v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 0-.5.5V5.5h1z" />
+                  </svg>
+
+                  <div className="flex-1">
+                    <a  href={`${API}${pdf.pdf_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#174873] font-medium hover:text-[#406BC7] hover:underline break-all"
+                    >
+                      {pdf.pdf_name}
+                    </a>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Click to open in new tab
+                    </p>
+                  </div>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDeletePdf(pdf.id)}
+                    className="ml-4 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium"
+                    title="Delete PDF"
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
 
       {/* ── TABLE ── */}
       {hasTable && (
@@ -544,7 +607,7 @@ const handleDeletePdf = async (pdfId) => {
                           ? row[col].startsWith('/uploads/') || row[col].startsWith('http')
                             ? 
                               (
-                               <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
+                              <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm">
@@ -572,50 +635,50 @@ const handleDeletePdf = async (pdfId) => {
                 {isAdmin && columns.length > 0 && (
                   <tr className="border-t-2 border-gray-200 bg-gray-50">
                     {columns.map(col => (
-                        <td key={col} className="px-4 py-2">
-                          {col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
-                            <div className="space-y-1">
-                              {/* Show upload button if no value yet */}
-                              {!newRow[col] ? (
-                                <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
-                                  <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                  </svg>
-                                  Upload PDF
-                                 <input
-                                   type="file"
-                                   accept=".pdf"
-                                   className="hidden"
+                      <td key={col} className="px-4 py-2">
+                        {col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
+                          <div className="space-y-1">
+                            {/* Show upload button if no value yet */}
+                            {!newRow[col] ? (
+                              <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                </svg>
+                                Upload PDF
+                                <input
+                                  type="file"
+                                  accept=".pdf"
+                                  className="hidden"
                                   onChange={async (e) => {                               
-                                  const file = e.target.files[0];
-                                  if (!file) return;
-                                  try {
-                                    const form = new FormData();
-                                    form.append('section', section || '');
-                                    form.append('category', subsection || '');
-                                    form.append('sub_category', '');
-                                    form.append('files', file);
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+                                    try {
+                                      const form = new FormData();
+                                      form.append('section', section || '');
+                                      form.append('category', subsection || '');
+                                      form.append('sub_category', '');
+                                      form.append('files', file);
 
-                                    // Debug — remove after fixing
-                                    console.log('Sending:', { section, subsection, fileName: file.name });
+                                      // Debug — remove after fixing
+                                      console.log('Sending:', { section, subsection, fileName: file.name });
                                 
-                                    const res = await axios.post(
-                                      `${API}/admin/facility-content/upload-pdf`, form,
-                                      { headers: { Authorization: `Bearer ${token}` } }
-                                    );
-                                    const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
-                                    if (pdfUrl) {
-                                      setNewRow(prev => ({ ...prev, [col]: pdfUrl }));
-                                    } else {
-                                      alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                                      const res = await axios.post(
+                                        `${API}/admin/facility-content/upload-pdf`, form,
+                                        { headers: { Authorization: `Bearer ${token}` } }
+                                      );
+                                      const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
+                                      if (pdfUrl) {
+                                        setNewRow(prev => ({ ...prev, [col]: pdfUrl }));
+                                      } else {
+                                        alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                                      }
+                                    } catch (err) {
+                                      alert('Upload failed: ' + JSON.stringify(err.response?.data));
                                     }
-                                  } catch (err) {
-                                    alert('Upload failed: ' + JSON.stringify(err.response?.data));
-                                   }
-                                 }}
-                                  />
-                                </label>
-                              ) : (
+                                  }}
+                                />
+                              </label>
+                            ) : (
                               /* Show filename + remove option if uploaded */
                               <div className="flex items-center gap-1">
                                 <span className="text-xs text-green-600 truncate max-w-[80px]">✓ Uploaded</span>
@@ -629,9 +692,9 @@ const handleDeletePdf = async (pdfId) => {
                             {/* Also allow manual URL paste */}
                             <input
                               value={newRow[col] || ''}
-          onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-          placeholder="or paste URL"
-          className="w-full px-2 py-1 border border-blue-200 rounded text-xs outline-none"
+                              onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+                              placeholder="or paste URL"
+                              className="w-full px-2 py-1 border border-blue-200 rounded text-xs outline-none"
                             />
                           </div>
                         ) : (
