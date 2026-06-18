@@ -34,7 +34,7 @@ const pages = {
   'advisor':{ title: 'Student Advisor',                       
               pageType: 'photo',
               profileName: 'Dr. Rukmini Jaiswal',
-              profileDesignation: 'Student Advisor & Assistant Professor, Department of Kathak, Mahila Mahavidyalaya',
+              profileDesignation: 'Student Advisor & Assistant Professor, Deptt. of Kathak Section, MMV',
               profilePhone: '+91 8511504765',
               profileEmail: 'rukminimmv@bhu.ac.in',
               profileUniversity: 'Banaras Hindu University',
@@ -43,11 +43,18 @@ const pages = {
 
   'staff':{ title: 'MMV Office Staff',                      
             pageType: 'table',
-            tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work', 'Photo'] 
+            tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work'] 
           },
 
   'proctorial/chief': { title: 'Chief Proctor', 
-                        pageType: 'photo-description' 
+                        pageType: 'photo-description',
+                        profileName: 'Dr. Sandeep Pokharia',
+                        profileDesignation: 'Deptt. of Chemistry Section, MMV',
+                        profilePhone: '+91 9151027051, Control Room: 0542-2369242, 2369134, 8887255334 (whatsapp)',
+                        profileOfficeContact : '0542-2369242, 2369134, 8887255334 (whatsapp)',
+                        profileEmail: 'chiefproctor@bhu.ac.in, responsedesk@bhu.ac.in',
+                        profileUniversity: 'Banaras Hindu University',
+                        profileAddress: 'Varanasi - 221005, U.P., India' 
                       },
 
   'proctorial/uniboard':{ title: 'University Proctorial Board',           
@@ -55,10 +62,14 @@ const pages = {
                           tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
                         },
 
-  'examination/universityexam':{  title: 'Controller of Examination — University', 
-                                  pageType: 'photo-description' },
+  'examination/universityexam': {  title: 'Controller of Examination — University', 
+                                  pageType: 'table', 
+                                  table: ['Name', 'Department', 'Contact', 'Email Id']
+                                },
   'examination/mmvexam':{ title: 'Controller of Examination — MMV',       
-                          pageType: 'photo-description' },
+                          pageType: 'table',
+                          table: ['Name', 'Department', 'Contact', 'Email Id']
+                        },
 };
 
 const AdministrationRouted = () => {

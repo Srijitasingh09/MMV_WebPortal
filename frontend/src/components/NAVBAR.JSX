@@ -208,6 +208,13 @@ const Navbar = () => {
   /> 
   </div>
   </div> */}
+         {/* CENTER - MMV SAARTHI LOGO */}
+         <div>
+          <img 
+            src="/mmv_saarthi_logo.png" 
+            alt="mmv-saarthi-logo"
+            className="w-50 h-20 object-contain bg-white" />
+         </div>
       
          {/* LEFT SIDE - MMV Logo + Name */}
          <div className="flex items-center gap-1">

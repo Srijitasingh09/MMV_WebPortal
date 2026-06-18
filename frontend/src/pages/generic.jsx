@@ -15,6 +15,7 @@ const GenericContentPage = ({
   profileDesignation = '',
   profileEmail = '',
   profilePhone = '',
+  profileOfficeContact = '',
   profileUniversity = '',
   profileAddress = '',
   pageType = 'description', // 'photo-description' | 'description' | 'pdf-list' | 'table' | 'description-table' | 'photo-description-table'
@@ -277,7 +278,7 @@ const GenericContentPage = ({
             `}>
               <div className="flex justify-center">
                 {data.photos?.[0] && (
-                  <div className="relative border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl w-4xl text-center">
+                  <div className="relative border border-blue-100 shadow-lg bg-[#eef6ff] p-6 rounded-2xl w-5xl text-center">
                     <img
                       src={`${API}${data.photos[data.photos.length - 1].photo_url}`}
                       alt={data.photos[data.photos.length - 1].photo_name}
@@ -291,7 +292,7 @@ const GenericContentPage = ({
                     {isAdmin && (
                       <button
                         onClick={() => handleDeletePhoto(data.photos[0].id)}
-                        className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-sm rounded"
+                        className="absolute top-1 right-1 px-2 py-1 bg-red-600 text-white text-sm rounded"
                       >
                         ✕
                       </button>
@@ -328,6 +329,13 @@ const GenericContentPage = ({
                                 {profilePhone}
                               </p>
                             )}
+
+                            {profileOfficeContact && (
+                              <p>
+                                <span className="font-semibold">Control Room Contact:</span>{" "}
+                                {profileOfficeContact}
+                              </p>
+                            )}
                             {profileEmail && (
                               <p>
                                 <span className="font-semibold">Email:</span>{" "}
@@ -353,7 +361,7 @@ const GenericContentPage = ({
                 : 'lg:col-span-3'
             }`}>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 px-12 ml-5 w-full min-h-180px">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full min-h-180px">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
