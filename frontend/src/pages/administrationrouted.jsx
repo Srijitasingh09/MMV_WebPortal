@@ -3,16 +3,15 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
-  'vc':                         { title: 'Vice Chancellor',                       pageType: 'slideshow-description' , slideshowHeight : 300,     
-  slideshowMaxWidth : '100%', },
+  'vc':                         { title: 'Vice Chancellor',                       pageType: 'photo-description' },     
   'principal':                  { title: 'MMV Principal',                         pageType: 'photo-description' },
   'dean':                       { title: 'Dean of Students',                      pageType: 'photo-description' },
   'advisor':                    { title: 'Student Advisor',                       pageType: 'photo-description' },
-  'staff':                      { title: 'MMV Office Staff',                      pageType: 'description-table',
-    tableColumns: ['Name', 'Designation', 'Department', 'Contact PDF'] },
+  'staff':                      { title: 'MMV Office Staff',                      pageType: 'table',
+    tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work', 'Photo PHOTO'] },
   'proctorial/chief':           { title: 'Chief Proctor',                         pageType: 'photo-description' },
   'proctorial/uniboard':        { title: 'University Proctorial Board',           pageType: 'table',
-    tableColumns: ['Name', 'Designation', 'Contact'] },
+    tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] },
   'examination/universityexam': { title: 'Controller of Examination — University', pageType: 'photo-description' },
   'examination/mmvexam':        { title: 'Controller of Examination — MMV',       pageType: 'photo-description' },
 };

@@ -145,7 +145,6 @@ With the virtual environment activated, from the project root:
 
 ```powershell
 python -m backend.seed
-python -m backend.seed_v2
 ```
 
 ---
@@ -203,7 +202,6 @@ Content on any of the 57 pages can be edited by visiting that page while logged 
 | Role | Email | Password |
 |---|---|---|
 | Admin | `admin@bhu.ac.in` | `admin123` |
-| Student | `paridhi@student.bhu.ac.in` | `student123` |
 
 > Use only for local development and testing.
 
