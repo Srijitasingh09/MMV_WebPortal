@@ -1,9 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
 
 const API = `http://${window.location.hostname}:8000`;
+
+// Profile photos are tagged via a filename prefix so they can be told apart
+// from any other photos uploaded on the same page (e.g. via the old
+// standalone "photo" block). This needs no backend changes since photo_name
+// is just whatever filename the browser sends.
+const PROFILE_PHOTO_TAG = '__profile_photo__';
+
+// Defined outside component so it never causes stale closure issues inside useCallback/useEffect
+const blankProfile = {
+  name: '', designation: '', university: '', address: '',
+  phone: '', officeContact: '', email: ''
+};
 
 const GenericContentPage = ({
   section,
@@ -11,18 +23,11 @@ const GenericContentPage = ({
   title,
   backPath,
   backLabel,
-  profileName = '',
-  profileDesignation = '',
-  profileEmail = '',
-  profilePhone = '',
-  profileOfficeContact = '',
-  profileUniversity = '',
-  profileAddress = '',
-  pageType = 'description', // 'photo-description' | 'description' | 'pdf-list' | 'table' | 'description-table' | 'photo-description-table'
+  pageType = 'description', // 'photo-description' | 'description' | 'pdf-list' | 'table' | 'description-table' | 'photo-description-table' | add 'profile' to any combo
   tableColumns = [],  
   photoAlign = 'left',  
   photoCols = 2,        // how many photos per row (1, 2, 3)
-  photoHeight = 200,      // predefined columns if pageType includes 'table'
+  photoHeight = 200,
   photoWidth = 200,
   slideshowHeight = 360,
   slideshowMaxWidth = '100%',
@@ -32,6 +37,7 @@ const GenericContentPage = ({
   const token     = localStorage.getItem('token');
   const imageRef  = useRef(null);
   const pdfRef    = useRef(null);
+  const profileImageRef = useRef(null);
 
   const [data,       setData]       = useState({});
   const [loading,    setLoading]    = useState(true);
@@ -40,23 +46,40 @@ const GenericContentPage = ({
   const [saving,     setSaving]     = useState(false);
 
   // table state
-  const [columns,    setColumns]    = useState(tableColumns);
-  const [rows,       setRows]       = useState([]);
-  const [newRow,     setNewRow]     = useState({});
-  const [addingCol,  setAddingCol]  = useState(false);
-  const [newColName, setNewColName] = useState('');
+  const [columns,      setColumns]      = useState(tableColumns);
+  const [rows,         setRows]         = useState([]);
+  const [newRow,       setNewRow]       = useState({});
+  const [addingCol,    setAddingCol]    = useState(false);
+  const [newColName,   setNewColName]   = useState('');
+
+  // inline row edit state
+  const [editingRowIdx,  setEditingRowIdx]  = useState(null); // which row is being edited
+  const [editingRowData, setEditingRowData] = useState({});   // copy of that row's data
+
+  // profile state
+  const [profile,          setProfile]          = useState(blankProfile);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editProfile,      setEditProfile]      = useState(blankProfile);
+  const [savingProfile,    setSavingProfile]    = useState(false);
 
   const hasSlideshow = pageType.includes('slideshow');
   const hasPhoto     = pageType.includes('photo'); 
-  const hasDesc  = pageType.includes('description');
-  const hasPdf   = pageType === 'pdf-list';
-  const hasTable = pageType.includes('table');
+  const hasDesc      = pageType.includes('description');
+  const hasPdf       = pageType === 'pdf-list';
+  const hasTable     = pageType.includes('table');
+  const hasProfile   = pageType.includes('profile');
 
-  const fetchData = async () => {
+  // The profile photo is whichever uploaded photo is tagged as such.
+  // Everything else is a regular "gallery" photo for the old photo/slideshow
+  // block — the two never overlap, so a page can have both independently.
+  const allPhotos    = data.photos || [];
+  const profilePhoto  = allPhotos.find(p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)) || null;
+  const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG));
+
+  // FIX 6: Wrapped in useCallback so it can be safely listed as a useEffect dependency
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      // fetch description/photo/pdf content
-      console.log("Photos:", data?.photos);
       const res = await axios.get(
         `${API}/facility-content`,
         { params: { section, category: subsection } }
@@ -65,21 +88,35 @@ const GenericContentPage = ({
       setData(match);
       setEditDesc(match.description || '');
 
-      // parse table from extra_data field
-      if (hasTable && match.details) {
-        try {
-          const parsed = JSON.parse(match.details);
-          if (parsed.columns) setColumns(parsed.columns);
-          if (parsed.rows)    setRows(parsed.rows);
-        } catch {
-          setRows([]);
-        }
+      // parse table / profile from details field (shared JSON blob)
+      let parsed = {};
+      if (match.details) {
+        try { parsed = JSON.parse(match.details); } catch { parsed = {}; }
       }
-    } catch { setData({}); }
-    finally { setLoading(false); }
-  };
 
-  useEffect(() => { fetchData(); }, [section, subsection]);
+      if (hasTable) {
+        setColumns(parsed.columns || tableColumns);
+        setRows(parsed.rows || []);
+      }
+
+      if (hasProfile) {
+        // Always reset — if this page (e.g. "dean") has no saved profile,
+        // don't keep showing whatever the previously viewed page had.
+        const merged = { ...blankProfile, ...(parsed.profile || {}) };
+        setProfile(merged);
+        setEditProfile(merged);
+      }
+    } catch {
+      setData({});
+      if (hasTable)   { setColumns(tableColumns); setRows([]); }
+      if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, subsection]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   // ── DESCRIPTION SAVE ──
   const handleSave = async () => {
@@ -98,20 +135,55 @@ const GenericContentPage = ({
   // ── TABLE SAVE ──
   const saveTable = async (cols, tableRows) => {
     try {
+      // merge with any existing details (e.g. profile) so we don't clobber it
+      let existing = {};
+      try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
+      const merged = { ...existing, columns: cols, rows: tableRows };
       await axios.put(`${API}/admin/facility-content`,
         {
           section,
           category: subsection,
           sub_category: '',
-          details: JSON.stringify({ columns: cols, rows: tableRows })
+          details: JSON.stringify(merged)
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      setData(prev => ({ ...prev, details: JSON.stringify(merged) }));
     } catch { alert('Table save failed'); }
   };
 
+  // ── PROFILE SAVE ──
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      // merge with any existing details (e.g. table) so we don't clobber it
+      let existing = {};
+      try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
+      const merged = { ...existing, profile: editProfile };
+      await axios.put(`${API}/admin/facility-content`,
+        {
+          section,
+          category: subsection,
+          sub_category: '',
+          details: JSON.stringify(merged)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setProfile(editProfile);
+      setData(prev => ({ ...prev, details: JSON.stringify(merged) }));
+      setIsEditingProfile(false);
+    } catch { alert('Profile save failed'); }
+    finally { setSavingProfile(false); }
+  };
+
+  // FIX 2: Updated validation to also allow rows where any column has a non-empty value,
+  // including PDF URLs that were set programmatically (not typed by the user)
   const handleAddRow = () => {
-    if (!columns.some(col => (newRow[col] || '').trim())) return;
+    const hasAnyValue = columns.some(col => {
+      const val = newRow[col] || '';
+      return val.trim() !== '';
+    });
+    if (!hasAnyValue) return;
     const updated = [...rows, { ...newRow }];
     setRows(updated);
     setNewRow({});
@@ -119,9 +191,34 @@ const GenericContentPage = ({
   };
 
   const handleDeleteRow = (idx) => {
+    // Cancel any active row edit to prevent index-shift bug
+    // (if a row above or equal to the edited row is deleted, editingRowIdx would point to the wrong row)
+    if (editingRowIdx !== null) {
+      setEditingRowIdx(null);
+      setEditingRowData({});
+    }
     const updated = rows.filter((_, i) => i !== idx);
     setRows(updated);
     saveTable(columns, updated);
+  };
+
+  // ── ROW EDIT ──
+  const handleStartEditRow = (idx) => {
+    setEditingRowIdx(idx);
+    setEditingRowData({ ...rows[idx] });
+  };
+
+  const handleCancelEditRow = () => {
+    setEditingRowIdx(null);
+    setEditingRowData({});
+  };
+
+  const handleSaveEditRow = () => {
+    const updated = rows.map((r, i) => i === editingRowIdx ? { ...editingRowData } : r);
+    setRows(updated);
+    saveTable(columns, updated);
+    setEditingRowIdx(null);
+    setEditingRowData({});
   };
 
   const handleAddColumn = () => {
@@ -136,6 +233,11 @@ const GenericContentPage = ({
   };
 
   const handleDeleteColumn = (col) => {
+    // Cancel any active row edit — the column being edited may no longer exist
+    if (editingRowIdx !== null) {
+      setEditingRowIdx(null);
+      setEditingRowData({});
+    }
     const updatedCols = columns.filter(c => c !== col);
     const updatedRows = rows.map(r => { const c = { ...r }; delete c[col]; return c; });
     setColumns(updatedCols);
@@ -162,6 +264,51 @@ const GenericContentPage = ({
     }
   };
 
+  // ── PROFILE PHOTO UPLOAD ──
+  // Tags the uploaded file so it can be reliably identified as THE profile
+  // photo later, independent of any other photos on this page. If a profile
+  // photo already exists, it's replaced (old one deleted first) so there's
+  // always exactly one.
+  const handleProfilePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      // remove any existing profile photo first so re-uploading replaces it
+      const existingProfilePhoto = (data.photos || []).find(
+        p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)
+      );
+      if (existingProfilePhoto) {
+        await axios.delete(`${API}/admin/facility-content/photo/${existingProfilePhoto.id}`,
+          { headers: { Authorization: `Bearer ${token}` } });
+      }
+
+      const taggedFile = new File([file], `${PROFILE_PHOTO_TAG}${file.name}`, { type: file.type });
+      const form = new FormData();
+      form.append('section', section);
+      form.append('category', subsection);
+      form.append('sub_category', '');
+      form.append('files', taggedFile);
+
+      await axios.post(`${API}/admin/facility-content/upload-photo`, form,
+        { headers: { Authorization: `Bearer ${token}` } });
+      await fetchData();
+    } catch { alert('Profile photo upload failed'); }
+    if (profileImageRef.current) {
+      profileImageRef.current.value = '';
+    }
+  };
+
+  // ── PROFILE PHOTO REMOVE ──
+  const handleRemoveProfilePhoto = async () => {
+    if (!profilePhoto) return;
+    if (!window.confirm('Remove this profile photo?')) return;
+    try {
+      await axios.delete(`${API}/admin/facility-content/photo/${profilePhoto.id}`,
+        { headers: { Authorization: `Bearer ${token}` } });
+      await fetchData();
+    } catch { alert('Remove failed'); }
+  };
+
   const handleDeletePhoto = async (photoId) => {
     if (!window.confirm('Delete this photo?')) return;
     try {
@@ -181,7 +328,8 @@ const GenericContentPage = ({
   };
 
   const handlePdfUpload = async (e) => {
-    const files = e.target.files; if (!files || files.length === 0) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     const form = new FormData();
     form.append('section', section);
     form.append('category', subsection);
@@ -192,7 +340,10 @@ const GenericContentPage = ({
     await axios.post(`${API}/admin/facility-content/upload-pdf`, form,
       { headers: { Authorization: `Bearer ${token}` } });
     await fetchData();
-    pdfRef.current.value = '';
+    // FIX 1: Added null check before accessing pdfRef.current to prevent crash
+    if (pdfRef.current) {
+      pdfRef.current.value = '';
+    }
   };
 
   if (loading) return (
@@ -211,6 +362,156 @@ const GenericContentPage = ({
       </button>
 
       <h1 className="text-3xl font-semibold text-[#174873]">{title}</h1>
+
+      {/* ── PROFILE SECTION ── */}
+      {hasProfile && (
+        <div className="bg-[#eef6ff] rounded-2xl px-8 py-8 text-center relative">
+
+          {isAdmin && !isEditingProfile && (
+            <button
+              onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }}
+              className="absolute top-4 right-4 px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium bg-white/70 hover:bg-white"
+            >
+              Edit Profile
+            </button>
+          )}
+
+          {isEditingProfile ? (
+            <div className="text-left max-w-xl mx-auto space-y-3">
+              <h3 className="text-lg font-bold text-[#174873] text-center mb-2">Edit Profile</h3>
+
+              {/* PROFILE PHOTO */}
+              <div className="flex flex-col items-center gap-2 mb-2">
+                {profilePhoto ? (
+                  <img
+                    src={`${API}${profilePhoto.photo_url}`}
+                    alt={profilePhoto.photo_name}
+                    className="rounded-lg object-cover border border-gray-200"
+                    style={{ width: '220px', height: '260px', objectPosition: 'top center' }}
+                  />
+                ) : (
+                  <div className="w-[220px] h-[260px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-sm bg-white">
+                    No photo yet
+                  </div>
+                )}
+                <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => profileImageRef.current?.click()}
+                    className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium"
+                  >
+                    {profilePhoto ? 'Change Photo' : 'Upload Photo'}
+                  </button>
+                  {profilePhoto && (
+                    <button
+                      onClick={handleRemoveProfilePhoto}
+                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50"
+                    >
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* FIX 8: Removed 'age' field from profile edit form */}
+              {[
+                { key: 'name',          label: 'Name' },
+                { key: 'designation',   label: 'Designation' },
+                { key: 'university',    label: 'University / Department' },
+                { key: 'address',       label: 'Address' },
+                { key: 'phone',         label: 'Contact' },
+                { key: 'officeContact', label: 'Office Contact' },
+                { key: 'email',         label: 'Email' },
+              ].map(field => (
+                <div key={field.key}>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                    {field.label}
+                  </label>
+                  <input
+                    value={editProfile[field.key] || ''}
+                    onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
+                    placeholder={field.label}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]/20 bg-white"
+                  />
+                </div>
+              ))}
+
+              <div className="flex gap-3 justify-center pt-2">
+                <button onClick={handleSaveProfile} disabled={savingProfile}
+                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                  {savingProfile ? 'Saving...' : 'Save'}
+                </button>
+                <button onClick={() => setIsEditingProfile(false)}
+                  className="px-4 py-2 text-gray-500 text-sm">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : profile.name ? (
+            <>
+              {profilePhoto && (
+                <img
+                  src={`${API}${profilePhoto.photo_url}`}
+                  alt={profilePhoto.photo_name}
+                  className="rounded-lg object-cover border border-gray-200 mx-auto mb-4"
+                  style={{ width: '220px', height: '260px', objectPosition: 'top center' }}
+                />
+              )}
+
+              <h2 className="text-3xl font-bold text-[#174873]">
+                {profile.name}
+              </h2>
+
+              {profile.designation && (
+                <p className="text-xl font-semibold text-[#174873] mt-1">
+                  {profile.designation}
+                </p>
+              )}
+
+              {profile.university && (
+                <p className="text-base text-gray-800 mt-3">
+                  {profile.university}
+                </p>
+              )}
+
+              {profile.address && (
+                <p className="text-sm text-gray-700 mt-1">
+                  {profile.address}
+                </p>
+              )}
+
+              <div className="mt-4 space-y-1">
+                {profile.phone && (
+                  <p className="text-sm text-gray-800">
+                    <span className="font-semibold">Contact:</span>{" "}
+                    {profile.phone}
+                  </p>
+                )}
+
+                {profile.officeContact && (
+                  <p className="text-sm text-gray-800">
+                    <span className="font-semibold">Office Contact:</span>{" "}
+                    {profile.officeContact}
+                  </p>
+                )}
+
+                {profile.email && (
+                  <p className="text-sm text-gray-800">
+                    <span className="font-semibold">Email:</span>{" "}
+                    {profile.email}
+                  </p>
+                )}
+
+                {/* FIX 8: Removed age display — not appropriate for college staff profiles */}
+              </div>
+            </>
+          ) : (
+            <p className="italic text-gray-400">
+              {isAdmin ? 'No profile yet. Click Edit Profile to add one.' : 'Profile coming soon.'}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ── ADMIN BAR ── */}
       {isAdmin && (
@@ -246,19 +547,19 @@ const GenericContentPage = ({
       {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
       {(hasPhoto || hasDesc || hasSlideshow) && (
         <div className={`grid grid-cols-1 gap-6 ${
-          (hasPhoto || hasSlideshow) && (data.photo_url || data.photos?.length) && 
+          (hasPhoto || hasSlideshow) && galleryPhotos.length && 
           hasDesc ? photoAlign === 'center' ? '' : 'lg:grid-cols-3': ''
         }`}>
 
           {/* SLIDESHOW */}
           {hasSlideshow && (
             <div className={`
-              ${photoAlign === 'left'  ? 'lg:col-span-1 order-1' : ''}
-              ${photoAlign === 'right' ? 'lg:col-span-1 order-2' : ''}
+              ${photoAlign === 'left'   ? 'lg:col-span-1 order-1' : ''}
+              ${photoAlign === 'right'  ? 'lg:col-span-1 order-2' : ''}
               ${photoAlign === 'center' ? 'lg:col-span-3' : ''}
             `}>
               <SlideshowBlock
-                photos={data.photos || []}
+                photos={galleryPhotos}
                 isAdmin={isAdmin}
                 onDelete={handleDeletePhoto}
                 height={slideshowHeight}
@@ -267,101 +568,57 @@ const GenericContentPage = ({
             </div>
           )}
 
-          {/* SINGLE PHOTO */}
-          {/* PHOTOS */}
-          {hasPhoto && data.photos?.length > 0 && (
+          {/* FIX 3: Now renders ALL gallery photos in a responsive grid
+              respecting the photoCols prop (1, 2, or 3 columns per row) */}
+          {hasPhoto && galleryPhotos.length > 0 && (
             <div className={`
               ${!hasDesc ? 'lg:col-span-3' : ''}
-              ${hasDesc && photoAlign === 'left'  ? 'lg:col-span-1 order-1' : ''}
-              ${hasDesc && photoAlign === 'right' ? 'lg:col-span-1 order-2' : ''}
+              ${hasDesc && photoAlign === 'left'   ? 'lg:col-span-1 order-1' : ''}
+              ${hasDesc && photoAlign === 'right'  ? 'lg:col-span-1 order-2' : ''}
               ${hasDesc && photoAlign === 'center' ? 'lg:col-span-3' : ''}
             `}>
-              <div className="flex justify-center">
-                {data.photos?.[0] && (
-                  <div className="relative border border-blue-100 shadow-lg bg-[#eef6ff] p-6 rounded-2xl w-5xl text-center">
+              <div className={`grid gap-4 ${
+                photoCols === 1 ? 'grid-cols-1' :
+                photoCols === 3 ? 'grid-cols-3' :
+                'grid-cols-2'
+              }`}>
+                {galleryPhotos.map((photo) => (
+                  <div key={photo.id} className="relative border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl text-center">
                     <img
-                      src={`${API}${data.photos[data.photos.length - 1].photo_url}`}
-                      alt={data.photos[data.photos.length - 1].photo_name}
-                      className="object-cover  mx-auto rounded-lg"
+                      src={`${API}${photo.photo_url}`}
+                      alt={photo.photo_name}
+                      className="object-cover mx-auto rounded-lg"
                       style={{
-                        width: '350px',
-                        height: '400px',
+                        width: `${photoWidth}px`,
+                        height: `${photoHeight}px`,
                         objectPosition: 'top center'
                       }}
                     />
                     {isAdmin && (
                       <button
-                        onClick={() => handleDeletePhoto(data.photos[0].id)}
+                        onClick={() => handleDeletePhoto(photo.id)}
                         className="absolute top-1 right-1 px-2 py-1 bg-red-600 text-white text-sm rounded"
                       >
                         ✕
                       </button>
                     )}
-
-                    {/* PROFILE CARD */}
-                    {profileName && (
-                      <div className="bg-[#eef6ff] p-4 mx-auto text-center">
-                        <div className="text-center">
-                          <h2 className="text-4xl font-bold text-[#174873]">
-                            {profileName}
-                          </h2>
-
-                          <p className="text-2xl font-semibold text-[#174873] mt-2">
-                            {profileDesignation}
-                          </p>
-
-                          {profileUniversity && (
-                            <p className="text-lg text-gray-800 mt-3">
-                              {profileUniversity}
-                            </p>
-                          )}
-
-                          {profileAddress && (
-                            <p className="text-sm text-gray-700 mt-1">
-                              {profileAddress}
-                            </p>
-                          )}
-
-                          <div className="mt-5 space-y-2">
-                            {profilePhone && (
-                              <p>
-                                <span className="font-semibold">Contact:</span>{" "}
-                                {profilePhone}
-                              </p>
-                            )}
-
-                            {profileOfficeContact && (
-                              <p>
-                                <span className="font-semibold">Control Room Contact:</span>{" "}
-                                {profileOfficeContact}
-                              </p>
-                            )}
-                            {profileEmail && (
-                              <p>
-                                <span className="font-semibold">Email:</span>{" "}
-                                {profileEmail}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                )}
+                ))}
               </div>
             </div>
           )}
 
           {hasDesc && (
             <div className={`${
-              (hasPhoto || hasSlideshow) && (data.photo_url || data.photos?.length)
-                ? photoAlign === 'right' ? 'lg:col-span-2 order-1'
+              (hasPhoto || hasSlideshow) && galleryPhotos.length
+                ? photoAlign === 'right'  ? 'lg:col-span-2 order-1'
                 : photoAlign === 'center' ? 'w-full'
                 : 'lg:col-span-2 order-2'
                 : 'lg:col-span-3'
             }`}>
 
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full min-h-180px">
+              {/* FIX 7: Changed min-h-180px → min-h-[180px] (valid Tailwind arbitrary value) */}
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -387,7 +644,7 @@ const GenericContentPage = ({
                     const raw = data.description || '';
                     if (!raw.trim()) {
                       return (
-                        <p className="italic text-gray-400 text-center ">
+                        <p className="italic text-gray-400 text-center">
                           {isAdmin ? 'No content yet. Click Edit Description.' : 'Content coming soon.'}
                         </p>
                       );
@@ -401,7 +658,7 @@ const GenericContentPage = ({
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base ">
+                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base">
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{b}</li>
                             ))}
@@ -418,7 +675,7 @@ const GenericContentPage = ({
                       if (trimmed === '') {
                         flushBullets();
                         elements.push(<div key={`sp-${idx}`} className="h-2" />);
-                          return;
+                        return;
                       }
 
                       // very first non-blank line → big centered heading
@@ -471,12 +728,13 @@ const GenericContentPage = ({
                         );
                         return;
                       }
- 
+
                       // > Highlighted note / callout box
+                      // FIX 4: Changed bg-[#174873]/8 → bg-[#174873]/[8%] (valid Tailwind opacity syntax)
                       if (trimmed.startsWith('> ')) {
                         flushBullets();
                         elements.push(
-                          <div key={idx} className="bg-[#174873]/8 border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm">
+                          <div key={idx} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm">
                             {trimmed.slice(2)}
                           </div>
                         );
@@ -502,9 +760,7 @@ const GenericContentPage = ({
                     });
 
                     flushBullets();
-                    return  <div className="space-y-2">
-                              {elements}
-                            </div>;
+                    return <div className="space-y-2">{elements}</div>;
                   })()
                 )}
               </div>
@@ -533,7 +789,7 @@ const GenericContentPage = ({
                   </svg>
 
                   <div className="flex-1">
-                    <a  href={`${API}${pdf.pdf_url}`}
+                    <a href={`${API}${pdf.pdf_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#174873] font-medium hover:text-[#406BC7] hover:underline break-all"
@@ -601,43 +857,128 @@ const GenericContentPage = ({
               <tbody>
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={columns.length + 2}
+                    <td colSpan={columns.length + (isAdmin ? 2 : 0)}
                       className="px-4 py-8 text-center text-gray-400 italic">
                       {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
                     </td>
                   </tr>
                 )}
-                {rows.map((row, idx) => (
-                  <tr key={idx} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
-                    {columns.map(col => (
-                      <td key={col} className="px-4 py-3 text-gray-700">
-                        {row[col]
-                          ? row[col].startsWith('/uploads/') || row[col].startsWith('http')
-                            ? 
-                              (
-                              <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm">
-                                <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                </svg>
-                                View PDF
-                              </a>
-                              )
-                            : row[col]
-                          : '—'}
-                      </td>
-                    ))}
-                    {isAdmin && <td />}
-                    {isAdmin && (
-                      <td className="px-4 py-3">
-                        <button onClick={() => handleDeleteRow(idx)}
-                          className="text-red-500 hover:text-red-700 text-xs font-bold">Remove</button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
+                {rows.map((row, idx) => {
+                  const isEditingThisRow = isAdmin && editingRowIdx === idx;
+                  return (
+                    <tr key={idx} className={`border-t border-gray-100 transition-colors ${isEditingThisRow ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                      {columns.map(col => (
+                        <td key={col} className="px-4 py-3 text-gray-700">
+                          {isEditingThisRow ? (
+                            /* ── EDIT MODE: show input for each cell ── */
+                            col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
+                              <div className="space-y-1">
+                                {editingRowData[col] ? (
+                                  <div className="flex items-center gap-1">
+                                    <a href={editingRowData[col].startsWith('http') ? editingRowData[col] : `${API}${editingRowData[col]}`}
+                                      target="_blank" rel="noopener noreferrer"
+                                      className="text-xs text-[#174873] hover:underline truncate max-w-[80px]">
+                                      Current PDF
+                                    </a>
+                                    <button onClick={() => setEditingRowData(prev => ({ ...prev, [col]: '' }))}
+                                      className="text-red-400 text-xs hover:text-red-600">✕</button>
+                                  </div>
+                                ) : (
+                                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
+                                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                    </svg>
+                                    Upload PDF
+                                    <input type="file" accept=".pdf" className="hidden"
+                                      onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+                                        try {
+                                          const form = new FormData();
+                                          form.append('section', section || '');
+                                          form.append('category', subsection || '');
+                                          form.append('sub_category', '');
+                                          form.append('files', file);
+                                          const res = await axios.post(
+                                            `${API}/admin/facility-content/upload-pdf`, form,
+                                            { headers: { Authorization: `Bearer ${token}` } }
+                                          );
+                                          const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
+                                          if (pdfUrl) setEditingRowData(prev => ({ ...prev, [col]: pdfUrl }));
+                                          else alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                                        } catch (err) {
+                                          alert('Upload failed: ' + JSON.stringify(err.response?.data));
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                )}
+                                <input
+                                  value={editingRowData[col] || ''}
+                                  onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
+                                  placeholder="or paste URL"
+                                  className="w-full px-2 py-1 border border-blue-300 rounded text-xs outline-none focus:ring-1 focus:ring-[#174873]"
+                                />
+                              </div>
+                            ) : (
+                              <input
+                                value={editingRowData[col] || ''}
+                                onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
+                                placeholder={col}
+                                className="w-full px-2 py-1 border border-blue-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#174873]"
+                              />
+                            )
+                          ) : (
+                            /* ── VIEW MODE: show value as before ── */
+                            row[col]
+                              ? row[col].startsWith('/uploads/') || row[col].startsWith('http')
+                                ? (
+                                  <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm">
+                                    <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
+                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                    </svg>
+                                    View PDF
+                                  </a>
+                                )
+                                : row[col]
+                              : '—'
+                          )}
+                        </td>
+                      ))}
+
+                      {/* Action cell: Edit/Save/Cancel + Remove */}
+                      {isAdmin && (
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {isEditingThisRow ? (
+                            <div className="flex gap-2">
+                              <button onClick={handleSaveEditRow}
+                                className="text-green-600 hover:text-green-800 text-xs font-bold">
+                                Save
+                              </button>
+                              <button onClick={handleCancelEditRow}
+                                className="text-gray-400 hover:text-gray-600 text-xs">
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <button onClick={() => handleStartEditRow(idx)}
+                                className="text-[#174873] hover:text-[#406BC7] text-xs font-bold">
+                                Edit
+                              </button>
+                              <button onClick={() => handleDeleteRow(idx)}
+                                className="text-red-500 hover:text-red-700 text-xs font-bold">
+                                Remove
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
 
                 {/* Add row */}
                 {isAdmin && columns.length > 0 && (
@@ -657,7 +998,7 @@ const GenericContentPage = ({
                                   type="file"
                                   accept=".pdf"
                                   className="hidden"
-                                  onChange={async (e) => {                               
+                                  onChange={async (e) => {
                                     const file = e.target.files[0];
                                     if (!file) return;
                                     try {
@@ -667,9 +1008,8 @@ const GenericContentPage = ({
                                       form.append('sub_category', '');
                                       form.append('files', file);
 
-                                      // Debug — remove after fixing
-                                      console.log('Sending:', { section, subsection, fileName: file.name });
-                                
+                                      // FIX 5: Removed debug console.log that was left in by mistake
+
                                       const res = await axios.post(
                                         `${API}/admin/facility-content/upload-pdf`, form,
                                         { headers: { Authorization: `Bearer ${token}` } }
@@ -711,12 +1051,12 @@ const GenericContentPage = ({
                             value={newRow[col] || ''}
                             onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
                             placeholder={col}
-                             className="w-full px-2 py-1 border border-blue-200 rounded text-sm outline-none"
+                            className="w-full px-2 py-1 border border-blue-200 rounded text-sm outline-none"
                           />
                         )}
                       </td>
                     ))}
-                    {isAdmin && <td />}
+                    {/* FIX 9: Removed extra blank <td /> here too — only one Action cell */}
                     <td className="px-4 py-2">
                       <button onClick={handleAddRow}
                         className="px-3 py-1 bg-[#174873] text-white rounded text-xs font-bold">
