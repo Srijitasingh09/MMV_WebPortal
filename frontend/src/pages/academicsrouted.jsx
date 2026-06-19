@@ -3,17 +3,69 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
-  'nep':                       { title: 'National Education Policy (NEP)', pageType: 'description' },
-  'syllabus/ug/science':       { title: 'Syllabus — UG Science',           pageType: 'pdf-list' },
-  'syllabus/ug/socialscience': { title: 'Syllabus — UG Social Science',    pageType: 'pdf-list' },
-  'syllabus/ug/arts':          { title: 'Syllabus — UG Arts',              pageType: 'pdf-list' },
-  'syllabus/pg':               { title: 'Syllabus — PG',                   pageType: 'pdf-list' },
-  'electives':                 { title: 'Electives',                       pageType: 'pdf-list' },
-  'swayam':                    { title: 'SWAYAM Courses',                  pageType: 'description' },
-  'section-incharge':          { title: 'Section In-Charge',               pageType: 'description-table',
-    tableColumns: ['Name', 'Section', 'Department', 'Contact'] },
-  'calendar':                  { title: 'Academic Calendar',               pageType: 'pdf-list' },
-  'holidays':                  { title: 'Holiday List',                    pageType: 'pdf-list' },
+  'nep': { 
+    title: 'National Education Policy (NEP)', 
+    pageType: 'description' 
+  },
+
+  'syllabus/ug/science': { 
+    title: 'Syllabus — UG Science',           
+    pageType: 'table',
+    table: ['Course', 'Syllabus PDF'] 
+  },
+
+  'syllabus/ug/socialscience': { 
+    title: 'Syllabus — UG Social Science',    
+    pageType: 'table',
+    table: ['Course', 'Syllabus PDF']
+  },
+
+  'syllabus/ug/arts': { 
+    title: 'Syllabus — UG Arts', 
+    pageType: 'table',
+    table: ['Course', 'Syllabus PDF'] 
+  },
+
+  'syllabus/pg/bioinformatics': { 
+    title: 'Syllabus — Bioinformatics',                   
+    pageType: 'pdf-list' 
+  },
+
+  'syllabus/pg/homescience': { 
+    title: 'Syllabus — Home Science',                   
+    pageType: 'pdf-list' 
+  },
+
+  'syllabus/pg/education': { 
+    title: 'Syllabus — Education',                   
+    pageType: 'pdf-list' 
+  },
+
+  'electives': { 
+    title: 'Electives',                       
+    pageType: 'description' 
+  },
+
+  'swayam': { 
+    title: 'SWAYAM Courses',                  
+    pageType: 'description' 
+  },
+
+  'section-incharge': { 
+    title: 'Section In-Charge',               
+    pageType: 'description-table',
+    tableColumns: ['Name', 'Section', 'Department', 'Contact'] 
+  },
+
+  'calendar': { 
+    title: 'Academic Calendar',               
+    pageType: 'pdf-list' 
+  },
+
+  'holidays': { 
+    title: 'Holiday List',                    
+    pageType: 'pdf-list' 
+  },
 };
 
 const AcademicsRouted = () => {

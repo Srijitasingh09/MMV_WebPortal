@@ -15,12 +15,12 @@ const pages = {
 
   'dean': { 
     title: 'Dean of Students',                              
-    pageType: 'profile-description' 
+    pageType: 'profile' 
   },
 
   'advisor': { 
     title: 'Student Advisor',                               
-    pageType: 'profile-photo-description' 
+    pageType: 'profile' 
   },
 
   'staff': { 
@@ -31,7 +31,7 @@ const pages = {
 
   'proctorial/chief': { 
     title: 'Chief Proctor', 
-    pageType: 'profile-description'
+    pageType: 'profile'
   },
 
   'proctorial/uniboard': { 
