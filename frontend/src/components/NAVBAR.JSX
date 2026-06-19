@@ -291,7 +291,11 @@ const Navbar = () => {
               ]},
               { label: "Electives", path: "/academics/electives" },
               { label: "SWAYAM Courses", path: "/academics/swayam" },
-              { label: "Section Incharge", path: "/academics/section-incharge" },
+              { label: "Section Incharge", children: [
+                { label: "Science", path: "/academics/section-incharge/science"},
+                { label: "Social Science", path: "/academics/section-incharge/socialscience"},
+                { label: "Arts", path: "/academics/section-incharge/arts"}
+              ]},
               { label: "Academic Calendar", path: "/academics/calendar" },
               { label: "Holiday List", path: "/academics/holidays" },
             ]}

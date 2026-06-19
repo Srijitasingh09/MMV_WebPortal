@@ -51,10 +51,22 @@ const pages = {
     pageType: 'description' 
   },
 
-  'section-incharge': { 
-    title: 'Section In-Charge',               
-    pageType: 'description-table',
-    tableColumns: ['Name', 'Section', 'Department', 'Contact'] 
+  'section-incharge/science': { 
+    title: 'Science Section Incharge/Coordinator',               
+    pageType: 'table',
+    tableColumns: ['Department', 'Section Incharge', 'Contact', 'Email'] 
+  },
+
+  'section-incharge/socialscience': { 
+    title: 'Social Science Section Incharge/Coordinator',               
+    pageType: 'table',
+    tableColumns: ['Department', 'Section Incharge', 'Contact', 'Email'] 
+  },
+
+  'section-incharge/arts': { 
+    title: 'Arts Section Incharge/Coordinator',               
+    pageType: 'table',
+    tableColumns: ['Department', 'Section Incharge', 'Contact', 'Email'] 
   },
 
   'calendar': { 
