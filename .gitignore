@@ -1,1 +1,6 @@
 college_portal.db
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.dbcollege_portal.db
