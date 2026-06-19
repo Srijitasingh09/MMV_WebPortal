@@ -719,11 +719,22 @@ const GenericContentPage = ({
                       }
 
                       // **Bold line** (entire line wrapped in **)
-                      if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4) {
+                      // Handle bold segments anywhere in the line using **...**
+                      if (trimmed.includes('**')) {
                         flushBullets();
+                        const parts = trimmed.split(/(\*\*.*?\*\*)/g).filter(Boolean);
                         elements.push(
-                          <p key={idx} className="text-gray-800 font-semibold text-base text-left">
-                            {trimmed.slice(2, -2)}
+                          <p key={idx} className="text-gray-800 text-base text-left">
+                            {parts.map((part, i) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return (
+                                  <span key={i} className="font-semibold">
+                                    {part.slice(2, -2)}
+                                  </span>
+                                );
+                              }
+                              return <span key={i}>{part}</span>;
+                            })}
                           </p>
                         );
                         return;
