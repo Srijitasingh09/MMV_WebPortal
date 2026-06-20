@@ -3,61 +3,194 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
-  'hostels/chiefwarden':                  { title: 'Chief Warden',                    pageType: 'photo-description' },
-  'hostels/coordinator':                  { title: 'Hostel Coordinator',              pageType: 'photo',photoAlign: "center" },
-  'hostels/kirtikunj':                    { title: 'Kirti Kunj Hostel',               pageType: 'description-table',
-    tableColumns: ['Room Type', 'Capacity', 'Warden', 'Contact'] },
-  'hostels/swastikunj':                   { title: 'Swasti Kunj Hostel',              pageType: 'description-table',
-    tableColumns: ['Room Type', 'Capacity', 'Warden', 'Contact'] },
-  'hostels/pragyakunj':                   { title: 'Pragya Kunj Hostel',              pageType: 'description-table',
-    tableColumns: ['Room Type', 'Capacity', 'Warden', 'Contact'] },
-  'hostels/jyotikunj':                    { title: 'Jyoti Kunj Hostel',               pageType: 'description-table',
-    tableColumns: ['Room Type', 'Capacity', 'Warden', 'Contact'] },
-  'hostels/kundandevi':                   { title: 'Kundan Devi Hostel',              pageType: 'description-table',
-    tableColumns: ['Room Type', 'Capacity', 'Warden', 'Contact'] },
-  'library/central':                      { title: 'Central Library',                 pageType: 'description-table',
-    tableColumns: ['Service', 'Timings', 'Contact'] },
-  'library/cyber':                        { title: 'Cyber Library',                   pageType: 'description' },
-  'library/mmvlibrary':                   { title: 'MMV Library',                     pageType: 'description-table',
-    tableColumns: ['Service', 'Timings', 'Contact'] },
-  'sports/universitysports':              { title: 'University Sports',               pageType: 'description-table',
-    tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] },
-  'sports/mmvsports':                     { title: 'MMV Sports',                      pageType: 'description-table',
-    tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] },
-  'sports/gym':                           { title: 'Gymnasium',                       pageType: 'description' },
-  'wellbeing/universitywell':             { title: 'University Well-being',           pageType: 'description' },
-  'wellbeing/mmvwell':                    { title: 'MMV Well-being',                  pageType: 'description' },
-  'trainingplacement/universitytraining': { title: 'University Training & Placement', pageType: 'description-table',
-    tableColumns: ['Company', 'Role', 'Year', 'Package'] },
-  'trainingplacement/mmvtraining':        { title: 'MMV Training & Placement',        pageType: 'description-table',
-    tableColumns: ['Company', 'Role', 'Year', 'Package'] },
-  'cdc':                                  { title: 'CDC',                             pageType: 'description' },
-  'medical/ssr':                          { title: 'Sir Sundarlal Hospital',          pageType: 'description-table',
-    tableColumns: ['Department', 'Timings', 'Contact'] },
-  'medical/tc':                           { title: 'Trauma Center',                   pageType: 'description' },
-  'medical/health':                       { title: 'Health Center',                   pageType: 'description-table',
-    tableColumns: ['Service', 'Timings', 'Contact'] },
-  'extracurricular/ncc':                  { title: 'NCC',                             pageType: 'description' },
-  'extracurricular/nss':                  { title: 'NSS',                             pageType: 'description' },
-  'extracurricular/clubs':                { title: 'Clubs',                           pageType: 'description-table',
-    tableColumns: ['Club Name', 'Type', 'Contact Person', 'Meeting Day'] },
-  'extracurricular/diplomacourses':       { title: 'Diploma Courses',                 pageType: 'description-table',
-    tableColumns: ['Course', 'Duration', 'Eligibility', 'Contact'] },
-  'samarth':                              { title: 'Samarth Portal',                  pageType: 'description' },
-  'namaste':                              { title: 'Namaste App',                     pageType: 'description' },
-  'canteen/universitycanteen':            { title: 'University Canteen',              pageType: 'description' },
-  'canteen/mmvcanteen':                   { title: 'MMV Canteen',                     pageType: 'description' },
-  'citydelegacy':                         { title: 'City Delegacy',                   pageType: 'description' },
-  'other/vt':                             { title: 'Vishwanath Temple',               pageType: 'description' },
-  'other/bkb':                            { title: 'Bharat Kala Bhawan',              pageType: 'description' },
-  'other/transportation':                 { title: 'Transportation',                  pageType: 'description-table',
-    tableColumns: ['Route', 'Timing', 'Fare', 'Contact'] },
-  'other/banks':                          { title: 'Banks',                           pageType: 'description-table',
-    tableColumns: ['Bank', 'Branch', 'Timings', 'Contact'] },
-  'other/po':                             { title: 'Post Offices',                    pageType: 'description' },
-  'other/guesthouses':                    { title: 'Guest Houses',                    pageType: 'description-table',
-    tableColumns: ['Name', 'Capacity', 'Contact', 'Booking'] },
-  'other/auditorium':                     { title: 'Auditorium',                      pageType: 'description' },
+  'hostels/chiefwarden': { 
+    title: 'Chief Warden',                    
+    pageType: 'profile-description' 
+  },
+
+  'hostels/coordinator': { 
+    title: 'Hostel Coordinator',              
+    pageType: 'profile-description'
+  },
+
+  'hostels/swastikunj': { 
+    title: 'Swasti Kunj Hostel',              
+    pageType: 'photo-description-table',
+    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
+  },
+
+  'hostels/kirtikunj': { 
+    title: 'Kirti Kunj Hostel',               
+    pageType: 'photo-description-table',
+    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
+  },
+
+  'hostels/kundandevi': { 
+    title: 'Kundan Devi Malviya Hostel',              
+    pageType: 'photo-description-table',
+    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
+  },
+
+  'hostels/pragyakunj': { 
+    title: 'Pragya Kunj Hostel',              
+    pageType: 'photo-description-table',
+    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
+  },
+
+  'hostels/jyotikunj': { 
+    title: 'Jyoti Kunj Hostel',               
+    pageType: 'photo-description-table',
+    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
+  },
+
+  'library/central': { 
+    title: 'Central Library',                 
+    pageType: 'photo-description',
+  },
+
+  'library/cyber': { 
+    title: 'Cyber Library',                   
+    pageType: 'photo-description' 
+  },
+
+  'library/mmvlibrary': { 
+    title: 'MMV Library',                     
+    pageType: 'photo-description',
+  },
+
+  'sports/universitysports': { 
+    title: 'University Sports Board',               
+    pageType: 'photo-description-table',
+    tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] 
+  },
+
+  'sports/mmvsports': { 
+    title: 'MMV Sports Board',                      
+    pageType: 'photo-description-table',
+    tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] 
+  },
+
+  'sports/gym': { 
+    title: 'Open-Gym & Indoor Gym',                       
+    pageType: 'photo-description' 
+  },
+
+  'wellbeing/universitywell': { 
+    title: 'Well Being Service Cell, BHU',           
+    pageType: 'photo-description' 
+  },
+
+  'wellbeing/mmvwell': { 
+    title: 'MMV PAHAL',                  
+    pageType: 'photo-description' 
+  },
+
+  'trainingplacement/universitytraining': { 
+    title: 'University Training & Placement', 
+    pageType: 'photo-description-table',
+    tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
+  },
+
+  'trainingplacement/mmvtraining': { 
+    title: 'MMV Training & Placement',        
+    pageType: 'photo-description-table',
+    tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
+  },
+
+  'cdc': { 
+    title: 'CDC',                             
+    pageType: 'photo-description' 
+  },
+
+  'medical/ssr': { 
+    title: 'Sir Sundarlal Hospital',          
+    pageType: 'photo-description',
+  },
+
+  'medical/tc': { 
+    title: 'Trauma Center',                   
+    pageType: 'photo-description' 
+  },
+
+  'medical/health': { 
+    title: 'Student Health Center',                   
+    pageType: 'photo-description',
+  },
+
+  'extracurricular/ncc': { 
+    title: 'NCC',                             
+    pageType: 'photo-description' 
+  },
+
+  'extracurricular/nss': { 
+    title: 'NSS',                             
+    pageType: 'photo-description' 
+  },
+
+  'extracurricular/clubs': { title: 'Clubs',                           
+    pageType: 'photo-description-table',
+  },
+
+  'extracurricular/diplomacourses': { 
+    title: 'Diploma & Certificate Courses',                 
+    pageType: 'description-table',
+    tableColumns: ['Course', 'Duration', 'Eligibility'] 
+  },
+
+  'samarth': { 
+    title: 'Samarth Portal',                  
+    pageType: 'photo-description' 
+  },
+
+  'namaste': { 
+    title: 'Namaste BHU App',                     
+    pageType: 'photo-description' 
+  },
+
+  'canteen/universitycanteen': { 
+    title: 'University Canteen',              
+    pageType: 'photo-description' 
+  },
+
+  'canteen/mmvcanteen': { 
+    title: 'MMV Canteen',                     
+    pageType: 'photo-description' 
+  },
+
+  'citydelegacy': { 
+    title: 'City Delegacy',                   
+    pageType: 'photo-description' 
+  },
+
+  'other/vt': { 
+    title: 'Vishwanath Temple',               
+    pageType: 'photo-description' 
+  },
+
+  'other/bkb': { 
+    title: 'Bharat Kala Bhawan',              
+    pageType: 'photo-description' 
+  },
+
+  'other/transportation': { 
+    title: 'Transportation',                  
+    pageType: 'photo-description'
+  },
+
+  'other/banks': { 
+    title: 'Banks & Post Offices',                           
+    pageType: 'photo-description',
+  },
+
+  'other/guesthouses': { 
+    title: 'Guest Houses',                    
+    pageType: 'photo-description',
+  },
+
+  'other/auditorium': { 
+    title: 'Auditorium',                      
+    pageType: 'photo-description' 
+  },
 };
 
 const FacilitiesRouted = () => {

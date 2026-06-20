@@ -43,7 +43,7 @@ const pages = {
 
   'electives': { 
     title: 'Electives',                       
-    pageType: 'description' 
+    pageType: 'table-description' 
   },
 
   'swayam': { 
