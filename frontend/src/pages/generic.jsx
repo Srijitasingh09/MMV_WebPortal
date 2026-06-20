@@ -654,13 +654,49 @@ const GenericContentPage = ({
                     const elements = [];
                     let bulletBuffer = [];
                     let firstLine = true;
-                
+
+                    // Converts plain URLs and [text](url) markdown links into
+                    // clickable blue <a> elements. Returns an array of strings/nodes.
+                    const renderTextWithLinks = (text) => {
+                      // Regex: matches [label](url) OR bare http(s):// URLs
+                      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
+                      const parts = [];
+                      let lastIndex = 0;
+                      let match;
+                      let keyCounter = 0;
+                      while ((match = linkRegex.exec(text)) !== null) {
+                        // Push any plain text before this match
+                        if (match.index > lastIndex) {
+                          parts.push(text.slice(lastIndex, match.index));
+                        }
+                        const label = match[1] || match[3]; // markdown label or raw URL
+                        const href  = match[2] || match[3]; // markdown url or raw URL
+                        parts.push(
+                          <a
+                            key={`link-${keyCounter++}`}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline hover:text-blue-800 break-all"
+                          >
+                            {label}
+                          </a>
+                        );
+                        lastIndex = match.index + match[0].length;
+                      }
+                      // Remaining plain text
+                      if (lastIndex < text.length) {
+                        parts.push(text.slice(lastIndex));
+                      }
+                      return parts.length > 0 ? parts : [text];
+                    };
+
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
                           <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base">
                             {bulletBuffer.map((b, i) => (
-                              <li key={i}>{b}</li>
+                              <li key={i}>{renderTextWithLinks(b)}</li>
                             ))}
                           </ul>
                         );
@@ -729,11 +765,11 @@ const GenericContentPage = ({
                               if (part.startsWith('**') && part.endsWith('**')) {
                                 return (
                                   <span key={i} className="font-semibold">
-                                    {part.slice(2, -2)}
+                                    {renderTextWithLinks(part.slice(2, -2))}
                                   </span>
                                 );
                               }
-                              return <span key={i}>{part}</span>;
+                              return <span key={i}>{renderTextWithLinks(part)}</span>;
                             })}
                           </p>
                         );
@@ -746,7 +782,7 @@ const GenericContentPage = ({
                         flushBullets();
                         elements.push(
                           <div key={idx} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm">
-                            {trimmed.slice(2)}
+                            {renderTextWithLinks(trimmed.slice(2))}
                           </div>
                         );
                         return;
@@ -765,7 +801,7 @@ const GenericContentPage = ({
                       flushBullets();
                       elements.push(
                         <p key={idx} className="text-gray-700 text-base leading-relaxed text-left">
-                          {trimmed}
+                          {renderTextWithLinks(trimmed)}
                         </p>
                       );
                     });
@@ -781,7 +817,8 @@ const GenericContentPage = ({
       )}
 
       {/* ── PDF VIEWER ── */}
-      {data.pdfs?.length > 0 && (
+      
+      {hasPdf && data.pdfs?.length > 0 && (
         <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="bg-[#174873] px-6 py-4">
             <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
