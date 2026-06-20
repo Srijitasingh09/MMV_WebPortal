@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/Home';
@@ -8,6 +9,8 @@ import AdministrationRouted from './pages/AdministrationRouted';
 import FacilitiesRouted from './pages/FacilitiesRouted';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
+import Notices from './pages/notice';
+import Contact from './pages/contact';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -26,8 +29,8 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 };
 
 // Layout Wrapper to conditionally show Layout
-const LayoutWrapper = ({ children }) => {
-    return <Layout>{children}</Layout>;
+const LayoutWrapper = ({ children, hideFooter = false }) => {
+  return <Layout hideFooter={hideFooter}>{children}</Layout>;
 };
 
 function App() {
@@ -51,6 +54,16 @@ function App() {
        <Route path="/academics/:sub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
        <Route path="/academics/:sub/:subsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
        <Route path="/academics/:sub/:subsub/:subsubsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
+       
+       {/*notice*/}
+        <Route path="/Notices" element={<LayoutWrapper><Notices/></LayoutWrapper>} />
+
+         {/*contact*/}
+        <Route path="/Contact" element={<LayoutWrapper hideFooter={true}><Contact/></LayoutWrapper>} />
+       
+
+
+
        {/* Admin Routes */}
         <Route 
           path="/admin" 
