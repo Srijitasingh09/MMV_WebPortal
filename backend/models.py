@@ -166,3 +166,25 @@ class FacilityContentPdf(Base):
     pdf_url = Column(String)
 
     content = relationship("FacilityContent", back_populates="pdfs")
+
+class ContactInfo(Base):
+    __tablename__ = "contact_info"
+ 
+    id = Column(Integer, primary_key=True, index=True)
+    address = Column(Text, nullable=True)
+    phone = Column(String, nullable=True)
+    email = Column(String, nullable=True)
+    office_hours = Column(String, nullable=True)
+    map_embed_url = Column(Text, nullable=True)
+ 
+class EmergencyContact(Base):
+    __tablename__ = "emergency_contacts"
+ 
+    id            = Column(Integer, primary_key=True, index=True)
+    label         = Column(String, nullable=False)   # e.g. "Helpline", "Fire Emergency"
+    value         = Column(String, nullable=False)   # e.g. "0542-000-0000" or "security@mmv.bhu.ac.in"
+    type          = Column(String, nullable=False)   # "phone" | "email" | "address"
+    group_name    = Column(String, nullable=False)   # e.g. "Helpline Numbers", "Security Control Room"
+    display_order = Column(Integer, default=0)
+    created_at    = Column(DateTime, default=datetime.datetime.utcnow)
+ 

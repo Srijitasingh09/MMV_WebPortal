@@ -55,8 +55,7 @@ const LoginPage = () => {
             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mb-8 shadow-xl">
                  <img src="https://img.icons8.com/color/96/university.png" alt="BHU" className="w-10 h-10" />
             </div>
-            <h1 className="text-4xl font-bold leading-tight">MMV Student & Admin Portal</h1>
-            <p className="mt-4 text-white/70">Access your academic records, personalized recommendations, and university notices.</p>
+            <h1 className="text-4xl font-bold leading-tight">MMV Admin Portal</h1>
           </div>
           
           <div className="space-y-4">
@@ -73,9 +72,6 @@ const LoginPage = () => {
           <div className="mb-10">
             <h2 className="text-3xl font-bold text-gray-900">Sign In</h2>
             <p className="text-muted mt-2">Enter your credentials to continue</p>
-            <p className="text-xs text-muted mt-3">
-              New student? <Link to="/signup" className="font-bold text-primary hover:underline">Create Account First</Link>
-            </p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -122,9 +118,6 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <p className="mt-10 text-center text-xs text-muted">
-            Problems logging in? <a href="#" className="font-bold text-primary hover:underline">Contact Dean's Office</a>
-          </p>
         </div>
       </div>
     </div>

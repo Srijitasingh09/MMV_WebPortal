@@ -105,7 +105,13 @@ def ensure_facility_content_table():
         models.FacilityContentPdf.__table__,
     ], checkfirst=True)
 
+def ensure_emergency_contacts_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.EmergencyContact.__table__,
+    ], checkfirst=True)
+ 
 
+ensure_emergency_contacts_table() 
 ensure_notice_attachment_columns()
 ensure_college_info_columns()
 ensure_mmv_knowledge_file()
@@ -165,7 +171,54 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "full_name": user.full_name,
     }
 
+# ====================contacts=======================
 
+@app.get("/contact-info")
+def get_contact_info(db: Session = Depends(get_db)):
+    """
+    Public route — returns the single contact info row.
+    If none exists yet, returns an empty-ish object so the
+    frontend can render its 'not added yet' state gracefully.
+    """
+    info = db.query(models.ContactInfo).first()
+    if not info:
+        return {
+            "id": 0,
+            "address": None,
+            "phone": None,
+            "email": None,
+            "office_hours": None,
+            "map_embed_url": None,
+        }
+    return info
+ 
+ 
+@app.put("/admin/contact-info")
+def update_contact_info(
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Admin-only route — creates the row if it doesn't exist yet,
+    otherwise updates the existing one (upsert pattern, since
+    there should only ever be ONE contact info row).
+    """
+    ensure_admin(user)
+ 
+    info = db.query(models.ContactInfo).first()
+    if not info:
+        info = models.ContactInfo()
+        db.add(info)
+ 
+    for field in ["address", "phone", "email", "office_hours", "map_embed_url"]:
+        if field in payload:
+            setattr(info, field, payload[field])
+ 
+    db.commit()
+    db.refresh(info)
+    return info
+ 
 # ===================== NOTICES =====================
 
 @app.get("/notices")
@@ -207,6 +260,109 @@ def add_notice(
     db.refresh(new_notice)
     return new_notice
 
+@app.delete("/admin/notice/{notice_id}")
+def delete_notice(
+    notice_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    ensure_admin(user)
+    notice = db.query(models.Notice).filter(models.Notice.id == notice_id).first()
+    if not notice:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    if notice.attachment_url:
+        stored_name = os.path.basename(notice.attachment_url)
+        stored_path = os.path.join(UPLOADS_DIR, stored_name)
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
+    db.delete(notice)
+    db.commit()
+    return {"message": "Notice deleted"}
+
+# ================emergency contact=======================
+
+@app.get("/emergency-contacts")
+def get_emergency_contacts(db: Session = Depends(get_db)):
+    """
+    Public route — returns all emergency contact entries ordered by display_order.
+    Frontend groups them by group_name to build the three cards.
+    """
+    contacts = (
+        db.query(models.EmergencyContact)
+        .order_by(models.EmergencyContact.display_order)
+        .all()
+    )
+    return contacts
+ 
+ 
+@app.post("/admin/emergency-contacts")
+def add_emergency_contact(
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only — add a new emergency contact entry."""
+    ensure_admin(user)
+ 
+    # Auto-set display_order to max+1 so new entries go to the bottom
+    max_order = db.query(func.max(models.EmergencyContact.display_order)).scalar() or 0
+ 
+    entry = models.EmergencyContact(
+        label=payload.get("label", "").strip(),
+        value=payload.get("value", "").strip(),
+        type=payload.get("type", "phone"),           # "phone" | "email" | "address"
+        group_name=payload.get("group_name", "").strip(),
+        display_order=max_order + 1,
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+ 
+ 
+@app.put("/admin/emergency-contacts/{entry_id}")
+def update_emergency_contact(
+    entry_id: int,
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only — update an existing emergency contact entry."""
+    ensure_admin(user)
+ 
+    entry = db.query(models.EmergencyContact).filter(
+        models.EmergencyContact.id == entry_id
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Emergency contact not found")
+ 
+    for field in ["label", "value", "type", "group_name", "display_order"]:
+        if field in payload:
+            setattr(entry, field, payload[field])
+ 
+    db.commit()
+    db.refresh(entry)
+    return entry
+ 
+ 
+@app.delete("/admin/emergency-contacts/{entry_id}")
+def delete_emergency_contact(
+    entry_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only — delete an emergency contact entry."""
+    ensure_admin(user)
+ 
+    entry = db.query(models.EmergencyContact).filter(
+        models.EmergencyContact.id == entry_id
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Emergency contact not found")
+ 
+    db.delete(entry)
+    db.commit()
+    return {"message": "Deleted"}
 
 # ===================== COLLEGE INFO =====================
 

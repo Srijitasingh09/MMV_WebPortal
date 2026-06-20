@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { Bell, Plus, Send, Paperclip, Trash2, Landmark, ArrowUp, ArrowDown, ImagePlus, MessageSquare } from 'lucide-react';
+import { Bell, Plus, Send, Paperclip, Trash2, Landmark, ArrowUp, ArrowDown, ImagePlus, MessageSquare, Phone } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
 const AdminDashboard = () => {
@@ -17,6 +17,9 @@ const AdminDashboard = () => {
 
   const [notice, setNotice] = useState({ title: '', content: '', category: 'General' });
   const navigate = useNavigate();
+
+  const noticeAttachmentInputRef = useRef(null);
+  const collegeImageInputRef = useRef(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -36,6 +39,13 @@ const AdminDashboard = () => {
     contact: '',
     tags: ''
   });
+  const [contactInfoForm, setContactInfoForm] = useState({
+    address: '',
+    phone: '',
+    email: '',
+    office_hours: '',
+    map_embed_url: ''
+  });
   const [editingKnowledge, setEditingKnowledge] = useState(null);
   const [knowledgeEditForm, setKnowledgeEditForm] = useState({
     type: 'Notice',
@@ -54,12 +64,22 @@ const AdminDashboard = () => {
   const authHeader = () => ({ Authorization: `Bearer ${getToken()}` });
 
   const fetchAdminData = async () => {
-    const [collegeInfoRes, knowledgeRes] = await Promise.all([
+    const [collegeInfoRes, knowledgeRes, contactInfoRes] = await Promise.all([
       axios.get('/college-info', { headers: authHeader() }),
-      axios.get('/admin/mmv-knowledge', { headers: authHeader() })
+      axios.get('/admin/mmv-knowledge', { headers: authHeader() }),
+      axios.get('/contact-info').catch(() => ({ data: null }))
     ]);
     setCollegeInfo(collegeInfoRes.data);
     setMmvKnowledge(knowledgeRes.data || []);
+    if (contactInfoRes.data) {
+      setContactInfoForm({
+        address: contactInfoRes.data.address || '',
+        phone: contactInfoRes.data.phone || '',
+        email: contactInfoRes.data.email || '',
+        office_hours: contactInfoRes.data.office_hours || '',
+        map_embed_url: contactInfoRes.data.map_embed_url || ''
+      });
+    }
   };
 
   useEffect(() => {
@@ -92,6 +112,9 @@ const AdminDashboard = () => {
       showSuccess('Notice posted successfully!');
       setNotice({ title: '', content: '', category: 'General' });
       setNoticeAttachment(null);
+      if (noticeAttachmentInputRef.current) {
+        noticeAttachmentInputRef.current.value = '';
+      }
     } catch (err) {
       alert('Error posting notice');
     } finally {
@@ -118,9 +141,27 @@ const AdminDashboard = () => {
       showSuccess('College info entry added successfully!');
       setCollegeInfoForm({ title: '', category: 'General', description: '' });
       setCollegeImage(null);
+      if (collegeImageInputRef.current) {
+        collegeImageInputRef.current.value = '';
+      }
       await fetchAdminData();
     } catch (err) {
       alert('Error adding college info entry');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitContactInfo = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await axios.put('/admin/contact-info', contactInfoForm, {
+        headers: authHeader()
+      });
+      showSuccess('Contact information updated successfully!');
+    } catch (err) {
+      alert('Error updating contact information');
     } finally {
       setLoading(false);
     }
@@ -327,6 +368,12 @@ const AdminDashboard = () => {
         >
           <MessageSquare size={18} className="mr-2" /> MMV KNOWLEDGE
         </button>
+        <button
+          onClick={() => setActiveTab('contact-info')}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'contact-info' ? 'border-primary text-primary bg-red-50/40' : 'border-gray-200 text-muted bg-white'}`}
+        >
+          <Phone size={18} className="mr-2" /> CONTACT INFO
+        </button>
       </div>
 
       {activeTab === 'notice' && (
@@ -376,6 +423,7 @@ const AdminDashboard = () => {
               <Paperclip size={14} className="mr-2" /> Attachment (Optional)
             </label>
             <input
+              ref={noticeAttachmentInputRef}
               type="file"
               accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
               onChange={(e) => setNoticeAttachment(e.target.files?.[0] || null)}
@@ -479,6 +527,7 @@ const AdminDashboard = () => {
               <ImagePlus size={20} className="mx-auto mb-2 text-muted" />
               <p className="text-sm text-muted">Drag and drop image here, or choose file below</p>
               <input
+                ref={collegeImageInputRef}
                 type="file"
                 accept=".png,.jpg,.jpeg,.webp"
                 onChange={(e) => handleCollegeImageSelect(e.target.files?.[0] || null)}
@@ -625,6 +674,83 @@ const AdminDashboard = () => {
               </div>
             ))}
           </div>
+        </form>
+      )}
+
+      {activeTab === 'contact-info' && (
+        <form onSubmit={handleSubmitContactInfo} className="glass-card p-10 rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+          <div>
+            <h3 className="font-bold text-lg text-gray-900">Contact Page Details</h3>
+            <p className="text-muted text-sm mt-1">
+              This information appears on the public Contact Us page, along with a map.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Address</label>
+            <textarea
+              rows={3}
+              value={contactInfoForm.address}
+              onChange={(e) => setContactInfoForm({ ...contactInfoForm, address: e.target.value })}
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="e.g., Mahila Mahavidyalaya, Banaras Hindu University, Varanasi, Uttar Pradesh 221005"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Phone</label>
+              <input
+                value={contactInfoForm.phone}
+                onChange={(e) => setContactInfoForm({ ...contactInfoForm, phone: e.target.value })}
+                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., +91 542 123 4567"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Email</label>
+              <input
+                type="email"
+                value={contactInfoForm.email}
+                onChange={(e) => setContactInfoForm({ ...contactInfoForm, email: e.target.value })}
+                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., office@mmv.ac.in"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Office Hours</label>
+            <input
+              value={contactInfoForm.office_hours}
+              onChange={(e) => setContactInfoForm({ ...contactInfoForm, office_hours: e.target.value })}
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="e.g., Mon–Sat, 10:00 AM – 5:00 PM"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Google Maps Embed URL (optional)
+            </label>
+            <input
+              value={contactInfoForm.map_embed_url}
+              onChange={(e) => setContactInfoForm({ ...contactInfoForm, map_embed_url: e.target.value })}
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
+              placeholder="Paste the 'src' link from Google Maps > Share > Embed a map"
+            />
+            <p className="text-xs text-muted">
+              Leave blank to auto-generate a map from the address above.
+            </p>
+          </div>
+
+          <button
+            disabled={loading}
+            className="w-full py-5 bg-primary text-white rounded-2xl font-bold tracking-widest hover:bg-red-800 transition-colors flex items-center justify-center"
+          >
+            <Send size={18} className="mr-3" />
+            {loading ? 'SAVING...' : 'SAVE CONTACT INFO'}
+          </button>
         </form>
       )}
     </div>

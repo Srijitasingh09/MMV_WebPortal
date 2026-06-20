@@ -1,14 +1,14 @@
 import React from 'react';
 import Navbar from './Navbar';
 import Footer from "./Footer";
-const Layout = ({ children }) => {
+const Layout = ({ children , hideFooter = false }) => {
   return (
-    <div className="max-h-screen bg-gray-50">
+    <div className=" bg-gray-50">
       <Navbar />
       <main className="p-0">
         {children}
       </main>
-      <Footer/>
+      {!hideFooter && <Footer />}
     </div>
   );
 };
