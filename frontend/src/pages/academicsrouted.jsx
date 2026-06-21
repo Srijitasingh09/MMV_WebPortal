@@ -92,8 +92,8 @@ const AcademicsRouted = () => {
       section="academics"
       subsection={key}
       title={page.title}
-      backPath="/academics"
-      backLabel="Academics"
+      backPath="/"
+      backLabel="Home"
       pageType={page.pageType}
       tableColumns={page.tableColumns || []}
       photoAlign={page.photoAlign || 'left'}

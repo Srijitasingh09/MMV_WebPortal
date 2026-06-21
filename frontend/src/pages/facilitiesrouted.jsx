@@ -75,7 +75,7 @@ const pages = {
     pageType: 'photo-description' 
   },
 
-  'wellbeing/universitywell': { 
+  'wellbeing/wbsc': { 
     title: 'Well Being Service Cell, BHU',           
     pageType: 'photo-description' 
   },
@@ -108,7 +108,7 @@ const pages = {
   },
 
   'medical/tc': { 
-    title: 'Trauma Center',                   
+    title: 'Trauma Centre',                   
     pageType: 'photo-description' 
   },
 
