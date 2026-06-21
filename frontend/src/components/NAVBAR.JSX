@@ -309,7 +309,7 @@ const Navbar = () => {
                 { label: "Hostel Coordinator", path: "/facilities/hostels/coordinator" },
                 { label: "Swasti Kunj Hostel", path: "/facilities/hostels/swastikunj" },
                 { label: "Kirti Kunj Hostel", path: "/facilities/hostels/kirtikunj" },
-                { label: "Kundan Devi Malviya Hostel", path: "/facilities/hostels/kundandevi" },
+                { label: "Kundan Devi Malviya Girls Hostel", path: "/facilities/hostels/kundandevi" },
                 { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
                 { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
               ]},

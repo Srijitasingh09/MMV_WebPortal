@@ -15,120 +15,142 @@ const pages = {
 
   'hostels/swastikunj': { 
     title: 'Swasti Kunj Hostel',              
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/kirtikunj': { 
     title: 'Kirti Kunj Hostel',               
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/kundandevi': { 
-    title: 'Kundan Devi Malviya Hostel',              
-    pageType: 'photo-description-table',
+    title: 'Kundan Devi Malviya Girls Hostel',              
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/pragyakunj': { 
     title: 'Pragya Kunj Hostel',              
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/jyotikunj': { 
     title: 'Jyoti Kunj Hostel',               
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'library/central': { 
     title: 'Central Library',                 
-    pageType: 'photo-description',
+    pageType: 'slideshow-pdf-list-description',
+    photoAlign: 'center'
   },
 
   'library/cyber': { 
     title: 'Cyber Library',                   
-    pageType: 'photo-description' 
+    pageType: 'slideshow-pdf-list-description' ,
+    photoAlign: 'center'
   },
 
   'library/mmvlibrary': { 
     title: 'MMV Library',                     
-    pageType: 'photo-description',
+    pageType: 'slideshow-pdf-list-description',
+    photoAlign: 'center'
   },
 
   'sports/universitysports': { 
     title: 'University Sports Board',               
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] 
   },
 
   'sports/mmvsports': { 
     title: 'MMV Sports Board',                      
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] 
   },
 
   'sports/gym': { 
     title: 'Open-Gym & Indoor Gym',                       
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'wellbeing/wbsc': { 
     title: 'Well Being Service Cell, BHU',           
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'wellbeing/mmvwell': { 
     title: 'MMV PAHAL',                  
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'trainingplacement/universitytraining': { 
     title: 'University Training & Placement', 
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
   },
 
   'trainingplacement/mmvtraining': { 
     title: 'MMV Training & Placement',        
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center',
     tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
   },
 
   'cdc': { 
     title: 'CDC',                             
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
-  'medical/ssr': { 
+  'medical/ssh': { 
     title: 'Sir Sundarlal Hospital',          
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'medical/tc': { 
     title: 'Trauma Centre',                   
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'medical/health': { 
     title: 'Student Health Center',                   
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'extracurricular/ncc': { 
     title: 'NCC',                             
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'extracurricular/nss': { 
     title: 'NSS',                             
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'extracurricular/clubs': { title: 'Clubs',                           
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
+    photoAlign: 'center'
   },
 
   'extracurricular/diplomacourses': { 
@@ -139,57 +161,68 @@ const pages = {
 
   'samarth': { 
     title: 'Samarth Portal',                  
-    pageType: 'photo-description' 
+    pageType: 'description',
+    photoAlign: 'center' 
   },
 
   'namaste': { 
     title: 'Namaste BHU App',                     
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center' 
   },
 
   'canteen/universitycanteen': { 
     title: 'University Canteen',              
-    pageType: 'photo-description' 
+    pageType: 'photo-description',
+    photoAlign: 'center'
   },
 
   'canteen/mmvcanteen': { 
     title: 'MMV Canteen',                     
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center' 
   },
 
   'citydelegacy': { 
     title: 'City Delegacy',                   
-    pageType: 'photo-description' 
+    pageType: 'slideshow-description',
+    photoAlign: 'center' 
   },
 
   'other/vt': { 
     title: 'Vishwanath Temple',               
-    pageType: 'photo-description' 
+    pageType: 'photo-description',
+    photoAlign: 'center'
   },
 
   'other/bkb': { 
     title: 'Bharat Kala Bhawan',              
-    pageType: 'photo-description' 
+    pageType: 'photo-description',
+    photoAlign: 'center'
   },
 
   'other/transportation': { 
     title: 'Transportation',                  
-    pageType: 'photo-description'
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   'other/banks': { 
     title: 'Banks & Post Offices',                           
     pageType: 'photo-description',
+    photoAlign: 'center'
   },
 
   'other/guesthouses': { 
     title: 'Guest Houses',                    
     pageType: 'photo-description',
+    photoAlign: 'center'
   },
 
   'other/auditorium': { 
     title: 'Auditorium',                      
-    pageType: 'photo-description' 
+    pageType: 'photo-description',
+    photoAlign: 'center'
   },
 };
 
