@@ -219,7 +219,7 @@ const Navbar = () => {
          {/* LEFT SIDE - MMV Logo + Name */}
          <div className="flex items-center gap-1">
           <div>
-            <h1 className="text-gray-700 text-lg font-3xs">
+            <h1 className="text-[#280f48] text-xl font-medium">
               Mahila Maha Vidyalaya
             </h1>
           </div>
@@ -344,7 +344,7 @@ const Navbar = () => {
                 { label: "Diploma & Certificate Courses", path: "/facilities/extracurricular/diplomacourses" },
               ]},
               { label: "Samarth Portal", path: "/facilities/samarth" },
-              { label: "Namaste App", path: "/facilities/namaste" },
+              { label: "Namaste BHU App", path: "/facilities/namaste" },
               { label: "Canteen", children: [
                 { label: "University", path: "/facilities/canteen/universitycanteen" },
                 { label: "MMV", path: "/facilities/canteen/mmvcanteen" },

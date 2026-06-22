@@ -88,7 +88,7 @@ const pages = {
 
   'wellbeing/wbsc': { 
     title: 'Well Being Service Cell, BHU',           
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
@@ -191,13 +191,13 @@ const pages = {
 
   'other/vt': { 
     title: 'Vishwanath Temple',               
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
   'other/bkb': { 
     title: 'Bharat Kala Bhawan',              
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
