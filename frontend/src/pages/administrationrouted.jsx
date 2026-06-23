@@ -15,7 +15,7 @@ const pages = {
 
   'dean': { 
     title: 'Dean of Students',                              
-    pageType: 'profile' 
+    pageType: 'profile-description' 
   },
 
   'advisor': { 
@@ -31,18 +31,18 @@ const pages = {
 
   'proctorial/chief': { 
     title: 'Chief Proctor', 
-    pageType: 'profile'
+    pageType: 'profile-description'
   },
 
   'proctorial/uniboard': { 
     title: 'University Proctorial Board',           
-    pageType: 'table',
+    pageType: 'table-description',
     tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
   },
 
   'examination/universityexam': {  
     title: 'Controller of Examination — University', 
-    pageType: 'table', 
+    pageType: 'table-description', 
     tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
   },
   

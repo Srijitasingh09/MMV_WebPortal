@@ -68,16 +68,14 @@ const pages = {
 
   'sports/universitysports': { 
     title: 'University Sports Board',               
-    pageType: 'slideshow-description-table',
+    pageType: 'slideshow-description',
     photoAlign: 'center',
-    tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] 
   },
 
   'sports/mmvsports': { 
     title: 'MMV Sports Board',                      
-    pageType: 'slideshow-description-table',
+    pageType: 'slideshow-description',
     photoAlign: 'center',
-    tableColumns: ['Sport', 'Venue', 'Timing', 'Coach'] 
   },
 
   'sports/gym': { 
@@ -113,7 +111,7 @@ const pages = {
   },
 
   'cdc': { 
-    title: 'CDC',                             
+    title: 'Central Discovery Centre, BHU',                             
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
@@ -137,13 +135,13 @@ const pages = {
   },
 
   'extracurricular/ncc': { 
-    title: 'NCC',                             
+    title: 'National Cadet Corps (NCC)',                             
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
   'extracurricular/nss': { 
-    title: 'NSS',                             
+    title: 'National Service Scheme (NSS)',                             
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
@@ -167,8 +165,10 @@ const pages = {
 
   'namaste': { 
     title: 'Namaste BHU App',                     
-    pageType: 'slideshow-description',
-    photoAlign: 'center' 
+    pageType: 'photo-description',
+    photoAlign: 'center',
+    photoWidth : '100%',
+    photoHeight : 'full'
   },
 
   'canteen/universitycanteen': { 
@@ -198,7 +198,7 @@ const pages = {
   'other/bkb': { 
     title: 'Bharat Kala Bhawan',              
     pageType: 'slideshow-description',
-    photoAlign: 'center'
+    pageAlign: 'center'
   },
 
   'other/transportation': { 
@@ -215,7 +215,7 @@ const pages = {
 
   'other/guesthouses': { 
     title: 'Guest Houses',                    
-    pageType: 'photo-description',
+    pageType: 'photo-description-pdf-list',
     photoAlign: 'center'
   },
 
