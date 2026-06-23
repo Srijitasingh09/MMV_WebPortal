@@ -10,31 +10,47 @@ Built with a **React + Vite** frontend, **FastAPI** backend, and **SQLite** data
 
 ```
 MMV_WebPortal/
-├── backend/                  # FastAPI app
-│   ├── main.py               # App entry point, all API routes
-│   ├── models.py             # SQLAlchemy database models
-│   ├── auth.py               # JWT authentication
-│   ├── seed.py               # Seed initial admin/student users
-│   ├── seed_v2.py            # Seed additional sample data
-│   └── requirements.txt      # Python dependencies
+├── readme.md                  # This file
 │
-└── frontend/                 # React + Vite client
+├── info/
+│   └── mmv_knowledge.json      # Knowledge base content for the planned AI assistant
+│
+├── backend/                   # FastAPI app
+│   ├── main.py                  # App entry point, all API routes
+│   ├── models.py                  # SQLAlchemy database models
+│   ├── database.py                  # DB engine/session setup
+│   ├── auth.py                        # JWT authentication
+│   ├── seed.py                          # Seed initial admin/student users
+│   ├── requirements.txt                  # Python dependencies
+│   └── uploads/                            # Uploaded photos and PDFs (served as static files)
+│
+└── frontend/                  # React + Vite client
+    ├── index.html
+    ├── package.json
+    ├── vite.config.js
+    ├── tailwind.config.js
     └── src/
         ├── app.jsx                        # Route definitions
+        ├── main.jsx                       # React entry point
+        ├── app.css / index.css            # Global styles
+        ├── data/
+        │   └── mmvInfo.js                 # Static reference data
         ├── components/
         │   ├── NAVBAR.JSX                 # Navigation bar (all 57 links)
         │   ├── Layout.jsx                 # Wraps navbar + footer around pages
-        │   ├── footer.jsx                 # Site footer
-        │   └── Sidebar.jsx                # Admin sidebar
+        │   └── footer.jsx                 # Site footer
         └── pages/
-            ├── home.jsx                   # Home page
-            ├── about.jsx                  # About MMV page
-            ├── generic.jsx                # ★ Single template for all 57 content pages
-            ├── administrationrouted.jsx   # Route config for Administration section
-            ├── academicsrouted.jsx        # Route config for Academics section
-            ├── facilitiesrouted.jsx       # Route config for Facilities section
-            ├── AdminDashboard.jsx         # Admin control panel
-            └── LoginPage.jsx              # Admin login
+            ├── home.jsx                       # Home page
+            ├── about.jsx                       # About MMV page
+            ├── contact.jsx                      # Contact page
+            ├── notice.jsx                        # Notices page (reads from /notices)
+            ├── generic.jsx                        # ★ Single template for all 57 content pages
+            ├── SlideshowBlock.jsx                  # Reusable photo slideshow component
+            ├── administrationrouted.jsx            # Route config for Administration section
+            ├── academicsrouted.jsx                 # Route config for Academics section
+            ├── facilitiesrouted.jsx                # Route config for Facilities section
+            ├── AdminDashboard.jsx                  # Admin control panel
+            └── LoginPage.jsx                       # Admin login
 ```
 
 ---
@@ -56,13 +72,18 @@ URL → Router File → generic.jsx (template) → Backend API → Database
 
 ### Page types available
 
-| `pageType` value          | What appears on the page |
+`pageType` is a string built from keywords — combine as many as a page needs:
+
+| Keyword          | What it adds to the page |
 |---|---|
-| `description`             | Text content box only |
-| `photo-description`       | Photo on the left + text on the right |
-| `description-table`       | Text box + data table below |
-| `pdf-list`                | PDF upload and viewer |
-| `photo-description-table` | Photo + text + table |
+| `description`     | Text content box |
+| `photo`            | Photo grid (configurable columns/size) |
+| `table`             | Editable data table |
+| `slideshow`          | Auto-rotating photo slideshow |
+| `profile`             | Database-driven profile card (photo, name, designation, contact info) |
+| `pdf-list` (exact value) | PDF upload and viewer |
+
+Example combos: `'description'`, `'photo-description'`, `'description-table'`, `'description-profile'`, `'description-slideshow'`, or any mix of the above.
 
 ### Adding or changing a page
 
@@ -74,6 +95,20 @@ To change what a page shows (e.g. remove a table, add a photo), edit **only the 
 
 // Or make it show a PDF:
 'hostels/kirtikunj': { title: 'Kirti Kunj Hostel', pageType: 'pdf-list' },
+
+// Or add a slideshow with custom sizing:
+'hostels/kirtikunj': {
+  title: 'Kirti Kunj Hostel',
+  pageType: 'description-slideshow',
+  slideshowHeight: 360,
+  slideshowMaxWidth: '100%',
+},
+
+// Or add a staff profile section (used for Principal/Dean/VC-style pages):
+'administration/principal': {
+  title: 'Principal',
+  pageType: 'description-profile',
+},
 ```
 
 To add a brand new page, add one line to the router file and add its link to `NAVBAR.JSX`.
@@ -94,6 +129,7 @@ When editing any page's description in the admin controls, use this simple short
 | `> Some note`              | Highlighted callout box with left border |
 | `---`                      | Horizontal divider |
 | Blank line                 | Vertical spacing |
+| `[link text](url)`         | Clickable link (URL itself stays hidden) |
 | Anything else              | Normal left-aligned paragraph |
 
 Example:
@@ -133,9 +169,19 @@ python -m venv .venv
 pip install -r backend/requirements.txt
 ```
 
-Optional environment variable:
+### Environment Variables
 
-- `DATABASE_URL` — defaults to `sqlite:///./college_portal.db` if not set
+Create a `.env` file in the project root (this file is git-ignored and should **never** be committed):
+
+```env
+SECRET_KEY=replace-with-a-long-random-string
+DATABASE_URL=sqlite:///./college_portal.db
+```
+
+- `SECRET_KEY` — used to sign JWT auth tokens. **Required.** Generate a real random value for it, for example with `python -c "import secrets; print(secrets.token_hex(32))"`, and keep it private — anyone with this value can forge valid admin logins.
+- `DATABASE_URL` — optional, defaults to `sqlite:///./college_portal.db` if not set. Switch to PostgreSQL by pointing this at a Postgres connection string instead.
+
+A `.env.example` file (with placeholder values only) should be committed alongside the code so other contributors know which variables to set, without ever committing the real `.env` itself.
 
 ---
 
@@ -159,6 +205,7 @@ uvicorn backend.main:app --reload
 
 - API runs at: `http://127.0.0.1:8000`
 - Interactive API docs: `http://127.0.0.1:8000/docs`
+- Uploaded photos/PDFs are saved to `backend/uploads/` and served as static files
 
 ---
 
@@ -182,34 +229,42 @@ Navigate to `/login` to access the admin login page.
 
 After logging in, the navbar top bar shows an **Admin Panel** link and a **Logout** button on every page. The admin panel (`/admin`) allows managing:
 
-- Notices and announcements
-- Courses and subjects
-- Professors
-- Clubs and events
-- Facilities
-- Hostel documents
+- Notices and announcements (`/notices` — also used by the public Notices page)
+- Contact info and emergency contacts
 - College info cards
-- Academic calendar PDFs
-- MMV Knowledge Base (used by AI assistant)
-- College images
+- Administration section content
+- Academics: NEP info, syllabus uploads, electives, section in-charges, SWAYAM
+- Facility content (description, photos, PDFs, tables, profiles) across all 57 pages
+- MMV Knowledge Base — content intended for a planned AI assistant (not yet built; see below)
 
-Content on any of the 57 pages can be edited by visiting that page while logged in as admin — an **Admin Controls** bar appears at the top with Edit, Upload Photo, and Upload PDF options.
+Content on any of the 57 pages can be edited by visiting that page while logged in as admin — an **Admin Controls** bar appears at the top with Edit, Upload Photo, and Upload PDF options. Pages with a profile section show an additional **Edit Profile** option.
+
+---
+
+## Planned: AI Assistant / Chatbot
+
+The admin panel already supports managing **MMV Knowledge Base** entries (`/admin/mmv-knowledge`), and `info/mmv_knowledge.json` is reserved for this content — but the chatbot itself is **not built yet**, it's still in planning.
+
+Current direction:
+- Stateless — no per-message chat history will be saved to the database
+- Answers will be generated using AI-based (semantic) matching against the knowledge base, rather than exact keyword search
+- Given the small content size expected, this can start as a simple in-memory comparison (no separate vector database needed) and move to something like `pgvector` later if the knowledge base grows significantly
 
 ---
 
 ## Default Seed Users
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@bhu.ac.in` | `admin123` |
+Running `python -m backend.seed` creates a default admin account for local development. The exact email and password are defined in `backend/seed.py` — check that file directly rather than relying on this README, since it may be changed without this doc being updated.
 
-> Use only for local development and testing.
+> ⚠️ **Security note:** the seed admin password is currently hardcoded in `backend/seed.py` as plain text. This is fine for local development only. Before deploying anywhere public, change it to a strong, unique password (and ideally move it into `.env` rather than leaving it in source code).
 
 ---
 
 ## Development Notes
 
-- CORS is open (`allow_origins=["*"]`) for local development — restrict before deploying to production.
+- CORS is restricted via an `ALLOWED_ORIGINS` list defined in `backend/main.py` (`allow_origins=ALLOWED_ORIGINS`, `allow_credentials=True`) — update that list directly in code when adding new frontend origins (e.g. a production domain), rather than reopening it to `["*"]`.
+- `SECRET_KEY` must be set via `.env` — the app should not run with a hardcoded or default key in production.
 - Database tables are auto-created at backend startup via SQLAlchemy.
 - SQLite is used by default; switch to PostgreSQL by setting the `DATABASE_URL` environment variable.
 - The frontend proxies API requests to `http://localhost:8000` via Vite config.
+- Never commit `.env` to version control. Confirm it's listed in `.gitignore`, and if it was ever committed in the past, rotate `SECRET_KEY` immediately (an old key in git history is still a leaked key, even after deletion).

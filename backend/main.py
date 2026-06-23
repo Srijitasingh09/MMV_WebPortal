@@ -14,6 +14,29 @@ import os
 import json
 import shutil
 import uuid
+from dotenv import load_dotenv
+load_dotenv()
+
+# Allowed file types and size limit
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_PDF_TYPES = {"application/pdf"}
+MAX_UPLOAD_MB = 50
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+
+async def validate_upload(file: UploadFile, allowed_types: set):
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type '{file.content_type}' is not allowed."
+        )
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File is too large. Maximum size is {MAX_UPLOAD_MB}MB."
+        )
+    await file.seek(0)
+    return contents
 
 import models, database, auth
 from database import engine, get_db
@@ -120,9 +143,11 @@ ensure_facility_content_table()
 app = FastAPI(title="MMV WebPortal")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",") 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -227,7 +252,7 @@ def get_notices(db: Session = Depends(get_db)):
 
 
 @app.post("/admin/notice")
-def add_notice(
+async def add_notice(
     title: str = Form(...),
     content: str = Form(...),
     category: str = Form("General"),
@@ -240,6 +265,7 @@ def add_notice(
     attachment_url = None
     attachment_name = None
     if attachment and attachment.filename:
+        await validate_upload(attachment, ALLOWED_PDF_TYPES)
         safe_name = attachment.filename.replace(" ", "_")
         unique_name = f"{uuid.uuid4().hex}_{safe_name}"
         file_path = os.path.join(UPLOADS_DIR, unique_name)
@@ -374,7 +400,7 @@ def get_college_info(db: Session = Depends(get_db)):
 
 
 @app.post("/admin/college-info")
-def add_college_info(
+async def add_college_info(
     title: str = Form(...),
     description: str = Form(...),
     category: str = Form("General"),
@@ -387,6 +413,7 @@ def add_college_info(
     image_url = None
     image_name = None
     if image and image.filename:
+        await validate_upload(image, ALLOWED_IMAGE_TYPES)
         safe_name = image.filename.replace(" ", "_")
         unique_name = f"{uuid.uuid4().hex}_{safe_name}"
         file_path = os.path.join(UPLOADS_DIR, unique_name)
@@ -573,7 +600,7 @@ def update_administration_section(payload: dict, user: models.User = Depends(get
 
 
 @app.post("/admin/administration/upload-photo")
-def upload_administration_photo(
+async def upload_administration_photo(
     section_name: str = Form(...),
     sub_section: Optional[str] = Form(None),
     files: List[UploadFile] = File(...),
@@ -602,6 +629,7 @@ def upload_administration_photo(
 
         file_url, file_name = None, None
         for file in files:
+            await validate_upload(file, ALLOWED_IMAGE_TYPES)
             filename = f"admin_{uuid.uuid4().hex}_{file.filename}"
             filepath = os.path.join(UPLOADS_DIR, filename)
             with open(filepath, "wb") as buffer:
@@ -644,7 +672,7 @@ def update_nep(payload: dict, user: models.User = Depends(get_current_user), db:
 
 
 @app.post("/academics/nep/upload")
-def upload_nep_pdf(file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_nep_pdf(file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_admin(user)
     nep = db.query(models.AcademicNEP).first()
     if not nep:
@@ -659,6 +687,7 @@ def upload_nep_pdf(file: UploadFile = File(...), user: models.User = Depends(get
         if os.path.exists(old_filepath):
             os.remove(old_filepath)
 
+    await validate_upload(file, ALLOWED_IMAGE_TYPES)
     filename = f"nep_{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOADS_DIR, filename)
     with open(filepath, "wb") as buffer:
@@ -692,8 +721,9 @@ def get_syllabus(category: str, db: Session = Depends(get_db)):
 
 
 @app.post("/academics/syllabus/{category}/upload")
-def upload_syllabus_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_syllabus_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_admin(user)
+    await validate_upload(file, ALLOWED_PDF_TYPES)
     filename = f"syllabus_{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOADS_DIR, filename)
     with open(filepath, "wb") as buffer:
@@ -727,8 +757,9 @@ def get_electives(category: str, db: Session = Depends(get_db)):
 
 
 @app.post("/academics/electives/{category}/upload")
-def upload_elective_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_elective_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_admin(user)
+    await validate_upload(file, ALLOWED_PDF_TYPES)
     filename = f"elective_{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOADS_DIR, filename)
     with open(filepath, "wb") as buffer:
@@ -901,7 +932,7 @@ def upsert_facility_content(
 
 
 @app.post("/admin/facility-content/upload-pdf")
-def upload_facility_content_pdf(
+async def upload_facility_content_pdf(
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -927,6 +958,7 @@ def upload_facility_content_pdf(
 
     uploaded = []
     for file in files:
+        await validate_upload(file, ALLOWED_PDF_TYPES)
         filename = f"fac_{uuid.uuid4().hex}_{file.filename}"
         filepath = os.path.join(UPLOADS_DIR, filename)
         with open(filepath, "wb") as buffer:
@@ -959,7 +991,7 @@ def delete_facility_content_pdf(pdf_id: int, user: models.User = Depends(get_cur
 
 
 @app.post("/admin/facility-content/upload-photo")
-def upload_facility_content_photo(
+async def upload_facility_content_photo(
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -986,6 +1018,7 @@ def upload_facility_content_photo(
 
     uploaded = []
     for file in files:
+        await validate_upload(file, ALLOWED_IMAGE_TYPES)
         filename = f"fac_photo_{uuid.uuid4().hex}_{file.filename}"
         filepath = os.path.join(UPLOADS_DIR, filename)
         with open(filepath, "wb") as buffer:

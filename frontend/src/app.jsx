@@ -59,7 +59,7 @@ function App() {
         <Route path="/Notices" element={<LayoutWrapper><Notices/></LayoutWrapper>} />
 
          {/*contact*/}
-        <Route path="/Contact" element={<LayoutWrapper hideFooter={true}><Contact/></LayoutWrapper>} />
+        <Route path="/Contact" element={<LayoutWrapper><Contact/></LayoutWrapper>} />
        
 
 
