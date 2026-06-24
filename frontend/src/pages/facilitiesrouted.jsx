@@ -86,7 +86,7 @@ const pages = {
 
   'wellbeing/wbsc': { 
     title: 'Well Being Service Cell, BHU',           
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
