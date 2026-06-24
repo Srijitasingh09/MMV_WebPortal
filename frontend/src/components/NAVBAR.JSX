@@ -340,7 +340,7 @@ const Navbar = () => {
               { label: "Extra Curricular", children: [
                 { label: "NCC", path: "/facilities/extracurricular/ncc" },
                 { label: "NSS", path: "/facilities/extracurricular/nss" },
-                { label: "Clubs", path: "/facilities/extracurricular/clubs" },
+                { label: "NLSC", path: "/facilities/extracurricular/nlsc" },
                 { label: "Diploma & Certificate Courses", path: "/facilities/extracurricular/diplomacourses" },
               ]},
               { label: "Samarth Portal", path: "/facilities/samarth" },

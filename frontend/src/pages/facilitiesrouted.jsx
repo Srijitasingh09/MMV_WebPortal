@@ -144,7 +144,7 @@ const pages = {
     pageType: 'description',
   },
 
-  'extracurricular/clubs': { title: 'Clubs',                           
+  'extracurricular/nlsc': { title: 'Nurturing Life Skills Cell (NLSC)',                           
     pageType: 'description'
   },
 
@@ -182,7 +182,7 @@ const pages = {
 
   'citydelegacy': { 
     title: 'City Delegacy',                   
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center' 
   },
 

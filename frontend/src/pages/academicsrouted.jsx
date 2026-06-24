@@ -11,19 +11,19 @@ const pages = {
   'syllabus/ug/science': { 
     title: 'Syllabus — UG Science',           
     pageType: 'table',
-    table: ['Course', 'Syllabus PDF'] 
+    tableColumns: ['Course', 'Syllabus PDF'] 
   },
 
   'syllabus/ug/socialscience': { 
     title: 'Syllabus — UG Social Science',    
     pageType: 'table',
-    table: ['Course', 'Syllabus PDF']
+    tableColumns: ['Course', 'Syllabus PDF']
   },
 
   'syllabus/ug/arts': { 
     title: 'Syllabus — UG Arts', 
     pageType: 'table',
-    table: ['Course', 'Syllabus PDF'] 
+    tableColumns: ['Course', 'Syllabus PDF'] 
   },
 
   'syllabus/pg/bioinformatics': { 
