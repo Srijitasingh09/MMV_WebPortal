@@ -186,28 +186,7 @@ const Navbar = () => {
        alt="BHU Logo"
        className="h-18 rounded-full object-contain bg-white"
   />  
-
-  {/* <div className="flex flex-col">
-    <h1 className="text-white text-lg font-medium">
-      Banaras Hindu University
-    </h1> */}
-
-    {/* <p className="text-blue-200 text-xs">
-      Varanasi — 221005
-    </p> */}
-  {/* </div> */}
 </div>
-        {/* <div className="bg-white px-4 py-1 flex items-center justify-between">
-       
-        # website logo
-       <div className="flex items-center gap-2 pl-0">
-       <img
-       src="/bhu/logo.png"
-       alt="BHU Logo"
-       className="h-54 rounded-full object-contain bg-white"
-  /> 
-  </div>
-  </div> */}
          {/* CENTER - MMV SAARTHI LOGO */}
          <div>
           <img 
@@ -234,11 +213,6 @@ const Navbar = () => {
 
        {/* ---- NAVIGATION BAR ---- */}
       <nav className="bg-[#0f3358] flex px-2 border-b border-gray-200 relative justify-end">
-        {/* Added Logo */}
-        {/* <img 
-        src="./mmv_saarthi_logo.png" 
-        alt="mmv-saarthi-logo"
-        className='h-12 pl-0' /> */}
 
         <div className='flex relative justify-end'>
           <Link to="/"
