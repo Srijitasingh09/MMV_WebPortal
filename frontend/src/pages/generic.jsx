@@ -663,14 +663,14 @@ const GenericContentPage = ({
       {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
       {(hasPhoto || hasDesc || hasSlideshow) && (
         <div className={`grid grid-cols-1 gap-6 ${
-          hasPhoto && galleryPhotos.length && hasDesc && photoSettings.align !== 'top'
-            ? 'md:grid-cols-3'
-            : ''
+          hasPhoto && !hasSlideshow && galleryPhotos.length && hasDesc 
+           ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
+           : 'md:grid-cols-3' // Default fallback grid structure
         }`}>
 
           {/* SLIDESHOW */}
           {hasSlideshow && (
-            <div className="col-span-full w-full">
+             <div className="md:col-span-3 w-full">
               {isAdmin && (
                 <div className="flex justify-end mb-2 relative">
                   <button
@@ -716,15 +716,14 @@ const GenericContentPage = ({
                   )}
                 </div>
               )}
-              <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+              
                 <SlideshowBlock
                   photos={galleryPhotos}
                   isAdmin={isAdmin}
                   onDelete={handleDeletePhoto}
                   height={photoSettings.slideshowHeight}
-                  maxWidth={photoSettings.slideshowMaxWidth}
-                />
-              </div>
+                  maxWidth={photoSettings.slideshowMaxWidth || "100%"}
+                />      
             </div>
           )}
 
@@ -840,11 +839,13 @@ const GenericContentPage = ({
 
           {hasDesc && (
             <div className={`w-full ${
-              (hasPhoto || hasSlideshow) && galleryPhotos.length && photoSettings.align === 'left'
-                ? 'md:col-span-2 order-2'
-              : (hasPhoto || hasSlideshow) && galleryPhotos.length && photoSettings.align === 'right'
-                ? 'md:col-span-2 order-1'
-              : 'md:col-span-3'
+                hasSlideshow 
+                  ? 'md:col-span-3' 
+                  : hasPhoto && galleryPhotos.length && photoSettings.align === 'left'
+                  ? 'md:col-span-2 order-2'
+                  : hasPhoto && galleryPhotos.length && photoSettings.align === 'right'
+                  ? 'md:col-span-2 order-1'
+                  : 'md:col-span-3'
             }`}>
 
               {/* FIX 7: Changed min-h-180px → min-h-[180px] (valid Tailwind arbitrary value) */}
