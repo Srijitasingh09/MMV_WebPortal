@@ -77,8 +77,8 @@ const pages = {
   'holidays': { 
     title: 'Holiday List',                    
     pageType: 'pdf-list' 
-  },
-};
+  }
+}
 
 const AcademicsRouted = () => {
   const { sub, subsub, subsubsub } = useParams();
