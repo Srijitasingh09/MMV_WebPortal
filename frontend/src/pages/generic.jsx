@@ -945,6 +945,9 @@ const GenericContentPage = ({
                       });
                     };
 
+
+                    let tableBuffer = [];  // consecutive '| a | b | c |' lines collected into one table
+
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
@@ -1027,6 +1030,65 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
+                    const flushTable = () => {
+                      if (tableBuffer.length === 0) return;
+
+                      const parseRow = (lineText) =>
+                        lineText
+                          .replace(/^\|/, '')
+                          .replace(/\|$/, '')
+                          .split('|')
+                          .map(cell => cell.trim());
+
+                      const isDividerRow = (cells) =>
+                        cells.every(cell => /^:?-+:?$/.test(cell));
+
+                      const rowsParsed = tableBuffer.map(parseRow).filter(cells => !isDividerRow(cells));
+
+                      if (rowsParsed.length > 0) {
+                        const [headerRow, ...rawBodyRows] = rowsParsed;
+                        const colCount = headerRow.length;
+
+                        // Normalize every body row to exactly colCount cells —
+                        // pad short rows with empty cells, drop extra cells on
+                        // long rows — so every <tr> lines up under the header
+                        // regardless of how many '|' the admin typed on a line.
+                        const bodyRows = rawBodyRows.map(cells => {
+                          const normalized = cells.slice(0, colCount);
+                          while (normalized.length < colCount) normalized.push('');
+                          return normalized;
+                        });
+
+                        elements.push(
+                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
+                            <table className="w-full text-sm text-left table-fixed">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  {headerRow.map((cell, ci) => (
+                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
+                                      {renderInlineFormatting(cell)}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="hover:bg-gray-50">
+                                    {cells.map((cell, ci) => (
+                                      <td key={ci} className="px-4 py-2 text-gray-700">
+                                        {renderInlineFormatting(cell)}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }
+                      tableBuffer = [];
+                    };
+
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
 
@@ -1051,6 +1113,7 @@ const GenericContentPage = ({
                       // blank line → spacer
                       if (trimmed === '') {
                         flushBullets();
+                        flushTable();
                         elements.push(<div key={`sp-${idx}`} className="h-2" />);
                         return;
                       }
@@ -1059,6 +1122,7 @@ const GenericContentPage = ({
                       if (firstLine) {
                         firstLine = false;
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h2 key={idx} className="text-2xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
                             {trimmed}
@@ -1070,6 +1134,7 @@ const GenericContentPage = ({
                       // ## Subheading
                       if (trimmed.startsWith('## ')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h3 key={idx} className="text-lg font-semibold text-[#174873] mt-4">
                             {trimmed.slice(3)}
@@ -1081,6 +1146,7 @@ const GenericContentPage = ({
                       // ### Smaller subheading
                       if (trimmed.startsWith('### ')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h4 key={idx} className="text-base font-semibold text-gray-800 mt-3">
                             {trimmed.slice(4)}
@@ -1116,9 +1182,18 @@ const GenericContentPage = ({
                         return;
                       }
 
+                      // | Table row |
+                      if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
+                        flushBullets();
+                        flushTable();
+                        tableBuffer.push(trimmed);
+                        return;
+                      }
+
                       // **Bold** or mixed bold+plain line
                       if (trimmed.includes('**')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <p key={idx} className="text-gray-800 text-base text-left">
                             {renderInlineFormatting(trimmed)}
@@ -1146,6 +1221,7 @@ const GenericContentPage = ({
                     });
 
                     flushBullets();
+                    flushTable();
                     flushNote();
                     return <div className="space-y-2">{elements}</div>;
                   })()
