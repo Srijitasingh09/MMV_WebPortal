@@ -4,7 +4,8 @@ import GenericContentPage from './generic';
 
 const pages = {
   'nep':                       { title: 'National Education Policy (NEP)', pageType: 'description' },
-  'syllabus/ug/science':       { title: 'Syllabus — UG Science',           pageType: 'pdf-list' },
+  'syllabus/ug/science':       { title: 'Syllabus — UG Science',           pageType: 'pdf-list-table',
+    tableColumns: ['Subject', 'Syllabus']},
   'syllabus/ug/socialscience': { title: 'Syllabus — UG Social Science',    pageType: 'pdf-list' },
   'syllabus/ug/arts':          { title: 'Syllabus — UG Arts',              pageType: 'pdf-list' },
   'syllabus/pg':               { title: 'Syllabus — PG',                   pageType: 'pdf-list' },
