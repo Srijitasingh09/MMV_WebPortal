@@ -663,13 +663,14 @@ const GenericContentPage = ({
       {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
       {(hasPhoto || hasDesc || hasSlideshow) && (
         <div className={`grid grid-cols-1 gap-6 ${
-          (hasPhoto || hasSlideshow) && galleryPhotos.length &&
-          hasDesc ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') : ''
+          hasPhoto && galleryPhotos.length && hasDesc && photoSettings.align !== 'top'
+            ? 'md:grid-cols-3'
+            : ''
         }`}>
 
           {/* SLIDESHOW */}
           {hasSlideshow && (
-            <div className="md:col-span-3 w-full">
+            <div className="col-span-full w-full">
               {isAdmin && (
                 <div className="flex justify-end mb-2 relative">
                   <button
@@ -715,13 +716,15 @@ const GenericContentPage = ({
                   )}
                 </div>
               )}
-              <SlideshowBlock
-                photos={galleryPhotos}
-                isAdmin={isAdmin}
-                onDelete={handleDeletePhoto}
-                height={photoSettings.slideshowHeight}
-                maxWidth={photoSettings.slideshowMaxWidth}
-              />
+              <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                <SlideshowBlock
+                  photos={galleryPhotos}
+                  isAdmin={isAdmin}
+                  onDelete={handleDeletePhoto}
+                  height={photoSettings.slideshowHeight}
+                  maxWidth={photoSettings.slideshowMaxWidth}
+                />
+              </div>
             </div>
           )}
 
