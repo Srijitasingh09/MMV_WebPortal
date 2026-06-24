@@ -11,6 +11,12 @@ const API = `http://${window.location.hostname}:8000`;
 // is just whatever filename the browser sends.
 const PROFILE_PHOTO_TAG = '__profile_photo__';
 
+// Same idea, but for PDFs uploaded into a table cell (e.g. a "syllabus PDF"
+// column). They're stored in the same backend `pdfs` table as the standalone
+// pdf-list block, so they need a tag to be told apart — otherwise they'd also
+// show up in the generic "Documents" viewer below the description.
+const TABLE_PDF_TAG = '__table_pdf__';
+
 // Defined outside component so it never causes stale closure issues inside useCallback/useEffect
 const blankProfile = {
   name: '', designation: '', university: '', address: '',
@@ -97,6 +103,12 @@ const GenericContentPage = ({
   const allPhotos    = data.photos || [];
   const profilePhoto  = allPhotos.find(p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)) || null;
   const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG));
+
+  // Same split for PDFs: a PDF uploaded into a table cell is tagged so it
+  // only shows up inside that table cell, never in the standalone "Documents"
+  // viewer used by the pdf-list block.
+  const allPdfs    = data.pdfs || [];
+  const galleryPdfs = allPdfs.filter(p => !p.pdf_name?.startsWith(TABLE_PDF_TAG));
 
   // FIX 6: Wrapped in useCallback so it can be safely listed as a useEffect dependency
   const fetchData = useCallback(async () => {
@@ -933,6 +945,9 @@ const GenericContentPage = ({
                       });
                     };
 
+
+                    let tableBuffer = [];  // consecutive '| a | b | c |' lines collected into one table
+
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
@@ -947,9 +962,13 @@ const GenericContentPage = ({
                     };
 
                     // Renders the whole accumulated note block as ONE callout box.
-                    // Supports the same inline formatting as the rest of the page:
-                    // - lines starting with '- ' become real bullet points
-                    // - '**bold**' and links work on every line
+                    // Supports the same formatting as the main description:
+                    // - '## ' / '### ' become headings (smaller, since they're
+                    //   inside a callout — text-sm/text-xs instead of text-lg/base)
+                    // - '- ' lines become real bullet points
+                    // - '---' becomes a divider line
+                    // - '**bold**' and links work on every line, including
+                    //   inside headings and bullets
                     // Consecutive non-bullet lines stay as separate lines (breaks
                     // preserved); consecutive bullet lines group into one <ul>.
                     const flushNote = () => {
@@ -971,7 +990,26 @@ const GenericContentPage = ({
                         };
 
                         noteBuffer.forEach((lineText, i) => {
-                          if (lineText.startsWith('- ')) {
+                          if (lineText.startsWith('### ')) {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <h4 key={`note-h4-${i}`} className="text-sm font-semibold text-[#174873] mt-2 not-italic">
+                                {renderInlineFormatting(lineText.slice(4))}
+                              </h4>
+                            );
+                          } else if (lineText.startsWith('## ')) {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <h3 key={`note-h3-${i}`} className="text-base font-semibold text-[#174873] mt-2 not-italic">
+                                {renderInlineFormatting(lineText.slice(3))}
+                              </h3>
+                            );
+                          } else if (lineText === '---') {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <hr key={`note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                            );
+                          } else if (lineText.startsWith('- ')) {
                             noteBulletBuffer.push(lineText.slice(2));
                           } else {
                             flushNoteBullets();
@@ -992,19 +1030,82 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
+                    const flushTable = () => {
+                      if (tableBuffer.length === 0) return;
+
+                      const parseRow = (lineText) =>
+                        lineText
+                          .replace(/^\|/, '')
+                          .replace(/\|$/, '')
+                          .split('|')
+                          .map(cell => cell.trim());
+
+                      const isDividerRow = (cells) =>
+                        cells.every(cell => /^:?-+:?$/.test(cell));
+
+                      const rowsParsed = tableBuffer.map(parseRow).filter(cells => !isDividerRow(cells));
+
+                      if (rowsParsed.length > 0) {
+                        const [headerRow, ...rawBodyRows] = rowsParsed;
+                        const colCount = headerRow.length;
+
+                        // Normalize every body row to exactly colCount cells —
+                        // pad short rows with empty cells, drop extra cells on
+                        // long rows — so every <tr> lines up under the header
+                        // regardless of how many '|' the admin typed on a line.
+                        const bodyRows = rawBodyRows.map(cells => {
+                          const normalized = cells.slice(0, colCount);
+                          while (normalized.length < colCount) normalized.push('');
+                          return normalized;
+                        });
+
+                        elements.push(
+                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
+                            <table className="w-full text-sm text-left table-fixed">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  {headerRow.map((cell, ci) => (
+                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
+                                      {renderInlineFormatting(cell)}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="hover:bg-gray-50">
+                                    {cells.map((cell, ci) => (
+                                      <td key={ci} className="px-4 py-2 text-gray-700">
+                                        {renderInlineFormatting(cell)}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        );
+                      }
+                      tableBuffer = [];
+                    };
+
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
 
                       // Currently inside an open note block (started with '>',
                       // not yet closed with a trailing '<') — every line is
-                      // swallowed into the note until the closing line is hit,
-                      // regardless of what it would otherwise look like.
+                      // swallowed into the note until the closing line is hit.
+                      // Continuation lines are allowed to repeat the leading
+                      // '> ' (the natural way people write multi-line quotes)
+                      // — strip it so bullets/bold on those lines still match
+                      // the same '- ' / '**' checks flushNote() looks for.
                       if (inNote) {
-                        if (trimmed.endsWith('<')) {
-                          noteBuffer.push(trimmed.slice(0, -1).trim());
+                        let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
+                        if (lineContent.endsWith('<')) {
+                          noteBuffer.push(lineContent.slice(0, -1).trim());
                           flushNote();
                         } else {
-                          noteBuffer.push(trimmed);
+                          noteBuffer.push(lineContent);
                         }
                         return;
                       }
@@ -1012,6 +1113,7 @@ const GenericContentPage = ({
                       // blank line → spacer
                       if (trimmed === '') {
                         flushBullets();
+                        flushTable();
                         elements.push(<div key={`sp-${idx}`} className="h-2" />);
                         return;
                       }
@@ -1020,6 +1122,7 @@ const GenericContentPage = ({
                       if (firstLine) {
                         firstLine = false;
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h2 key={idx} className="text-2xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
                             {trimmed}
@@ -1031,6 +1134,7 @@ const GenericContentPage = ({
                       // ## Subheading
                       if (trimmed.startsWith('## ')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h3 key={idx} className="text-lg font-semibold text-[#174873] mt-4">
                             {trimmed.slice(3)}
@@ -1042,6 +1146,7 @@ const GenericContentPage = ({
                       // ### Smaller subheading
                       if (trimmed.startsWith('### ')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h4 key={idx} className="text-base font-semibold text-gray-800 mt-3">
                             {trimmed.slice(4)}
@@ -1050,27 +1155,13 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // - Bullet point
-                      if (trimmed.startsWith('- ')) {
-                        bulletBuffer.push(trimmed.slice(2));
-                        return;
-                      }
-
-                      // **Bold** or mixed bold+plain line
-                      if (trimmed.includes('**')) {
-                        flushBullets();
-                        elements.push(
-                          <p key={idx} className="text-gray-800 text-base text-left">
-                            {renderInlineFormatting(trimmed)}
-                          </p>
-                        );
-                        return;
-                      }
-
                       // > Opens a note block. Everything from here through the
                       // line ending in '<' becomes ONE callout box (line breaks
                       // preserved inside it). A line can open and close on its
-                      // own (e.g. "> just this line <").
+                      // own (e.g. "> just this line <"). This check runs BEFORE
+                      // the bullet/bold checks below — otherwise a line like
+                      // "> some **bold** text" would get caught by the bold
+                      // check first and never open the note at all.
                       if (trimmed.startsWith('> ') || trimmed === '>') {
                         flushBullets();
                         let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
@@ -1082,6 +1173,32 @@ const GenericContentPage = ({
                           inNote = true;
                           noteBuffer.push(content);
                         }
+                        return;
+                      }
+
+                      // - Bullet point
+                      if (trimmed.startsWith('- ')) {
+                        bulletBuffer.push(trimmed.slice(2));
+                        return;
+                      }
+
+                      // | Table row |
+                      if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
+                        flushBullets();
+                        flushTable();
+                        tableBuffer.push(trimmed);
+                        return;
+                      }
+
+                      // **Bold** or mixed bold+plain line
+                      if (trimmed.includes('**')) {
+                        flushBullets();
+                        flushTable();
+                        elements.push(
+                          <p key={idx} className="text-gray-800 text-base text-left">
+                            {renderInlineFormatting(trimmed)}
+                          </p>
+                        );
                         return;
                       }
 
@@ -1104,6 +1221,7 @@ const GenericContentPage = ({
                     });
 
                     flushBullets();
+                    flushTable();
                     flushNote();
                     return <div className="space-y-2">{elements}</div>;
                   })()
@@ -1115,14 +1233,14 @@ const GenericContentPage = ({
       )}
 
       {/* ── PDF VIEWER ── */}
-      {data.pdfs?.length > 0 && (
+      {galleryPdfs.length > 0 && (
         <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="bg-[#174873] px-6 py-4">
             <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
           </div>
 
           <div className="divide-y divide-gray-200">
-            {data.pdfs.map(pdf => (
+            {galleryPdfs.map(pdf => (
               <div key={pdf.id} className="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
                 <div className="flex items-center gap-4 flex-1">
                   <svg
@@ -1282,11 +1400,12 @@ const GenericContentPage = ({
                                         const file = e.target.files[0];
                                         if (!file) return;
                                         try {
+                                          const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
                                           const form = new FormData();
                                           form.append('section', section || '');
                                           form.append('category', subsection || '');
                                           form.append('sub_category', '');
-                                          form.append('files', file);
+                                          form.append('files', taggedFile);
                                           const res = await axios.post(
                                             `${API}/admin/facility-content/upload-pdf`, form,
                                             { headers: { Authorization: `Bearer ${token}` } }
@@ -1390,11 +1509,12 @@ const GenericContentPage = ({
                                     const file = e.target.files[0];
                                     if (!file) return;
                                     try {
+                                      const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
                                       const form = new FormData();
                                       form.append('section', section || '');
                                       form.append('category', subsection || '');
                                       form.append('sub_category', '');
-                                      form.append('files', file);
+                                      form.append('files', taggedFile);
 
                                       // FIX 5: Removed debug console.log that was left in by mistake
 

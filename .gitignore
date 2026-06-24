@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 *.pyo
 .venv/
-*.dbcollege_portal.db
+*.db
 frontend/.env
 frontend/.env.production
 backend/.env 
