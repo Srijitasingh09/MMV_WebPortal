@@ -5,12 +5,12 @@ import GenericContentPage from './generic';
 const pages = {
   'hostels/chiefwarden': { 
     title: 'Chief Warden',                    
-    pageType: 'profile-description' 
+    pageType: 'profile' 
   },
 
   'hostels/coordinator': { 
     title: 'Hostel Coordinator',              
-    pageType: 'profile-description'
+    pageType: 'profile'
   },
 
   'hostels/swastikunj': { 
@@ -79,7 +79,7 @@ const pages = {
   },
 
   'sports/gym': { 
-    title: 'Open-Gym & Indoor Gym',                       
+    title: 'Open-Gym',                       
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
@@ -98,14 +98,13 @@ const pages = {
 
   'trainingplacement/universitytraining': { 
     title: 'University Training & Placement', 
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center',
-    tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
+    pageType: 'description-pdf-list',
+    photoAlign: 'center'
   },
 
   'trainingplacement/mmvtraining': { 
     title: 'MMV Training & Placement',        
-    pageType: 'slideshow-description-table',
+    pageType: 'description-table',
     photoAlign: 'center',
     tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
   },
@@ -150,8 +149,7 @@ const pages = {
 
   'extracurricular/diplomacourses': { 
     title: 'Diploma & Certificate Courses',                 
-    pageType: 'description-table',
-    tableColumns: ['Course', 'Duration', 'Eligibility'] 
+    pageType: 'pdf-list-description'
   },
 
   'samarth': { 
