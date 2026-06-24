@@ -136,19 +136,16 @@ const pages = {
 
   'extracurricular/ncc': { 
     title: 'National Cadet Corps (NCC)',                             
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
+    pageType: 'description'
   },
 
   'extracurricular/nss': { 
     title: 'National Service Scheme (NSS)',                             
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
+    pageType: 'description',
   },
 
   'extracurricular/clubs': { title: 'Clubs',                           
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center'
+    pageType: 'description'
   },
 
   'extracurricular/diplomacourses': { 
@@ -173,7 +170,7 @@ const pages = {
 
   'canteen/universitycanteen': { 
     title: 'University Canteen',              
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
@@ -209,7 +206,7 @@ const pages = {
 
   'other/banks': { 
     title: 'Banks & Post Offices',                           
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
@@ -221,7 +218,7 @@ const pages = {
 
   'other/auditorium': { 
     title: 'Auditorium',                      
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 };

@@ -833,7 +833,7 @@ const GenericContentPage = ({
             }`}>
 
               {/* FIX 7: Changed min-h-180px → min-h-[180px] (valid Tailwind arbitrary value) */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 ml-5 w-full min-h-[180px]">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
