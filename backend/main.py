@@ -14,6 +14,29 @@ import os
 import json
 import shutil
 import uuid
+from dotenv import load_dotenv
+load_dotenv()
+
+# Allowed file types and size limit
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_PDF_TYPES = {"application/pdf"}
+MAX_UPLOAD_MB = 50
+MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
+
+async def validate_upload(file: UploadFile, allowed_types: set):
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File type '{file.content_type}' is not allowed."
+        )
+    contents = await file.read()
+    if len(contents) > MAX_UPLOAD_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File is too large. Maximum size is {MAX_UPLOAD_MB}MB."
+        )
+    await file.seek(0)
+    return contents
 
 import models, database, auth
 from database import engine, get_db
@@ -105,7 +128,13 @@ def ensure_facility_content_table():
         models.FacilityContentPdf.__table__,
     ], checkfirst=True)
 
+def ensure_emergency_contacts_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.EmergencyContact.__table__,
+    ], checkfirst=True)
+ 
 
+ensure_emergency_contacts_table() 
 ensure_notice_attachment_columns()
 ensure_college_info_columns()
 ensure_mmv_knowledge_file()
@@ -114,9 +143,11 @@ ensure_facility_content_table()
 app = FastAPI(title="MMV WebPortal")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",") 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -165,7 +196,54 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "full_name": user.full_name,
     }
 
+# ====================contacts=======================
 
+@app.get("/contact-info")
+def get_contact_info(db: Session = Depends(get_db)):
+    """
+    Public route — returns the single contact info row.
+    If none exists yet, returns an empty-ish object so the
+    frontend can render its 'not added yet' state gracefully.
+    """
+    info = db.query(models.ContactInfo).first()
+    if not info:
+        return {
+            "id": 0,
+            "address": None,
+            "phone": None,
+            "email": None,
+            "office_hours": None,
+            "map_embed_url": None,
+        }
+    return info
+ 
+ 
+@app.put("/admin/contact-info")
+def update_contact_info(
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Admin-only route — creates the row if it doesn't exist yet,
+    otherwise updates the existing one (upsert pattern, since
+    there should only ever be ONE contact info row).
+    """
+    ensure_admin(user)
+ 
+    info = db.query(models.ContactInfo).first()
+    if not info:
+        info = models.ContactInfo()
+        db.add(info)
+ 
+    for field in ["address", "phone", "email", "office_hours", "map_embed_url"]:
+        if field in payload:
+            setattr(info, field, payload[field])
+ 
+    db.commit()
+    db.refresh(info)
+    return info
+ 
 # ===================== NOTICES =====================
 
 @app.get("/notices")
@@ -174,7 +252,7 @@ def get_notices(db: Session = Depends(get_db)):
 
 
 @app.post("/admin/notice")
-def add_notice(
+async def add_notice(
     title: str = Form(...),
     content: str = Form(...),
     category: str = Form("General"),
@@ -187,6 +265,7 @@ def add_notice(
     attachment_url = None
     attachment_name = None
     if attachment and attachment.filename:
+        await validate_upload(attachment, ALLOWED_PDF_TYPES)
         safe_name = attachment.filename.replace(" ", "_")
         unique_name = f"{uuid.uuid4().hex}_{safe_name}"
         file_path = os.path.join(UPLOADS_DIR, unique_name)
@@ -207,6 +286,109 @@ def add_notice(
     db.refresh(new_notice)
     return new_notice
 
+@app.delete("/admin/notice/{notice_id}")
+def delete_notice(
+    notice_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    ensure_admin(user)
+    notice = db.query(models.Notice).filter(models.Notice.id == notice_id).first()
+    if not notice:
+        raise HTTPException(status_code=404, detail="Notice not found")
+    if notice.attachment_url:
+        stored_name = os.path.basename(notice.attachment_url)
+        stored_path = os.path.join(UPLOADS_DIR, stored_name)
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
+    db.delete(notice)
+    db.commit()
+    return {"message": "Notice deleted"}
+
+# ================emergency contact=======================
+
+@app.get("/emergency-contacts")
+def get_emergency_contacts(db: Session = Depends(get_db)):
+    """
+    Public route — returns all emergency contact entries ordered by display_order.
+    Frontend groups them by group_name to build the three cards.
+    """
+    contacts = (
+        db.query(models.EmergencyContact)
+        .order_by(models.EmergencyContact.display_order)
+        .all()
+    )
+    return contacts
+ 
+ 
+@app.post("/admin/emergency-contacts")
+def add_emergency_contact(
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only — add a new emergency contact entry."""
+    ensure_admin(user)
+ 
+    # Auto-set display_order to max+1 so new entries go to the bottom
+    max_order = db.query(func.max(models.EmergencyContact.display_order)).scalar() or 0
+ 
+    entry = models.EmergencyContact(
+        label=payload.get("label", "").strip(),
+        value=payload.get("value", "").strip(),
+        type=payload.get("type", "phone"),           # "phone" | "email" | "address"
+        group_name=payload.get("group_name", "").strip(),
+        display_order=max_order + 1,
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return entry
+ 
+ 
+@app.put("/admin/emergency-contacts/{entry_id}")
+def update_emergency_contact(
+    entry_id: int,
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only — update an existing emergency contact entry."""
+    ensure_admin(user)
+ 
+    entry = db.query(models.EmergencyContact).filter(
+        models.EmergencyContact.id == entry_id
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Emergency contact not found")
+ 
+    for field in ["label", "value", "type", "group_name", "display_order"]:
+        if field in payload:
+            setattr(entry, field, payload[field])
+ 
+    db.commit()
+    db.refresh(entry)
+    return entry
+ 
+ 
+@app.delete("/admin/emergency-contacts/{entry_id}")
+def delete_emergency_contact(
+    entry_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Admin-only — delete an emergency contact entry."""
+    ensure_admin(user)
+ 
+    entry = db.query(models.EmergencyContact).filter(
+        models.EmergencyContact.id == entry_id
+    ).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Emergency contact not found")
+ 
+    db.delete(entry)
+    db.commit()
+    return {"message": "Deleted"}
 
 # ===================== COLLEGE INFO =====================
 
@@ -218,7 +400,7 @@ def get_college_info(db: Session = Depends(get_db)):
 
 
 @app.post("/admin/college-info")
-def add_college_info(
+async def add_college_info(
     title: str = Form(...),
     description: str = Form(...),
     category: str = Form("General"),
@@ -231,6 +413,7 @@ def add_college_info(
     image_url = None
     image_name = None
     if image and image.filename:
+        await validate_upload(image, ALLOWED_IMAGE_TYPES)
         safe_name = image.filename.replace(" ", "_")
         unique_name = f"{uuid.uuid4().hex}_{safe_name}"
         file_path = os.path.join(UPLOADS_DIR, unique_name)
@@ -417,7 +600,7 @@ def update_administration_section(payload: dict, user: models.User = Depends(get
 
 
 @app.post("/admin/administration/upload-photo")
-def upload_administration_photo(
+async def upload_administration_photo(
     section_name: str = Form(...),
     sub_section: Optional[str] = Form(None),
     files: List[UploadFile] = File(...),
@@ -446,6 +629,7 @@ def upload_administration_photo(
 
         file_url, file_name = None, None
         for file in files:
+            await validate_upload(file, ALLOWED_IMAGE_TYPES)
             filename = f"admin_{uuid.uuid4().hex}_{file.filename}"
             filepath = os.path.join(UPLOADS_DIR, filename)
             with open(filepath, "wb") as buffer:
@@ -488,7 +672,7 @@ def update_nep(payload: dict, user: models.User = Depends(get_current_user), db:
 
 
 @app.post("/academics/nep/upload")
-def upload_nep_pdf(file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_nep_pdf(file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_admin(user)
     nep = db.query(models.AcademicNEP).first()
     if not nep:
@@ -503,6 +687,7 @@ def upload_nep_pdf(file: UploadFile = File(...), user: models.User = Depends(get
         if os.path.exists(old_filepath):
             os.remove(old_filepath)
 
+    await validate_upload(file, ALLOWED_IMAGE_TYPES)
     filename = f"nep_{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOADS_DIR, filename)
     with open(filepath, "wb") as buffer:
@@ -536,8 +721,9 @@ def get_syllabus(category: str, db: Session = Depends(get_db)):
 
 
 @app.post("/academics/syllabus/{category}/upload")
-def upload_syllabus_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_syllabus_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_admin(user)
+    await validate_upload(file, ALLOWED_PDF_TYPES)
     filename = f"syllabus_{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOADS_DIR, filename)
     with open(filepath, "wb") as buffer:
@@ -571,8 +757,9 @@ def get_electives(category: str, db: Session = Depends(get_db)):
 
 
 @app.post("/academics/electives/{category}/upload")
-def upload_elective_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def upload_elective_pdf(category: str, file: UploadFile = File(...), user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     ensure_admin(user)
+    await validate_upload(file, ALLOWED_PDF_TYPES)
     filename = f"elective_{uuid.uuid4().hex}_{file.filename}"
     filepath = os.path.join(UPLOADS_DIR, filename)
     with open(filepath, "wb") as buffer:
@@ -745,7 +932,7 @@ def upsert_facility_content(
 
 
 @app.post("/admin/facility-content/upload-pdf")
-def upload_facility_content_pdf(
+async def upload_facility_content_pdf(
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -771,6 +958,7 @@ def upload_facility_content_pdf(
 
     uploaded = []
     for file in files:
+        await validate_upload(file, ALLOWED_PDF_TYPES)
         filename = f"fac_{uuid.uuid4().hex}_{file.filename}"
         filepath = os.path.join(UPLOADS_DIR, filename)
         with open(filepath, "wb") as buffer:
@@ -803,7 +991,7 @@ def delete_facility_content_pdf(pdf_id: int, user: models.User = Depends(get_cur
 
 
 @app.post("/admin/facility-content/upload-photo")
-def upload_facility_content_photo(
+async def upload_facility_content_photo(
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -830,6 +1018,7 @@ def upload_facility_content_photo(
 
     uploaded = []
     for file in files:
+        await validate_upload(file, ALLOWED_IMAGE_TYPES)
         filename = f"fac_photo_{uuid.uuid4().hex}_{file.filename}"
         filepath = os.path.join(UPLOADS_DIR, filename)
         with open(filepath, "wb") as buffer:

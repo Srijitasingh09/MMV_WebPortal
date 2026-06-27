@@ -1,0 +1,10 @@
+college_portal.db
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.college_portal_backup.db
+frontend/.env
+frontend/.env.production
+backend/.env 
+backend/uploads

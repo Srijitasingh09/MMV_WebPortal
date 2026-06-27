@@ -11,6 +11,12 @@ const API = `http://${window.location.hostname}:8000`;
 // is just whatever filename the browser sends.
 const PROFILE_PHOTO_TAG = '__profile_photo__';
 
+// Same idea, but for PDFs uploaded into a table cell (e.g. a "syllabus PDF"
+// column). They're stored in the same backend `pdfs` table as the standalone
+// pdf-list block, so they need a tag to be told apart — otherwise they'd also
+// show up in the generic "Documents" viewer below the description.
+const TABLE_PDF_TAG = '__table_pdf__';
+
 // Defined outside component so it never causes stale closure issues inside useCallback/useEffect
 const blankProfile = {
   name: '', designation: '', university: '', address: '',
@@ -51,6 +57,10 @@ const GenericContentPage = ({
   const [newRow,       setNewRow]       = useState({});
   const [addingCol,    setAddingCol]    = useState(false);
   const [newColName,   setNewColName]   = useState('');
+  const [tableHeading,     setTableHeading]     = useState('');
+  const [isEditingHeading, setIsEditingHeading] = useState(false);
+  const [editTableHeading, setEditTableHeading] = useState('');
+  const [savingHeading,    setSavingHeading]    = useState(false);
 
   // inline row edit state
   const [editingRowIdx,  setEditingRowIdx]  = useState(null); // which row is being edited
@@ -61,6 +71,24 @@ const GenericContentPage = ({
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [editProfile,      setEditProfile]      = useState(blankProfile);
   const [savingProfile,    setSavingProfile]    = useState(false);
+
+  // Photo size settings — admin-editable, saved per-page in `details` JSON.
+  // Falls back to the router-config props above until/unless a page has its
+  // own saved override (see fetchData -> parsed.photoSettings below).
+  const blankPhotoSettings = {
+    cols: photoCols,
+    height: photoHeight,
+    width: photoWidth,
+    align: photoAlign === 'center' ? 'top' : photoAlign, // 'left' | 'right' | 'top'
+    slideshowHeight: slideshowHeight,
+    slideshowMaxWidth: slideshowMaxWidth,
+  };
+  const [photoSettings,        setPhotoSettings]        = useState(blankPhotoSettings);
+  const [isEditingPhotoSize,   setIsEditingPhotoSize]   = useState(false);
+  const [editPhotoSettings,    setEditPhotoSettings]    = useState(blankPhotoSettings);
+  const [isEditingSlideSize,   setIsEditingSlideSize]   = useState(false);
+  const [editSlideSettings,    setEditSlideSettings]    = useState(blankPhotoSettings);
+  const [savingPhotoSettings,  setSavingPhotoSettings]  = useState(false);
 
   const hasSlideshow = pageType.includes('slideshow');
   const hasPhoto     = pageType.includes('photo'); 
@@ -76,6 +104,12 @@ const GenericContentPage = ({
   const profilePhoto  = allPhotos.find(p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)) || null;
   const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG));
 
+  // Same split for PDFs: a PDF uploaded into a table cell is tagged so it
+  // only shows up inside that table cell, never in the standalone "Documents"
+  // viewer used by the pdf-list block.
+  const allPdfs    = data.pdfs || [];
+  const galleryPdfs = allPdfs.filter(p => !p.pdf_name?.startsWith(TABLE_PDF_TAG));
+
   // FIX 6: Wrapped in useCallback so it can be safely listed as a useEffect dependency
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -88,7 +122,7 @@ const GenericContentPage = ({
       setData(match);
       setEditDesc(match.description || '');
 
-      // parse table / profile from details field (shared JSON blob)
+      // parse table / profile / photoSettings from details field (shared JSON blob)
       let parsed = {};
       if (match.details) {
         try { parsed = JSON.parse(match.details); } catch { parsed = {}; }
@@ -97,6 +131,9 @@ const GenericContentPage = ({
       if (hasTable) {
         setColumns(parsed.columns || tableColumns);
         setRows(parsed.rows || []);
+        const heading = parsed.tableHeading || '';
+        setTableHeading(heading);
+        setEditTableHeading(heading);
       }
 
       if (hasProfile) {
@@ -106,10 +143,21 @@ const GenericContentPage = ({
         setProfile(merged);
         setEditProfile(merged);
       }
+
+      // Photo size settings: start from router-config defaults, then layer
+      // any saved per-page override on top. Always reset on page change so
+      // switching pages doesn't carry over a previous page's saved sizes.
+      const mergedPhotoSettings = { ...blankPhotoSettings, ...(parsed.photoSettings || {}) };
+      setPhotoSettings(mergedPhotoSettings);
+      setEditPhotoSettings(mergedPhotoSettings);
+      setEditSlideSettings(mergedPhotoSettings);
     } catch {
       setData({});
-      if (hasTable)   { setColumns(tableColumns); setRows([]); }
+      if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); }
       if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
+      setPhotoSettings(blankPhotoSettings);
+      setEditPhotoSettings(blankPhotoSettings);
+      setEditSlideSettings(blankPhotoSettings);
     } finally {
       setLoading(false);
     }
@@ -152,6 +200,29 @@ const GenericContentPage = ({
     } catch { alert('Table save failed'); }
   };
 
+  // ── TABLE HEADING SAVE ──
+  const handleSaveTableHeading = async () => {
+    setSavingHeading(true);
+    try {
+      let existing = {};
+      try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
+      const merged = { ...existing, tableHeading: editTableHeading };
+      await axios.put(`${API}/admin/facility-content`,
+        {
+          section,
+          category: subsection,
+          sub_category: '',
+          details: JSON.stringify(merged)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTableHeading(editTableHeading);
+      setData(prev => ({ ...prev, details: JSON.stringify(merged) }));
+      setIsEditingHeading(false);
+    } catch { alert('Table heading save failed'); }
+    finally { setSavingHeading(false); }
+  };
+
   // ── PROFILE SAVE ──
   const handleSaveProfile = async () => {
     setSavingProfile(true);
@@ -174,6 +245,51 @@ const GenericContentPage = ({
       setIsEditingProfile(false);
     } catch { alert('Profile save failed'); }
     finally { setSavingProfile(false); }
+  };
+
+  // ── PHOTO SETTINGS SAVE ──
+  // Same merge-into-`details` pattern as saveTable/handleSaveProfile so this
+  // never clobbers table/profile data already saved on this page.
+  const savePhotoSettings = async (newSettings) => {
+    setSavingPhotoSettings(true);
+    try {
+      let existing = {};
+      try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
+      const merged = { ...existing, photoSettings: newSettings };
+      await axios.put(`${API}/admin/facility-content`,
+        {
+          section,
+          category: subsection,
+          sub_category: '',
+          details: JSON.stringify(merged)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPhotoSettings(newSettings);
+      setData(prev => ({ ...prev, details: JSON.stringify(merged) }));
+    } catch { alert('Photo size save failed'); }
+    finally { setSavingPhotoSettings(false); }
+  };
+
+  const handleSavePhotoGridSettings = () => {
+    const clampedCols = Math.min(3, Math.max(1, Number(editPhotoSettings.cols) || 1));
+    const validAligns = ['left', 'right', 'top'];
+    const nextAlign = validAligns.includes(editPhotoSettings.align) ? editPhotoSettings.align : photoSettings.align;
+    const next = {
+      ...photoSettings,
+      cols: clampedCols,
+      height: Number(editPhotoSettings.height) || photoSettings.height,
+      width: Number(editPhotoSettings.width) || photoSettings.width,
+      align: nextAlign,
+    };
+    savePhotoSettings(next);
+    setIsEditingPhotoSize(false);
+  };
+
+  const handleSaveSlideshowSettings = () => {
+    const next = { ...photoSettings, slideshowHeight: Number(editSlideSettings.slideshowHeight) || photoSettings.slideshowHeight, slideshowMaxWidth: editSlideSettings.slideshowMaxWidth || photoSettings.slideshowMaxWidth };
+    savePhotoSettings(next);
+    setIsEditingSlideSize(false);
   };
 
   // FIX 2: Updated validation to also allow rows where any column has a non-empty value,
@@ -547,50 +663,163 @@ const GenericContentPage = ({
       {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
       {(hasPhoto || hasDesc || hasSlideshow) && (
         <div className={`grid grid-cols-1 gap-6 ${
-          (hasPhoto || hasSlideshow) && galleryPhotos.length && 
-          hasDesc ? photoAlign === 'center' ? '' : 'lg:grid-cols-3': ''
+          hasPhoto && !hasSlideshow && galleryPhotos.length && hasDesc 
+           ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
+           : 'md:grid-cols-3' // Default fallback grid structure
         }`}>
 
           {/* SLIDESHOW */}
           {hasSlideshow && (
-            <div className={`
-              ${photoAlign === 'left'   ? 'lg:col-span-1 order-1' : ''}
-              ${photoAlign === 'right'  ? 'lg:col-span-1 order-2' : ''}
-              ${photoAlign === 'center' ? 'lg:col-span-3' : ''}
-            `}>
-              <SlideshowBlock
-                photos={galleryPhotos}
-                isAdmin={isAdmin}
-                onDelete={handleDeletePhoto}
-                height={slideshowHeight}
-                maxWidth={slideshowMaxWidth}
-              />
+             <div className="md:col-span-3 w-full">
+              {isAdmin && (
+                <div className="flex justify-end mb-2 relative">
+                  <button
+                    onClick={() => { setEditSlideSettings(photoSettings); setIsEditingSlideSize(v => !v); }}
+                    title="Adjust slideshow size"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 text-sm"
+                  >
+                    ⚙
+                  </button>
+                  {isEditingSlideSize && (
+                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 space-y-3">
+                      <p className="text-xs font-bold text-gray-500">Slideshow Size</p>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Height (px)</label>
+                        <input
+                          type="number"
+                          min={100}
+                          value={editSlideSettings.slideshowHeight}
+                          onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowHeight: e.target.value }))}
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Max width (e.g. 100%, 600px)</label>
+                        <input
+                          type="text"
+                          value={editSlideSettings.slideshowMaxWidth}
+                          onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowMaxWidth: e.target.value }))}
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-1">
+                        <button onClick={handleSaveSlideshowSettings} disabled={savingPhotoSettings}
+                          className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium disabled:opacity-50">
+                          {savingPhotoSettings ? 'Saving...' : 'Save'}
+                        </button>
+                        <button onClick={() => setIsEditingSlideSize(false)}
+                          className="px-3 py-1.5 text-gray-500 text-xs">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+                <SlideshowBlock
+                  photos={galleryPhotos}
+                  isAdmin={isAdmin}
+                  onDelete={handleDeletePhoto}
+                  height={photoSettings.slideshowHeight}
+                  maxWidth={photoSettings.slideshowMaxWidth || "100%"}
+                />      
             </div>
           )}
 
           {/* FIX 3: Now renders ALL gallery photos in a responsive grid
               respecting the photoCols prop (1, 2, or 3 columns per row) */}
           {hasPhoto && galleryPhotos.length > 0 && (
-            <div className={`
-              ${!hasDesc ? 'lg:col-span-3' : ''}
-              ${hasDesc && photoAlign === 'left'   ? 'lg:col-span-1 order-1' : ''}
-              ${hasDesc && photoAlign === 'right'  ? 'lg:col-span-1 order-2' : ''}
-              ${hasDesc && photoAlign === 'center' ? 'lg:col-span-3' : ''}
-            `}>
+            <div className={`min-w-0 ${
+              !hasDesc ? 'md:col-span-3' :
+              photoSettings.align === 'left'  ? 'md:col-span-1 order-1' :
+              photoSettings.align === 'right' ? 'md:col-span-1 order-2' :
+              'md:col-span-3'
+            }`}>
+              {isAdmin && (
+                <div className="flex justify-end mb-2 relative">
+                  <button
+                    onClick={() => { setEditPhotoSettings(photoSettings); setIsEditingPhotoSize(v => !v); }}
+                    title="Adjust photo size"
+                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 text-sm"
+                  >
+                    ⚙
+                  </button>
+                  {isEditingPhotoSize && (
+                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 space-y-3">
+                      <p className="text-xs font-bold text-gray-500">Photo Grid Size</p>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Position relative to text</label>
+                        <select
+                          value={editPhotoSettings.align}
+                          onChange={e => setEditPhotoSettings(prev => ({ ...prev, align: e.target.value }))}
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20 bg-white"
+                        >
+                          <option value="left">Beside text (left)</option>
+                          <option value="right">Beside text (right)</option>
+                          <option value="top">Above text (full width)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Photos per row (1–3)</label>
+                        <input
+                          type="number"
+                          min={1}
+                          max={3}
+                          value={editPhotoSettings.cols}
+                          onChange={e => setEditPhotoSettings(prev => ({ ...prev, cols: e.target.value }))}
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Photo width (px)</label>
+                        <input
+                          type="number"
+                          min={50}
+                          value={editPhotoSettings.width}
+                          onChange={e => setEditPhotoSettings(prev => ({ ...prev, width: e.target.value }))}
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">Photo height (px)</label>
+                        <input
+                          type="number"
+                          min={50}
+                          value={editPhotoSettings.height}
+                          onChange={e => setEditPhotoSettings(prev => ({ ...prev, height: e.target.value }))}
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end pt-1">
+                        <button onClick={handleSavePhotoGridSettings} disabled={savingPhotoSettings}
+                          className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium disabled:opacity-50">
+                          {savingPhotoSettings ? 'Saving...' : 'Save'}
+                        </button>
+                        <button onClick={() => setIsEditingPhotoSize(false)}
+                          className="px-3 py-1.5 text-gray-500 text-xs">
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className={`grid gap-4 ${
-                photoCols === 1 ? 'grid-cols-1' :
-                photoCols === 3 ? 'grid-cols-3' :
+                photoSettings.cols === 1 ? 'grid-cols-1' :
+                photoSettings.cols === 3 ? 'grid-cols-3' :
                 'grid-cols-2'
               }`}>
                 {galleryPhotos.map((photo) => (
-                  <div key={photo.id} className="relative border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl text-center">
+                  <div key={photo.id} className="relative min-w-0 border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl text-center">
                     <img
                       src={`${API}${photo.photo_url}`}
                       alt={photo.photo_name}
                       className="object-cover mx-auto rounded-lg"
                       style={{
-                        width: `${photoWidth}px`,
-                        height: `${photoHeight}px`,
+                        width: '100%',
+                        maxWidth: `${photoSettings.width}px`,
+                        height: `${photoSettings.height}px`,
                         objectPosition: 'top center'
                       }}
                     />
@@ -609,12 +838,14 @@ const GenericContentPage = ({
           )}
 
           {hasDesc && (
-            <div className={`${
-              (hasPhoto || hasSlideshow) && galleryPhotos.length
-                ? photoAlign === 'right'  ? 'lg:col-span-2 order-1'
-                : photoAlign === 'center' ? 'w-full'
-                : 'lg:col-span-2 order-2'
-                : 'lg:col-span-3'
+            <div className={`w-full ${
+                hasSlideshow 
+                  ? 'md:col-span-3' 
+                  : hasPhoto && galleryPhotos.length && photoSettings.align === 'left'
+                  ? 'md:col-span-2 order-2'
+                  : hasPhoto && galleryPhotos.length && photoSettings.align === 'right'
+                  ? 'md:col-span-2 order-1'
+                  : 'md:col-span-3'
             }`}>
 
               {/* FIX 7: Changed min-h-180px → min-h-[180px] (valid Tailwind arbitrary value) */}
@@ -623,9 +854,19 @@ const GenericContentPage = ({
                   <div className="space-y-3">
                     <textarea
                       value={editDesc}
-                      onChange={e => setEditDesc(e.target.value)}
+                      onChange={e => {
+                        setEditDesc(e.target.value);
+                        // Auto-grow: reset height then expand to scrollHeight
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                      }}
+                      onFocus={e => {
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                      }}
                       rows={8}
-                      className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-none outline-none focus:ring-2 focus:ring-[#174873]/20"
+                      className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-y outline-none focus:ring-2 focus:ring-[#174873]/20 overflow-hidden"
+                      style={{ minHeight: '200px' }}
                       placeholder="Enter description, contact info, about this section..."
                     />
                     <div className="flex gap-4">
@@ -654,13 +895,69 @@ const GenericContentPage = ({
                     const elements = [];
                     let bulletBuffer = [];
                     let firstLine = true;
-                
+                    let noteBuffer = [];   // lines collected between '>' open and '<' close
+                    let inNote = false;    // whether we're currently inside an open note block
+
+                    // Converts plain URLs and [text](url) markdown links into
+                    // clickable blue <a> elements. Returns an array of strings/nodes.
+                    const renderTextWithLinks = (text) => {
+                      // Regex: matches [label](url) OR bare http(s):// URLs
+                      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
+                      const parts = [];
+                      let lastIndex = 0;
+                      let match;
+                      let keyCounter = 0;
+                      while ((match = linkRegex.exec(text)) !== null) {
+                        // Push any plain text before this match
+                        if (match.index > lastIndex) {
+                          parts.push(text.slice(lastIndex, match.index));
+                        }
+                        const label = match[1] || match[3]; // markdown label or raw URL
+                        const href  = match[2] || match[3]; // markdown url or raw URL
+                        parts.push(
+                          <a
+                            key={`link-${keyCounter++}`}
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline hover:text-blue-800 break-all"
+                          >
+                            {label}
+                          </a>
+                        );
+                        lastIndex = match.index + match[0].length;
+                      }
+                      // Remaining plain text
+                      if (lastIndex < text.length) {
+                        parts.push(text.slice(lastIndex));
+                      }
+                      return parts.length > 0 ? parts : [text];
+                    };
+
+                    // Renders inline bold (**text**) + links together, usable anywhere
+                    const renderInlineFormatting = (text) => {
+                      const parts = text.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+                      return parts.map((part, i) => {
+                        if (part.startsWith('**') && part.endsWith('**')) {
+                          return (
+                            <strong key={i} className="font-bold">
+                              {renderTextWithLinks(part.slice(2, -2))}
+                            </strong>
+                          );
+                        }
+                        return <span key={i}>{renderTextWithLinks(part)}</span>;
+                      });
+                    };
+
+
+                    let tableBuffer = [];  // consecutive '| a | b | c |' lines collected into one table
+
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
                           <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base">
                             {bulletBuffer.map((b, i) => (
-                              <li key={i}>{b}</li>
+                              <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
                           </ul>
                         );
@@ -668,12 +965,167 @@ const GenericContentPage = ({
                       }
                     };
 
+                    // Renders the whole accumulated note block as ONE callout box.
+                    // Supports the same formatting as the main description:
+                    // - '## ' / '### ' become headings (smaller, since they're
+                    //   inside a callout — text-sm/text-xs instead of text-lg/base)
+                    // - '- ' lines become real bullet points
+                    // - '---' becomes a divider line
+                    // - '**bold**' and links work on every line, including
+                    //   inside headings and bullets
+                    // Consecutive non-bullet lines stay as separate lines (breaks
+                    // preserved); consecutive bullet lines group into one <ul>.
+                    const flushNote = () => {
+                      if (noteBuffer.length > 0) {
+                        const noteElements = [];
+                        let noteBulletBuffer = [];
+
+                        const flushNoteBullets = () => {
+                          if (noteBulletBuffer.length > 0) {
+                            noteElements.push(
+                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1">
+                                {noteBulletBuffer.map((b, i) => (
+                                  <li key={i}>{renderInlineFormatting(b)}</li>
+                                ))}
+                              </ul>
+                            );
+                            noteBulletBuffer = [];
+                          }
+                        };
+
+                        noteBuffer.forEach((lineText, i) => {
+                          if (lineText.startsWith('### ')) {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <h4 key={`note-h4-${i}`} className="text-sm font-semibold text-[#174873] mt-2 not-italic">
+                                {renderInlineFormatting(lineText.slice(4))}
+                              </h4>
+                            );
+                          } else if (lineText.startsWith('## ')) {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <h3 key={`note-h3-${i}`} className="text-base font-semibold text-[#174873] mt-2 not-italic">
+                                {renderInlineFormatting(lineText.slice(3))}
+                              </h3>
+                            );
+                          } else if (lineText === '---') {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <hr key={`note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                            );
+                          } else if (lineText.startsWith('- ')) {
+                            noteBulletBuffer.push(lineText.slice(2));
+                          } else {
+                            flushNoteBullets();
+                            noteElements.push(
+                              <div key={`note-line-${i}`}>{renderInlineFormatting(lineText)}</div>
+                            );
+                          }
+                        });
+                        flushNoteBullets();
+
+                        elements.push(
+                          <div key={`note-${elements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm space-y-1">
+                            {noteElements}
+                          </div>
+                        );
+                      }
+                      noteBuffer = [];
+                      inNote = false;
+                    };
+
+                    const flushTable = () => {
+                      if (tableBuffer.length === 0) return;
+
+                      const parseRow = (lineText) =>
+                        lineText
+                          .replace(/^\|/, '')
+                          .replace(/\|$/, '')
+                          .split('|')
+                          .map(cell => cell.trim());
+
+                      const isDividerRow = (cells) =>
+                        cells.every(cell => /^:?-+:?$/.test(cell));
+
+                      const rowsParsed = tableBuffer.map(parseRow).filter(cells => !isDividerRow(cells));
+
+                      if (rowsParsed.length > 0) {
+                        const [headerRow, ...rawBodyRows] = rowsParsed;
+                        const colCount = headerRow.length;
+
+                        // Normalize every body row to exactly colCount cells —
+                        // pad short rows with empty cells, drop extra cells on
+                        // long rows — so every <tr> lines up under the header
+                        // regardless of how many '|' the admin typed on a line.
+                        const bodyRows = rawBodyRows.map(cells => {
+                          const normalized = cells.slice(0, colCount);
+                          while (normalized.length < colCount) normalized.push('');
+                          return normalized;
+                        });
+
+                        elements.push(
+                          <div key={`table-${elements.length}`} className="rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm table-fixed border-collapse">
+                                <thead>
+                                  <tr className=" text-[#174873]">
+                                    {headerRow.map((cell, ci) => (
+                                      <th
+                                        key={ci}
+                                        className="px-4 py-3 text-left border border-gray-300 font-semibold"
+                                      >
+                                        {renderInlineFormatting(cell)}
+                                      </th>
+                                    ))}
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {bodyRows.map((cells, ri) => (
+                                    <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                      {cells.map((cell, ci) => (
+                                        <td
+                                          key={ci}
+                                          className="px-4 py-3 text-gray-700 text-left border border-gray-300"
+                                        >
+                                          {renderInlineFormatting(cell)}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        );
+                      }
+                      tableBuffer = [];
+                    };
+
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
+
+                      // Currently inside an open note block (started with '>',
+                      // not yet closed with a trailing '<') — every line is
+                      // swallowed into the note until the closing line is hit.
+                      // Continuation lines are allowed to repeat the leading
+                      // '> ' (the natural way people write multi-line quotes)
+                      // — strip it so bullets/bold on those lines still match
+                      // the same '- ' / '**' checks flushNote() looks for.
+                      if (inNote) {
+                        let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
+                        if (lineContent.endsWith('<')) {
+                          noteBuffer.push(lineContent.slice(0, -1).trim());
+                          flushNote();
+                        } else {
+                          noteBuffer.push(lineContent);
+                        }
+                        return;
+                      }
 
                       // blank line → spacer
                       if (trimmed === '') {
                         flushBullets();
+                        flushTable();
                         elements.push(<div key={`sp-${idx}`} className="h-2" />);
                         return;
                       }
@@ -682,6 +1134,7 @@ const GenericContentPage = ({
                       if (firstLine) {
                         firstLine = false;
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h2 key={idx} className="text-2xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
                             {trimmed}
@@ -693,6 +1146,7 @@ const GenericContentPage = ({
                       // ## Subheading
                       if (trimmed.startsWith('## ')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h3 key={idx} className="text-lg font-semibold text-[#174873] mt-4">
                             {trimmed.slice(3)}
@@ -704,11 +1158,33 @@ const GenericContentPage = ({
                       // ### Smaller subheading
                       if (trimmed.startsWith('### ')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
                           <h4 key={idx} className="text-base font-semibold text-gray-800 mt-3">
                             {trimmed.slice(4)}
                           </h4>
                         );
+                        return;
+                      }
+
+                      // > Opens a note block. Everything from here through the
+                      // line ending in '<' becomes ONE callout box (line breaks
+                      // preserved inside it). A line can open and close on its
+                      // own (e.g. "> just this line <"). This check runs BEFORE
+                      // the bullet/bold checks below — otherwise a line like
+                      // "> some **bold** text" would get caught by the bold
+                      // check first and never open the note at all.
+                      if (trimmed.startsWith('> ') || trimmed === '>') {
+                        flushBullets();
+                        let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
+                        if (content.endsWith('<')) {
+                          // opened and closed on the same line
+                          noteBuffer.push(content.slice(0, -1).trim());
+                          flushNote();
+                        } else {
+                          inNote = true;
+                          noteBuffer.push(content);
+                        }
                         return;
                       }
 
@@ -718,25 +1194,22 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // **Bold line** (entire line wrapped in **)
-                      if (trimmed.startsWith('**') && trimmed.endsWith('**') && trimmed.length > 4) {
+                      // | Table row |
+                      if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
                         flushBullets();
-                        elements.push(
-                          <p key={idx} className="text-gray-800 font-semibold text-base text-left">
-                            {trimmed.slice(2, -2)}
-                          </p>
-                        );
+                        flushTable();
+                        tableBuffer.push(trimmed);
                         return;
                       }
 
-                      // > Highlighted note / callout box
-                      // FIX 4: Changed bg-[#174873]/8 → bg-[#174873]/[8%] (valid Tailwind opacity syntax)
-                      if (trimmed.startsWith('> ')) {
+                      // **Bold** or mixed bold+plain line
+                      if (trimmed.includes('**')) {
                         flushBullets();
+                        flushTable();
                         elements.push(
-                          <div key={idx} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm">
-                            {trimmed.slice(2)}
-                          </div>
+                          <p key={idx} className="text-gray-800 text-base text-left">
+                            {renderInlineFormatting(trimmed)}
+                          </p>
                         );
                         return;
                       }
@@ -750,16 +1223,18 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Plain paragraph
+                      // Plain paragraph (may still contain inline bold/links)
                       flushBullets();
                       elements.push(
                         <p key={idx} className="text-gray-700 text-base leading-relaxed text-left">
-                          {trimmed}
+                          {renderInlineFormatting(trimmed)}
                         </p>
                       );
                     });
 
                     flushBullets();
+                    flushTable();
+                    flushNote();
                     return <div className="space-y-2">{elements}</div>;
                   })()
                 )}
@@ -770,14 +1245,14 @@ const GenericContentPage = ({
       )}
 
       {/* ── PDF VIEWER ── */}
-      {data.pdfs?.length > 0 && (
+      {galleryPdfs.length > 0 && (
         <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="bg-[#174873] px-6 py-4">
             <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
           </div>
 
           <div className="divide-y divide-gray-200">
-            {data.pdfs.map(pdf => (
+            {galleryPdfs.map(pdf => (
               <div key={pdf.id} className="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
                 <div className="flex items-center gap-4 flex-1">
                   <svg
@@ -819,12 +1294,55 @@ const GenericContentPage = ({
 
       {/* ── TABLE ── */}
       {hasTable && (
-        <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-[#174873] text-white">
-                  {columns.map(col => (
+        <div className="space-y-3">
+
+          {/* Table heading / caption, sits above the table */}
+          {(tableHeading || isAdmin) && (
+            <div className="flex items-start justify-between gap-3">
+              {isEditingHeading ? (
+                <div className="flex-1 flex gap-2 items-center">
+                  <input
+                    value={editTableHeading}
+                    onChange={e => setEditTableHeading(e.target.value)}
+                    placeholder="Table heading, e.g. Faculty List"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    autoFocus
+                  />
+                  <button onClick={handleSaveTableHeading} disabled={savingHeading}
+                    className="px-3 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                    {savingHeading ? 'Saving...' : 'Save'}
+                  </button>
+                  <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
+                    className="px-3 py-2 text-gray-500 text-sm">
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {tableHeading ? (
+                    <h3 className="text-xl font-bold text-[#174873]">{tableHeading}</h3>
+                  ) : (
+                    <span className="italic text-gray-400 text-sm">No table heading yet.</span>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(true); }}
+                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0"
+                    >
+                      {tableHeading ? 'Edit Heading' : '+ Add Heading'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-[#174873] text-white">
+                    {columns.map(col => (
                     <th key={col} className="px-4 py-3 text-left font-semibold">
                       {col}
                       {isAdmin && (
@@ -894,11 +1412,12 @@ const GenericContentPage = ({
                                         const file = e.target.files[0];
                                         if (!file) return;
                                         try {
+                                          const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
                                           const form = new FormData();
                                           form.append('section', section || '');
                                           form.append('category', subsection || '');
                                           form.append('sub_category', '');
-                                          form.append('files', file);
+                                          form.append('files', taggedFile);
                                           const res = await axios.post(
                                             `${API}/admin/facility-content/upload-pdf`, form,
                                             { headers: { Authorization: `Bearer ${token}` } }
@@ -1002,11 +1521,12 @@ const GenericContentPage = ({
                                     const file = e.target.files[0];
                                     if (!file) return;
                                     try {
+                                      const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
                                       const form = new FormData();
                                       form.append('section', section || '');
                                       form.append('category', subsection || '');
                                       form.append('sub_category', '');
-                                      form.append('files', file);
+                                      form.append('files', taggedFile);
 
                                       // FIX 5: Removed debug console.log that was left in by mistake
 
@@ -1069,6 +1589,7 @@ const GenericContentPage = ({
             </table>
           </div>
         </div>
+      </div>
       )}
     </div>
   );
