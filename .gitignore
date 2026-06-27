@@ -3,7 +3,8 @@ __pycache__/
 node_modules
 
 #Database
-*.db
+#*.db
+college_portal_backup.db
 
 #Uploads folder
 backend/uploads/
