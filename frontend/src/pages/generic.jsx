@@ -33,9 +33,9 @@ const GenericContentPage = ({
   tableColumns = [],  
   photoAlign = 'left',  
   photoCols = 2,        // how many photos per row (1, 2, 3)
-  photoHeight = 200,
-  photoWidth = 200,
-  slideshowHeight = 360,
+  photoHeight = 500,
+  photoWidth = '100%',
+  slideshowHeight = 500,
   slideshowMaxWidth = '100%',
 }) => {
   const navigate  = useNavigate();
@@ -93,7 +93,7 @@ const GenericContentPage = ({
   const hasSlideshow = pageType.includes('slideshow');
   const hasPhoto     = pageType.includes('photo'); 
   const hasDesc      = pageType.includes('description');
-  const hasPdf       = pageType === 'pdf-list';
+  const hasPdf       = pageType.includes('pdf-list');
   const hasTable     = pageType.includes('table');
   const hasProfile   = pageType.includes('profile');
 
@@ -920,7 +920,7 @@ const GenericContentPage = ({
                             href={href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 underline hover:text-blue-800 break-all"
+                            className="text-blue-600 hover:text-blue-800 break-all "
                           >
                             {label}
                           </a>

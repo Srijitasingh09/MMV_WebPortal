@@ -219,7 +219,7 @@ const Navbar = () => {
          {/* LEFT SIDE - MMV Logo + Name */}
          <div className="flex items-center gap-1">
           <div>
-            <h1 className="text-gray-700 text-lg font-3xs">
+            <h1 className="text-[#280f48] text-xl font-medium">
               Mahila Maha Vidyalaya
             </h1>
           </div>
@@ -291,7 +291,11 @@ const Navbar = () => {
               ]},
               { label: "Electives", path: "/academics/electives" },
               { label: "SWAYAM Courses", path: "/academics/swayam" },
-              { label: "Section Incharge", path: "/academics/section-incharge" },
+              { label: "Section Incharge", children: [
+                { label: "Science", path: "/academics/section-incharge/science"},
+                { label: "Social Science", path: "/academics/section-incharge/socialscience"},
+                { label: "Arts", path: "/academics/section-incharge/arts"}
+              ]},
               { label: "Academic Calendar", path: "/academics/calendar" },
               { label: "Holiday List", path: "/academics/holidays" },
             ]}
@@ -305,7 +309,7 @@ const Navbar = () => {
                 { label: "Hostel Coordinator", path: "/facilities/hostels/coordinator" },
                 { label: "Swasti Kunj Hostel", path: "/facilities/hostels/swastikunj" },
                 { label: "Kirti Kunj Hostel", path: "/facilities/hostels/kirtikunj" },
-                { label: "Kundan Devi Malviya Hostel", path: "/facilities/hostels/kundandevi" },
+                { label: "Kundan Devi Malviya Girls Hostel", path: "/facilities/hostels/kundandevi" },
                 { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
                 { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
               ]},
@@ -336,11 +340,11 @@ const Navbar = () => {
               { label: "Extra Curricular", children: [
                 { label: "NCC", path: "/facilities/extracurricular/ncc" },
                 { label: "NSS", path: "/facilities/extracurricular/nss" },
-                { label: "Clubs", path: "/facilities/extracurricular/clubs" },
+                { label: "NLSC", path: "/facilities/extracurricular/nlsc" },
                 { label: "Diploma & Certificate Courses", path: "/facilities/extracurricular/diplomacourses" },
               ]},
               { label: "Samarth Portal", path: "/facilities/samarth" },
-              { label: "Namaste App", path: "/facilities/namaste" },
+              { label: "Namaste BHU App", path: "/facilities/namaste" },
               { label: "Canteen", children: [
                 { label: "University", path: "/facilities/canteen/universitycanteen" },
                 { label: "MMV", path: "/facilities/canteen/mmvcanteen" },

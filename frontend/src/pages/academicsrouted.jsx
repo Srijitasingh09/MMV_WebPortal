@@ -11,19 +11,19 @@ const pages = {
   'syllabus/ug/science': { 
     title: 'Syllabus — UG Science',           
     pageType: 'table',
-    table: ['Course', 'Syllabus PDF'] 
+    tableColumns: ['Course', 'Syllabus PDF'] 
   },
 
   'syllabus/ug/socialscience': { 
     title: 'Syllabus — UG Social Science',    
     pageType: 'table',
-    table: ['Course', 'Syllabus PDF']
+    tableColumns: ['Course', 'Syllabus PDF']
   },
 
   'syllabus/ug/arts': { 
     title: 'Syllabus — UG Arts', 
     pageType: 'table',
-    table: ['Course', 'Syllabus PDF'] 
+    tableColumns: ['Course', 'Syllabus PDF'] 
   },
 
   'syllabus/pg/bioinformatics': { 
@@ -43,7 +43,7 @@ const pages = {
 
   'electives': { 
     title: 'Electives',                       
-    pageType: 'description' 
+    pageType: 'table-description' 
   },
 
   'swayam': { 
@@ -51,10 +51,22 @@ const pages = {
     pageType: 'description' 
   },
 
-  'section-incharge': { 
-    title: 'Section In-Charge',               
-    pageType: 'description-table',
-    tableColumns: ['Name', 'Section', 'Department', 'Contact'] 
+  'section-incharge/science': { 
+    title: 'Science Section Incharge/Coordinator',               
+    pageType: 'table',
+    tableColumns: ['Department', 'Section Incharge', 'Contact', 'Email'] 
+  },
+
+  'section-incharge/socialscience': { 
+    title: 'Social Science Section Incharge/Coordinator',               
+    pageType: 'table',
+    tableColumns: ['Department', 'Section Incharge', 'Contact', 'Email'] 
+  },
+
+  'section-incharge/arts': { 
+    title: 'Arts Section Incharge/Coordinator',               
+    pageType: 'table',
+    tableColumns: ['Department', 'Section Incharge', 'Contact', 'Email'] 
   },
 
   'calendar': { 
@@ -68,6 +80,7 @@ const pages = {
   },
 };
 
+
 const AcademicsRouted = () => {
   const { sub, subsub, subsubsub } = useParams();
   const key = [sub, subsub, subsubsub].filter(Boolean).join('/');
@@ -80,8 +93,8 @@ const AcademicsRouted = () => {
       section="academics"
       subsection={key}
       title={page.title}
-      backPath="/academics"
-      backLabel="Academics"
+      backPath="/"
+      backLabel="Home"
       pageType={page.pageType}
       tableColumns={page.tableColumns || []}
       photoAlign={page.photoAlign || 'left'}
