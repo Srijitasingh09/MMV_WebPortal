@@ -15,35 +15,35 @@ const pages = {
 
   'hostels/swastikunj': { 
     title: 'Swasti Kunj Hostel',              
-    pageType: 'slideshow-description-table',
+    pageType: 'photo-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/kirtikunj': { 
     title: 'Kirti Kunj Hostel',               
-    pageType: 'slideshow-description-table',
+    pageType: 'photo-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/kundandevi': { 
     title: 'Kundan Devi Malviya Girls Hostel',              
-    pageType: 'slideshow-description-table',
+    pageType: 'photo-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/pragyakunj': { 
     title: 'Pragya Kunj Hostel',              
-    pageType: 'slideshow-description-table',
+    pageType: 'photo-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
 
   'hostels/jyotikunj': { 
     title: 'Jyoti Kunj Hostel',               
-    pageType: 'slideshow-description-table',
+    pageType: 'photo-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact'] 
   },
@@ -80,56 +80,53 @@ const pages = {
 
   'sports/gym': { 
     title: 'Open-Gym',                       
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'wellbeing/wbsc': { 
     title: 'Well Being Service Cell, BHU',           
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'wellbeing/mmvwell': { 
     title: 'MMV PAHAL',                  
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'trainingplacement/universitytraining': { 
-    title: 'University Training & Placement', 
+    title: 'University Training & Placement Cell', 
     pageType: 'description-pdf-list',
-    photoAlign: 'center'
   },
 
   'trainingplacement/mmvtraining': { 
-    title: 'MMV Training & Placement',        
-    pageType: 'description-table',
-    photoAlign: 'center',
-    tableColumns: ['Name', 'Department', 'Designation', 'Contact', 'Email Id'] 
+    title: 'Training & Placement Cell, MMV',        
+    pageType: 'description',
   },
 
   'cdc': { 
     title: 'Central Discovery Centre, BHU',                             
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'medical/ssh': { 
     title: 'Sir Sundarlal Hospital',          
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'medical/tc': { 
     title: 'Trauma Centre',                   
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'medical/health': { 
     title: 'Student Health Center',                   
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
@@ -186,7 +183,7 @@ const pages = {
 
   'other/vt': { 
     title: 'Vishwanath Temple',               
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
@@ -198,13 +195,13 @@ const pages = {
 
   'other/transportation': { 
     title: 'Transportation',                  
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
   'other/banks': { 
     title: 'Banks & Post Offices',                           
-    pageType: 'slideshow-description',
+    pageType: 'photo-description',
     photoAlign: 'center'
   },
 
