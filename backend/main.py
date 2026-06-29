@@ -102,8 +102,10 @@ def save_mmv_chat_knowledge(entries):
 
 def ensure_notice_attachment_columns():
     with engine.connect() as conn:
-        column_rows = conn.execute(text("PRAGMA table_info(notices)")).fetchall()
-        columns = {row[1] for row in column_rows}
+        column_rows = conn.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'notices'"
+        )).fetchall()
+        columns = {row[0] for row in column_rows}
         if "attachment_url" not in columns:
             conn.execute(text("ALTER TABLE notices ADD COLUMN attachment_url VARCHAR"))
         if "attachment_name" not in columns:
@@ -113,8 +115,10 @@ def ensure_notice_attachment_columns():
 
 def ensure_college_info_columns():
     with engine.connect() as conn:
-        column_rows = conn.execute(text("PRAGMA table_info(college_info_items)")).fetchall()
-        columns = {row[1] for row in column_rows}
+        column_rows = conn.execute(text(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = 'college_info_items'"
+        )).fetchall()
+        columns = {row[0] for row in column_rows}
         if "display_order" not in columns:
             conn.execute(text("ALTER TABLE college_info_items ADD COLUMN display_order INTEGER DEFAULT 0"))
         conn.execute(text("UPDATE college_info_items SET display_order = id WHERE display_order IS NULL OR display_order = 0"))
