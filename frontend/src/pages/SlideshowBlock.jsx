@@ -8,7 +8,7 @@ const SlideshowBlock = ({ photos, isAdmin, onDelete , height = 360, maxWidth = '
   useEffect(() => {
     if (photos.length === 0) return;
     const timer = setInterval(() =>
-      setCurrent(p => (p + 1) % photos.length), 3000);
+      setCurrent(p => (p + 1) % photos.length), 5000);
     return () => clearInterval(timer);
   }, [photos.length]);
 
