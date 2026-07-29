@@ -51,6 +51,11 @@ const GenericContentPage = ({
   const [editDesc,   setEditDesc]   = useState('');
   const [saving,     setSaving]     = useState(false);
 
+  // description: '+++ Title ... +++' collapsible blocks (see flushAccordion
+  // in the render below). openSections tracks which block indices are open;
+  // every block starts closed until clicked.
+  const [openSections, setOpenSections] = useState({});
+
   // table state
   const [columns,      setColumns]      = useState(tableColumns);
   const [rows,         setRows]         = useState([]);
@@ -61,6 +66,10 @@ const GenericContentPage = ({
   const [isEditingHeading, setIsEditingHeading] = useState(false);
   const [editTableHeading, setEditTableHeading] = useState('');
   const [savingHeading,    setSavingHeading]    = useState(false);
+
+  // table: click-to-sort (alphabetical, toggles asc/desc)
+  const [sortColumn,    setSortColumn]    = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
 
   // inline row edit state
   const [editingRowIdx,  setEditingRowIdx]  = useState(null); // which row is being edited
@@ -128,12 +137,16 @@ const GenericContentPage = ({
         try { parsed = JSON.parse(match.details); } catch { parsed = {}; }
       }
 
+      setOpenSections({}); // reset accordion open/closed state when navigating to a different page
+
       if (hasTable) {
         setColumns(parsed.columns || tableColumns);
         setRows(parsed.rows || []);
         const heading = parsed.tableHeading || '';
         setTableHeading(heading);
         setEditTableHeading(heading);
+        setSortColumn(null);
+        setSortDirection('asc');
       }
 
       if (hasProfile) {
@@ -153,8 +166,10 @@ const GenericContentPage = ({
       setEditSlideSettings(mergedPhotoSettings);
     } catch {
       setData({});
-      if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); }
+      if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); setSortColumn(null); }
       if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
+      setCollapsibleDescription(false);
+      setOpenSections({});
       setPhotoSettings(blankPhotoSettings);
       setEditPhotoSettings(blankPhotoSettings);
       setEditSlideSettings(blankPhotoSettings);
@@ -179,6 +194,29 @@ const GenericContentPage = ({
     } catch { alert('Save failed'); }
     finally { setSaving(false); }
   };
+
+  // ── TABLE SORT ── click a header to sort alphabetically; click again to
+  // flip direction. Sorting is view-only (doesn't reorder saved rows), and
+  // each row keeps its original index so Edit/Delete still hit the right row.
+  const handleSortColumn = (col) => {
+    if (sortColumn === col) {
+      setSortDirection(d => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(col);
+      setSortDirection('asc');
+    }
+  };
+
+  const displayRows = React.useMemo(() => {
+    const withIndex = rows.map((row, origIdx) => ({ row, origIdx }));
+    if (!sortColumn) return withIndex;
+    const sorted = [...withIndex].sort((a, b) => {
+      const av = (a.row[sortColumn] || '').toString().toLowerCase();
+      const bv = (b.row[sortColumn] || '').toString().toLowerCase();
+      return av.localeCompare(bv);
+    });
+    return sortDirection === 'asc' ? sorted : sorted.reverse();
+  }, [rows, sortColumn, sortDirection]);
 
   // ── TABLE SAVE ──
   const saveTable = async (cols, tableRows) => {
@@ -898,6 +936,18 @@ const GenericContentPage = ({
                     let noteBuffer = [];   // lines collected between '>' open and '<' close
                     let inNote = false;    // whether we're currently inside an open note block
 
+                    // Collapsible block syntax — completely separate from
+                    // '## '/'### ' headings. An admin writes:
+                    //   +++ Title shown on the closed bar
+                    //   ...any lines...
+                    //   +++
+                    // and it renders as its own click-to-expand widget,
+                    // independent of the description's normal heading levels.
+                    let accordionBuffer = [];   // lines collected between the opening '+++ Title' and the closing '+++'
+                    let accordionTitle = '';
+                    let inAccordion = false;
+                    let accordionCount = 0;     // gives each rendered block a stable index for open/closed state
+
                     // Converts plain URLs and [text](url) markdown links into
                     // clickable blue <a> elements. Returns an array of strings/nodes.
                     const renderTextWithLinks = (text) => {
@@ -1034,6 +1084,77 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
+                    // Renders one '+++ Title ... +++' block as a self-contained
+                    // click-to-expand widget. Unlike the note/table/bullet
+                    // helpers above, this doesn't touch `elements` incrementally
+                    // — it builds its own little content list, then pushes ONE
+                    // finished accordion component.
+                    const flushAccordion = () => {
+                      const index = accordionCount++;
+                      const contentElements = [];
+                      let localBulletBuffer = [];
+
+                      const flushLocalBullets = () => {
+                        if (localBulletBuffer.length > 0) {
+                          contentElements.push(
+                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                              {localBulletBuffer.map((b, bi) => (
+                                <li key={bi}>{renderInlineFormatting(b)}</li>
+                              ))}
+                            </ul>
+                          );
+                          localBulletBuffer = [];
+                        }
+                      };
+
+                      accordionBuffer.forEach((lineText, li) => {
+                        const t = lineText.trim();
+                        if (t === '') {
+                          flushLocalBullets();
+                          contentElements.push(<div key={`acc-sp-${li}`} className="h-1" />);
+                          return;
+                        }
+                        if (t.startsWith('- ')) {
+                          localBulletBuffer.push(t.slice(2));
+                          return;
+                        }
+                        flushLocalBullets();
+                        contentElements.push(
+                          <p key={`acc-line-${li}`} className="text-gray-700 text-sm leading-relaxed">
+                            {renderInlineFormatting(t)}
+                          </p>
+                        );
+                      });
+                      flushLocalBullets();
+
+                      const isOpen = !!openSections[index];
+                      elements.push(
+                        <div key={`accordion-${index}`} className="border border-gray-200 rounded-xl overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
+                            className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
+                          >
+                            <span className="font-semibold text-[#174873]">
+                              {renderInlineFormatting(accordionTitle)}
+                            </span>
+                            <span className={`text-[#174873] text-sm transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}>
+                              ▶
+                            </span>
+                          </button>
+                          {isOpen && (
+                            <div className="px-4 py-3 space-y-1 border-t border-gray-100">
+                              {contentElements}
+                            </div>
+                          )}
+                        </div>
+                      );
+
+                      accordionBuffer = [];
+                      accordionTitle = '';
+                      inAccordion = false;
+                    };
+
                     const flushTable = () => {
                       if (tableBuffer.length === 0) return;
 
@@ -1122,6 +1243,18 @@ const GenericContentPage = ({
                         return;
                       }
 
+                      // Currently inside an open '+++ Title ... +++' accordion
+                      // block — every line is swallowed until a line that is
+                      // exactly '+++' on its own closes it.
+                      if (inAccordion) {
+                        if (trimmed === '+++') {
+                          flushAccordion();
+                        } else {
+                          accordionBuffer.push(line);
+                        }
+                        return;
+                      }
+
                       // blank line → spacer
                       if (trimmed === '') {
                         flushBullets();
@@ -1188,6 +1321,20 @@ const GenericContentPage = ({
                         return;
                       }
 
+                      // +++ Title  → opens a collapsible accordion block.
+                      // Everything after this line is hidden until a lone
+                      // '+++' line closes it. Completely separate from the
+                      // '## '/'### ' headings — those stay plain and always
+                      // visible; only '+++' blocks are ever collapsible.
+                      if (trimmed.startsWith('+++ ')) {
+                        flushBullets();
+                        flushTable();
+                        accordionTitle = trimmed.slice(4);
+                        accordionBuffer = [];
+                        inAccordion = true;
+                        return;
+                      }
+
                       // - Bullet point
                       if (trimmed.startsWith('- ')) {
                         bulletBuffer.push(trimmed.slice(2));
@@ -1207,7 +1354,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <p key={idx} className="text-gray-800 text-base text-left">
+                          <p key={idx} className="text-gray-800 text-base text-justify">
                             {renderInlineFormatting(trimmed)}
                           </p>
                         );
@@ -1226,7 +1373,7 @@ const GenericContentPage = ({
                       // Plain paragraph (may still contain inline bold/links)
                       flushBullets();
                       elements.push(
-                        <p key={idx} className="text-gray-700 text-base leading-relaxed text-left">
+                        <p key={idx} className="text-gray-700 text-base leading-relaxed text-justify">
                           {renderInlineFormatting(trimmed)}
                         </p>
                       );
@@ -1235,6 +1382,8 @@ const GenericContentPage = ({
                     flushBullets();
                     flushTable();
                     flushNote();
+                    if (inAccordion) flushAccordion();
+
                     return <div className="space-y-2">{elements}</div>;
                   })()
                 )}
@@ -1344,7 +1493,16 @@ const GenericContentPage = ({
                   <tr className="bg-[#174873] text-white">
                     {columns.map(col => (
                     <th key={col} className="px-4 py-3 text-left font-semibold">
-                      {col}
+                      <span
+                        onClick={() => handleSortColumn(col)}
+                        className="cursor-pointer select-none inline-flex items-center gap-1 hover:underline"
+                        title="Click to sort alphabetically"
+                      >
+                        {col}
+                        <span className="text-xs opacity-80">
+                          {sortColumn === col ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
+                        </span>
+                      </span>
                       {isAdmin && (
                         <button onClick={() => handleDeleteColumn(col)}
                           className="ml-2 text-red-300 hover:text-white text-xs">×</button>
@@ -1381,7 +1539,8 @@ const GenericContentPage = ({
                     </td>
                   </tr>
                 )}
-                {rows.map((row, idx) => {
+                {displayRows.map(({ row, origIdx }) => {
+                  const idx = origIdx; // keeps existing edit/delete logic below untouched
                   const isEditingThisRow = isAdmin && editingRowIdx === idx;
                   return (
                     <tr key={idx} className={`border-t border-gray-100 transition-colors ${isEditingThisRow ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
