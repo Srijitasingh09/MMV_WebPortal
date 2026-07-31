@@ -8,13 +8,12 @@ import { Link, useNavigate } from 'react-router-dom';
 // ============================================
 const SubSubMenu = ({ label, children }) => {
   const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div
-  className="relative"
-  onMouseEnter={() => setIsOpen(true)}
-  onMouseLeave={() => setIsOpen(false)}
->
+      className="relative"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
       <div className="flex items-center justify-between px-1 py-1
                       text-sm text-white hover:bg-[#2d54a8]
                       border-b border-blue-800 cursor-pointer">
@@ -31,7 +30,7 @@ const SubSubMenu = ({ label, children }) => {
               to={item.path}
               className="block px-4 py-2 text-sm text-white
                          hover:bg-[#2d54a8] border-b border-blue-800"
-            >
+        >
               {item.label}
             </Link>
           ))}
@@ -182,44 +181,24 @@ const Navbar = () => {
       <div className="bg-white px-4 py-1 flex items-center justify-between ">
        
         {/* RIGHT SIDE - BHU Logo */}
-       <div className="flex items-end gap-2 pl-0">
-       <img
-       src="/bhu/logo_bhu.png"
-       alt="BHU Logo"
-       className="h-18 rounded-full object-contain bg-white"
-  />  
-
-  {/* <div className="flex flex-col">
-    <h1 className="text-white text-lg font-medium">
-      Banaras Hindu University
-    </h1> */}
-
-    {/* <p className="text-blue-200 text-xs">
-      Varanasi — 221005
-    </p> */}
-  {/* </div> */}
-</div>
-        {/* <div className="bg-white px-4 py-1 flex items-center justify-between">
-       
-        # website logo
-       <div className="flex items-center gap-2 pl-0">
-       <img
-       src="/bhu/logo.png"
-       alt="BHU Logo"
-       className="h-54 rounded-full object-contain bg-white"
-  /> 
-  </div>
-  </div> */}
-         {/* CENTER - MMV SAARTHI LOGO */}
-         <div>
+        <div className="flex items-end gap-2 pl-0">
+          <img
+            src="/bhu/logo_bhu.png"
+            alt="BHU Logo"
+            className="h-18 rounded-full object-contain bg-white"
+          />  
+        </div>
+        {/* CENTER - MMV SAARTHI LOGO */}
+        <div>
           <img 
             src="/mmv_saarthi_logo.png" 
             alt="mmv-saarthi-logo"
-            className="w-50 h-20 object-contain bg-white" />
-         </div>
+            className="w-50 h-20 object-contain bg-white" 
+          />
+        </div>
       
-         {/* LEFT SIDE - MMV Logo + Name */}
-         <div className="flex items-center gap-1">
+        {/* LEFT SIDE - MMV Logo + Name */}
+        <div className="flex items-center gap-1">
           <div>
             <h1 className="text-[#280f48] text-xl font-medium">
               Mahila Maha Vidyalaya
@@ -231,36 +210,29 @@ const Navbar = () => {
             className="w-20 h-18 rounded-full object-contain bg-white"
           />
         </div>
-        
+       
       </div>
 
-       {/* ---- NAVIGATION BAR ---- */}
-      <nav className="bg-[#0f3358] px-2 border-b border-gray-200 relative ">
-       <button
-         className="md:hidden text-white text-3xl p-2" onClick={() => setMenuOpen(!menuOpen)}>
-          ≡
-         </button>
-
-       {/* <div className='flex relative justify-end'> */}
-      <div className= {`${
-         menuOpen ? "flex flex-col": "hidden"} md:flex relative justify-end`}>
-
-          <Link to="/"
+      {/* ---- NAVIGATION BAR ---- */}
+      <nav className="bg-[#0f3358] flex px-2 border-b border-gray-200 relative justify-end">
+        <div className='flex relative justify-end'>
+        <Link to="/"
+          className="px-5 py-3 text-white text-1.5xl font-medium
+                    hover:bg-[#406BC7] hover:text-white
+                    transition-colors duration-200">
+          Home
+        </Link>
+        <Link to="/about"
             className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
-            Home
-          </Link>
-          <Link to="/about"
-            className="px-5 py-3 text-white text-1.5xl font-medium
-                    hover:bg-[#406BC7] hover:text-white
-                    transition-colors duration-200">
-            About MMV
-          </Link>
+          About MMV
+        </Link>
 
-          <DropdownMenu
-            title="Administration"
-            items={[
+        <DropdownMenu
+          title="Administration"
+          items=
+            {[
               { label: "Vice Chancellor", path: "/administration/vc" },
               { label: "MMV Principal", path: "/administration/principal" },
               { label: "Dean of Students", path: "/administration/dean" },
@@ -275,11 +247,12 @@ const Navbar = () => {
               ]},
               { label: "MMV Office Staff", path: "/administration/staff" },
             ]}
-          />
+        />
                                              
-          <DropdownMenu
-            title="Academics"
-            items={[
+        <DropdownMenu
+          title="Academics"
+          items=
+            {[
               { label: "NEP", path: "/academics/nep" },
               { label: "Syllabus", children: [
                 { label: "Under Graduate", children: [
@@ -303,11 +276,12 @@ const Navbar = () => {
               { label: "Academic Calendar", path: "/academics/calendar" },
               { label: "Holiday List", path: "/academics/holidays" },
             ]}
-          />
+        />
 
-          <DropdownMenu
-            title="Facilities"
-            items={[
+        <DropdownMenu
+          title="Facilities"
+          items=
+            {[
               { label: "Hostels", children: [
                 { label: "Chief Warden", path: "/facilities/hostels/chiefwarden" },
                 { label: "Hostel Coordinator", path: "/facilities/hostels/coordinator" },
@@ -363,31 +337,30 @@ const Navbar = () => {
                 { label: "Auditorium", path: "/facilities/other/auditorium" },
               ]},
             ]}
-          />
+        />
 
-          <Link to="/notices"
+        <Link to="/notices"
             className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             Notices
-          </Link>
+        </Link>
 
-          <Link to="/ai-assistant"
+        <Link to="/ai-assistant"
             className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             AI Assistant
-          </Link>
+        </Link>
 
-          <Link to="/contact"
+        <Link to="/contact"
             className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200">
             Contact
-          </Link>
+        </Link>
         </div>
       </nav>
-
     </div>
   );
 };

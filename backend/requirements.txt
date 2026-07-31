@@ -12,3 +12,5 @@ pydantic-settings
 pydantic[email]
 python-dotenv
 cors
+voyageai
+groq
