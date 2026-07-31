@@ -1084,8 +1084,6 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
-<<<<<<< HEAD
-=======
                     // Renders one '+++ Title ... +++' block as a self-contained
                     // click-to-expand widget. Unlike the note/table/bullet
                     // helpers above, this doesn't touch `elements` incrementally
@@ -1156,8 +1154,6 @@ const GenericContentPage = ({
                       accordionTitle = '';
                       inAccordion = false;
                     };
-
->>>>>>> main
                     const flushTable = () => {
                       if (tableBuffer.length === 0) return;
 
@@ -1188,31 +1184,6 @@ const GenericContentPage = ({
                         });
 
                         elements.push(
-<<<<<<< HEAD
-                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
-                            <table className="w-full text-sm text-left table-fixed">
-                              <thead className="bg-gray-50">
-                                <tr>
-                                  {headerRow.map((cell, ci) => (
-                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
-                                      {renderInlineFormatting(cell)}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="hover:bg-gray-50">
-                                    {cells.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2 text-gray-700">
-                                        {renderInlineFormatting(cell)}
-                                      </td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-=======
                           <div key={`table-${elements.length}`} className="rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
                             <div className="overflow-x-auto">
                               <table className="w-full text-sm table-fixed border-collapse">
@@ -1244,7 +1215,7 @@ const GenericContentPage = ({
                                 </tbody>
                               </table>
                             </div>
->>>>>>> main
+
                           </div>
                         );
                       }
@@ -1268,8 +1239,6 @@ const GenericContentPage = ({
                           flushNote();
                         } else {
                           noteBuffer.push(lineContent);
-<<<<<<< HEAD
-=======
                         }
                         return;
                       }
@@ -1282,7 +1251,7 @@ const GenericContentPage = ({
                           flushAccordion();
                         } else {
                           accordionBuffer.push(line);
->>>>>>> main
+
                         }
                         return;
                       }
@@ -1353,8 +1322,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-<<<<<<< HEAD
-=======
                       // +++ Title  → opens a collapsible accordion block.
                       // Everything after this line is hidden until a lone
                       // '+++' line closes it. Completely separate from the
@@ -1369,7 +1336,6 @@ const GenericContentPage = ({
                         return;
                       }
 
->>>>>>> main
                       // - Bullet point
                       if (trimmed.startsWith('- ')) {
                         bulletBuffer.push(trimmed.slice(2));
@@ -1389,11 +1355,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-<<<<<<< HEAD
-                          <p key={idx} className="text-gray-800 text-base text-left">
-=======
                           <p key={idx} className="text-gray-800 text-base text-justify">
->>>>>>> main
                             {renderInlineFormatting(trimmed)}
                           </p>
                         );
