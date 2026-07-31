@@ -1278,37 +1278,29 @@ const GenericContentPage = ({
                         });
 
                         elements.push(
-                          <div key={`table-${elements.length}`} className="rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm table-fixed border-collapse">
-                                <thead>
-                                  <tr className=" text-[#174873]">
-                                    {headerRow.map((cell, ci) => (
-                                      <th
-                                        key={ci}
-                                        className="px-4 py-3 text-left border border-gray-300 font-semibold"
-                                      >
+                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
+                            <table className="w-full text-sm text-left table-fixed">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  {headerRow.map((cell, ci) => (
+                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
+                                      {renderInlineFormatting(cell)}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="hover:bg-gray-50">
+                                    {cells.map((cell, ci) => (
+                                      <td key={ci} className="px-4 py-2 text-gray-700">
                                         {renderInlineFormatting(cell)}
-                                      </th>
+                                      </td>
                                     ))}
                                   </tr>
-                                </thead>
-                                <tbody>
-                                  {bodyRows.map((cells, ri) => (
-                                    <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                      {cells.map((cell, ci) => (
-                                        <td
-                                          key={ci}
-                                          className="px-4 py-3 text-gray-700 text-left border border-gray-300"
-                                        >
-                                          {renderInlineFormatting(cell)}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         );
                       }
@@ -1448,6 +1440,8 @@ const GenericContentPage = ({
                         flushTable();
                         elements.push(
                           <p key={idx} className="text-gray-800 text-lg text-justify">
+                          <p key={idx} className="text-gray-800 text-base text-left">
+
                             {renderInlineFormatting(trimmed)}
                           </p>
                         );

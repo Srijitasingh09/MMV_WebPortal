@@ -11,6 +11,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import Notices from './pages/notice';
 import Contact from './pages/contact';
+import MMVerse from './pages/MMVerse';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -61,7 +62,8 @@ function App() {
          {/*contact*/}
         <Route path="/Contact" element={<LayoutWrapper><Contact/></LayoutWrapper>} />
        
-
+       {/* Ai Assistant */}
+       <Route path="/ai-assistant" element={<LayoutWrapper><MMVerse /></LayoutWrapper>} />
 
 
        {/* Admin Routes */}
