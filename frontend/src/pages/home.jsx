@@ -30,14 +30,14 @@ const Hero = () => (
 const About = () => (
   <section className="bg-white py-10 px-6">
     <div className="max-w-5xl mx-auto text-center">
-      <span className="inline-block bg-[#EEF3FC] text-[#2d54a8] text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5">
+      <span className="inline-block bg-[#EEF3FC] text-[#2d54a8] text-sm font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-5">
         About the Portal
       </span>
       <h2 className="text-4xl font-semibold text-[#1a3a6b] mb-6 leading-snug"
           style={{ fontFamily: "'Cormorant Garamond', serif" }}>
         Your Complete Guide to MMV
       </h2>
-      <p className="text-gray-500 text-[15px] leading-relaxed max-w-3xl mx-auto mb-12">
+      <p className="text-gray-700 text-[15px] leading-relaxed max-w-3xl mx-auto mb-12">
         The MMV Student Portal is a centralized information hub for all students of Mahila Maha
         Vidyalaya, Banaras Hindu University. Whether you're looking for your department's
         syllabus, hostel information, administrative contacts, or the latest notices —
@@ -50,7 +50,7 @@ const About = () => (
           ['1929', 'Year Established'],
           ['30+', 'Departments'],
           ['2,500+', 'Students Enrolled'],
-          ['200+', 'Faculty Members'],
+          ['75+', 'Faculty Members'],
         ].map(([n, l]) => (
           <div key={l} className="bg-[#f4f7fd] rounded-2xl py-7 px-4">
             <div className="text-2xl font-bold text-[#406BC7] mb-1">{n}</div>
@@ -91,7 +91,7 @@ const FeatureSection = ({ id, title, description, points, image, reverse, accent
               style={{ background: tagBg, color: tagText, fontFamily: "'Cormorant Garamond', serif"}}>
           {title}
         </span>
-        <p className="text-gray-500 text-[14px] leading-relaxed mb-6">
+        <p className="text-gray-700 text-sm leading-relaxed mb-6">
           {description}
         </p>
         <ul className="space-y-3">
@@ -121,7 +121,7 @@ const Facilities = () => (
             style={{ fontFamily: "'Cormorant Garamond', serif" }}>
           Campus Facilities & Resources
         </span>
-        <p className="text-gray-500 text-[14px] leading-relaxed max-w-2xl mx-auto">
+        <p className="text-gray-700 text-sm leading-relaxed max-w-2xl mx-auto">
           MMV provides a comprehensive range of campus facilities to support students' academic,
           physical, and personal well-being. The Facilities section gives detailed information
           about each resource available on campus.
@@ -142,10 +142,10 @@ const Facilities = () => (
           <div key={f.label}
                className="bg-[#f4f7fd] rounded-2xl p-5 border border-[#406BC7] transition-all duration-200 group">
             <div className="text-3xl mb-3">{f.icon}</div>
-            <div className="text-sm font-semibold text-[#1a3a6b] mb-1 transition-colors">
+            <div className="text-lg font-semibold text-[#1a3a6b] mb-1 transition-colors">
               {f.label}
             </div>
-            <div className="text-xs text-gray-500 leading-relaxed">{f.detail}</div>
+            <div className="text-sm text-gray-600 leading-relaxed">{f.detail}</div>
           </div>
         ))}
       </div>
@@ -184,12 +184,12 @@ const Administration = () => (
     id="administration"
     image="/bhu/administration.png"
     title="College Administration & Governance"
-    description="The Administration section provides students with official information about the college's governance structure. This includes contacts for the Principal's office, administrative departments, committees, and institutional policies — making it easy to know who to reach for any matter."
+    description="The Administration section provides students with official information about the college's governance structure. This includes contacts for the Principal's office, administrative departments, committees, and institutional policies — making it easy to know whom to reach for any matter."
     points={[
       { icon: '🏛️', label: "Principal's Office", detail: 'Contact details, messages, and official communications.' },
       { icon: '📋', label: 'Controller of Examination', detail: 'Any queries related with semester examination ' },
       { icon: '📞', label: 'Staff Directory', detail: 'Administrative and teaching staff contact information.' },
-      { icon: '📜', label: 'Dean of Students', detail: 'Student conduct rules, attendance policies, and college guidelines.' },
+      { icon: '📜', label: 'Student Advisor', detail: 'Student conduct rules and college guidelines.' },
     ]}
     reverse={true}
     tagBg="#dbf2e6"
@@ -234,7 +234,7 @@ const AIAssistant = () => (
             style={{ fontFamily: "'Cormorant Garamond', serif" }}>
           Get Instant Answers with the MMV AI-Bot
         </span>
-        <p className="text-gray-500 text-[14px] leading-relaxed mb-6">
+        <p className="text-gray-700 text-sm leading-relaxed mb-6">
           The MMV AI Assistant is a conversational chatbot built specifically for students
           of Mahila Maha Vidyalaya. Instead of searching through multiple pages, simply
           type your question and get an accurate answer within seconds.
@@ -249,12 +249,12 @@ const AIAssistant = () => (
               <span className="text-xl leading-none mt-0.5">{p.icon}</span>
               <div>
                 <span className="text-sm font-semibold text-[#1a3a6b]">{p.label}: </span>
-                <span className="text-sm text-gray-500">{p.detail}</span>
+                <span className="text-sm text-gray-600">{p.detail}</span>
               </div>
             </li>
           ))}
         </ul>
-        <p className="mt-6 text-xs text-gray-400 italic">
+        <p className="mt-6 text-xs text-gray-500 italic">
           Navigate to the AI Assistant section from the portal menu to start a conversation.
         </p>
       </div>
@@ -262,8 +262,8 @@ const AIAssistant = () => (
       {/* Visual */}
       <div className="md:w-5/12 w-full">
         <div className="bg-white rounded-2xl p-6 border-7 border-[#E6E6FF]-100 shadow-sm">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-9 h-9 rounded-full bg-[#EEF3FC] flex items-center justify-content text-lg">🤖</div>
+          <div className="flex items-center bg-[#e0a10d] rounded p-0.5 gap-3 mb-5">
+            <div className="w-9 h-9 rounded-full bg-[#1956c6] flex items-center justify-content text-lg">🤖</div>
               <div className="text-sm font-semibold text-[#1a3a6b]">MMVerse</div>
           </div>
           <div className="space-y-3">
@@ -300,13 +300,13 @@ const AIAssistant = () => (
 // ============================================
 // SECTION NAV — sticky page index
 // ============================================
-const sections = [
-  { id: 'academics', label: 'Academics' },
-  { id: 'administration', label: 'Administration' },
-  { id: 'notices', label: 'Notices' },
-  { id: 'facilities', label: 'Facilities' },
-  { id: 'ai-assistant', label: 'AI Assistant' },
-];
+// const sections = [
+//   { id: 'academics', label: 'Academics' },
+//   { id: 'administration', label: 'Administration' },
+//   { id: 'notices', label: 'Notices' },
+//   { id: 'facilities', label: 'Facilities' },
+//   { id: 'ai-assistant', label: 'AI Assistant' },
+// ];
 
 const SectionNav = () => (
   <nav className="sticky top-0 z-40 bg-white border-b border-gray-100 shadow-sm">

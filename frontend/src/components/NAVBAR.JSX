@@ -1,7 +1,7 @@
-// import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import React from 'react'
-import { useState } from 'react'
+//import React from 'react'
+//import { useState } from 'react'
 
 // ============================================
 // LEVEL 3 - Deepest submenu
@@ -145,6 +145,8 @@ const Navbar = () => {
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
   const token = localStorage.getItem('token');
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('isAdmin');
@@ -233,14 +235,16 @@ const Navbar = () => {
       </div>
 
        {/* ---- NAVIGATION BAR ---- */}
-      <nav className="bg-[#0f3358] flex px-2 border-b border-gray-200 relative justify-end">
-        {/* Added Logo */}
-        {/* <img 
-        src="./mmv_saarthi_logo.png" 
-        alt="mmv-saarthi-logo"
-        className='h-12 pl-0' /> */}
+      <nav className="bg-[#0f3358] px-2 border-b border-gray-200 relative ">
+       <button
+         className="md:hidden text-white text-3xl p-2" onClick={() => setMenuOpen(!menuOpen)}>
+          ≡
+         </button>
 
-        <div className='flex relative justify-end'>
+       {/* <div className='flex relative justify-end'> */}
+      <div className= {`${
+         menuOpen ? "flex flex-col": "hidden"} md:flex relative justify-end`}>
+
           <Link to="/"
             className="px-5 py-3 text-white text-1.5xl font-medium
                     hover:bg-[#406BC7] hover:text-white
@@ -382,9 +386,6 @@ const Navbar = () => {
             Contact
           </Link>
         </div>
-
-        
-
       </nav>
 
     </div>
