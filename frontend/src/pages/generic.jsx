@@ -67,10 +67,6 @@ const GenericContentPage = ({
   const [editTableHeading, setEditTableHeading] = useState('');
   const [savingHeading,    setSavingHeading]    = useState(false);
 
-  // table: click-to-sort (alphabetical, toggles asc/desc)
-  const [sortColumn,    setSortColumn]    = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc'); // 'asc' | 'desc'
-
   // inline row edit state
   const [editingRowIdx,  setEditingRowIdx]  = useState(null); // which row is being edited
   const [editingRowData, setEditingRowData] = useState({});   // copy of that row's data
@@ -145,8 +141,6 @@ const GenericContentPage = ({
         const heading = parsed.tableHeading || '';
         setTableHeading(heading);
         setEditTableHeading(heading);
-        setSortColumn(null);
-        setSortDirection('asc');
       }
 
       if (hasProfile) {
@@ -166,9 +160,8 @@ const GenericContentPage = ({
       setEditSlideSettings(mergedPhotoSettings);
     } catch {
       setData({});
-      if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); setSortColumn(null); }
+      if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); }
       if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
-      setCollapsibleDescription(false);
       setOpenSections({});
       setPhotoSettings(blankPhotoSettings);
       setEditPhotoSettings(blankPhotoSettings);
@@ -195,28 +188,21 @@ const GenericContentPage = ({
     finally { setSaving(false); }
   };
 
-  // ── TABLE SORT ── click a header to sort alphabetically; click again to
-  // flip direction. Sorting is view-only (doesn't reorder saved rows), and
-  // each row keeps its original index so Edit/Delete still hit the right row.
-  const handleSortColumn = (col) => {
-    if (sortColumn === col) {
-      setSortDirection(d => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
-      setSortColumn(col);
-      setSortDirection('asc');
-    }
-  };
+  // ── TABLE ROW ORDER ── rows are displayed in the exact order they're
+  // stored in; admins reorder them manually with the ▲/▼ buttons below
+  // (see handleMoveRow), which swaps rows and persists the new order.
+  const displayRows = rows.map((row, origIdx) => ({ row, origIdx }));
 
-  const displayRows = React.useMemo(() => {
-    const withIndex = rows.map((row, origIdx) => ({ row, origIdx }));
-    if (!sortColumn) return withIndex;
-    const sorted = [...withIndex].sort((a, b) => {
-      const av = (a.row[sortColumn] || '').toString().toLowerCase();
-      const bv = (b.row[sortColumn] || '').toString().toLowerCase();
-      return av.localeCompare(bv);
-    });
-    return sortDirection === 'asc' ? sorted : sorted.reverse();
-  }, [rows, sortColumn, sortDirection]);
+  // ── ROW REORDER (admin only) ── swap a row with its neighbor and persist
+  const handleMoveRow = (idx, direction) => {
+    if (editingRowIdx !== null) return; // avoid index confusion mid-edit
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= rows.length) return;
+    const updated = [...rows];
+    [updated[idx], updated[targetIdx]] = [updated[targetIdx], updated[idx]];
+    setRows(updated);
+    saveTable(columns, updated);
+  };
 
   // ── TABLE SAVE ──
   const saveTable = async (cols, tableRows) => {
@@ -507,7 +493,7 @@ const GenericContentPage = ({
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
 
       {/* Back */}
       <button onClick={() => navigate(backPath)}
@@ -515,11 +501,19 @@ const GenericContentPage = ({
         ← Back to {backLabel}
       </button>
 
-      <h1 className="text-3xl font-semibold text-[#174873]">{title}</h1>
+      {/* Main page heading — centered pill/badge style (light gray rounded
+          background, bold navy text). Change `bg-gray-200` / `text-[#174873]`
+          here to restyle the badge, or swap `rounded-full` for e.g.
+          `rounded-2xl` for a less pill-like shape. */}
+      <div className="w-full flex justify-center">
+        <h1 className="inline-block bg-gray-200 text-[#174873] font-bold text-lg sm:text-xl md:text-2xl text-center px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-sm break-words max-w-full">
+          {title}
+        </h1>
+      </div>
 
       {/* ── PROFILE SECTION ── */}
       {hasProfile && (
-        <div className="bg-[#eef6ff] rounded-2xl px-8 py-8 text-center relative">
+        <div className="bg-[#C3DDFF] rounded-2xl px-4 sm:px-8 py-6 sm:py-8 text-center relative">
 
           {isAdmin && !isEditingProfile && (
             <button
@@ -540,11 +534,11 @@ const GenericContentPage = ({
                   <img
                     src={`${API}${profilePhoto.photo_url}`}
                     alt={profilePhoto.photo_name}
-                    className="rounded-lg object-cover border border-gray-200"
-                    style={{ width: '220px', height: '260px', objectPosition: 'top center' }}
+                    className="rounded-lg object-cover border border-gray-200 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                    style={{ objectPosition: 'top center' }}
                   />
                 ) : (
-                  <div className="w-[220px] h-[260px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-sm bg-white">
+                  <div className="w-[160px] h-[190px] sm:w-[220px] sm:h-[260px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-sm bg-white">
                     No photo yet
                   </div>
                 )}
@@ -567,7 +561,7 @@ const GenericContentPage = ({
                 </div>
               </div>
 
-              {/* FIX 8: Removed 'age' field from profile edit form */}
+         
               {[
                 { key: 'name',          label: 'Name' },
                 { key: 'designation',   label: 'Designation' },
@@ -607,17 +601,17 @@ const GenericContentPage = ({
                 <img
                   src={`${API}${profilePhoto.photo_url}`}
                   alt={profilePhoto.photo_name}
-                  className="rounded-lg object-cover border border-gray-200 mx-auto mb-4"
-                  style={{ width: '220px', height: '260px', objectPosition: 'top center' }}
+                  className="rounded-lg object-cover border border-gray-200 mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                  style={{ objectPosition: 'top center' }}
                 />
               )}
 
-              <h2 className="text-3xl font-bold text-[#174873]">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#174873] break-words">
                 {profile.name}
               </h2>
 
               {profile.designation && (
-                <p className="text-xl font-semibold text-[#174873] mt-1">
+                <p className="text-2xl font-semibold text-[#174873] mt-1">
                   {profile.designation}
                 </p>
               )}
@@ -700,7 +694,7 @@ const GenericContentPage = ({
 
       {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
       {(hasPhoto || hasDesc || hasSlideshow) && (
-        <div className={`grid grid-cols-1 gap-6 ${
+        <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${
           hasPhoto && !hasSlideshow && galleryPhotos.length && hasDesc 
            ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
            : 'md:grid-cols-3' // Default fallback grid structure
@@ -719,7 +713,7 @@ const GenericContentPage = ({
                     ⚙
                   </button>
                   {isEditingSlideSize && (
-                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 space-y-3">
+                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 max-w-[90vw] space-y-3">
                       <p className="text-xs font-bold text-gray-500">Slideshow Size</p>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Height (px)</label>
@@ -755,13 +749,15 @@ const GenericContentPage = ({
                 </div>
               )}
               
-                <SlideshowBlock
-                  photos={galleryPhotos}
-                  isAdmin={isAdmin}
-                  onDelete={handleDeletePhoto}
-                  height={photoSettings.slideshowHeight}
-                  maxWidth={photoSettings.slideshowMaxWidth || "100%"}
-                />      
+                <div className="w-full max-w-full overflow-hidden mx-auto">
+                  <SlideshowBlock
+                    photos={galleryPhotos}
+                    isAdmin={isAdmin}
+                    onDelete={handleDeletePhoto}
+                    height={photoSettings.slideshowHeight}
+                    maxWidth={photoSettings.slideshowMaxWidth || "100%"}
+                  />
+                </div>
             </div>
           )}
 
@@ -784,7 +780,7 @@ const GenericContentPage = ({
                     ⚙
                   </button>
                   {isEditingPhotoSize && (
-                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 space-y-3">
+                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 max-w-[90vw] space-y-3">
                       <p className="text-xs font-bold text-gray-500">Photo Grid Size</p>
                       <div>
                         <label className="block text-xs text-gray-600 mb-1">Position relative to text</label>
@@ -843,10 +839,10 @@ const GenericContentPage = ({
                   )}
                 </div>
               )}
-              <div className={`grid gap-4 ${
-                photoSettings.cols === 1 ? 'grid-cols-1' :
-                photoSettings.cols === 3 ? 'grid-cols-3' :
-                'grid-cols-2'
+              <div className={`grid gap-4 grid-cols-1 ${
+                photoSettings.cols === 1 ? 'sm:grid-cols-1' :
+                photoSettings.cols === 3 ? 'sm:grid-cols-2 lg:grid-cols-3' :
+                'sm:grid-cols-2'
               }`}>
                 {galleryPhotos.map((photo) => (
                   <div key={photo.id} className="relative min-w-0 border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl text-center">
@@ -887,7 +883,7 @@ const GenericContentPage = ({
             }`}>
 
               {/* FIX 7: Changed min-h-180px → min-h-[180px] (valid Tailwind arbitrary value) */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 w-full min-h-[180px]">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -1005,7 +1001,7 @@ const GenericContentPage = ({
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-base">
+                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-lg">
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
@@ -1093,6 +1089,8 @@ const GenericContentPage = ({
                       const index = accordionCount++;
                       const contentElements = [];
                       let localBulletBuffer = [];
+                      let localNoteBuffer = [];   // lines collected between '>' open and '<' close, inside this accordion
+                      let inLocalNote = false;
 
                       const flushLocalBullets = () => {
                         if (localBulletBuffer.length > 0) {
@@ -1107,13 +1105,107 @@ const GenericContentPage = ({
                         }
                       };
 
+                      // Renders a note block found inside this accordion using
+                      // the exact same static callout box as the top-level
+                      // description notes — not collapsible, just "active"
+                      // (parsed/rendered) wherever it's written.
+                      const flushLocalNote = () => {
+                        if (localNoteBuffer.length > 0) {
+                          const noteElements = [];
+                          let localNoteBulletBuffer = [];
+
+                          const flushLocalNoteBullets = () => {
+                            if (localNoteBulletBuffer.length > 0) {
+                              noteElements.push(
+                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1">
+                                  {localNoteBulletBuffer.map((b, i) => (
+                                    <li key={i}>{renderInlineFormatting(b)}</li>
+                                  ))}
+                                </ul>
+                              );
+                              localNoteBulletBuffer = [];
+                            }
+                          };
+
+                          localNoteBuffer.forEach((lineText, i) => {
+                            if (lineText.startsWith('### ')) {
+                              flushLocalNoteBullets();
+                              noteElements.push(
+                                <h4 key={`acc-note-h4-${i}`} className="text-sm font-semibold text-[#174873] mt-2 not-italic">
+                                  {renderInlineFormatting(lineText.slice(4))}
+                                </h4>
+                              );
+                            } else if (lineText.startsWith('## ')) {
+                              flushLocalNoteBullets();
+                              noteElements.push(
+                                <h3 key={`acc-note-h3-${i}`} className="text-base font-semibold text-[#174873] mt-2 not-italic">
+                                  {renderInlineFormatting(lineText.slice(3))}
+                                </h3>
+                              );
+                            } else if (lineText === '---') {
+                              flushLocalNoteBullets();
+                              noteElements.push(
+                                <hr key={`acc-note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                              );
+                            } else if (lineText.startsWith('- ')) {
+                              localNoteBulletBuffer.push(lineText.slice(2));
+                            } else {
+                              flushLocalNoteBullets();
+                              noteElements.push(
+                                <div key={`acc-note-line-${i}`}>{renderInlineFormatting(lineText)}</div>
+                              );
+                            }
+                          });
+                          flushLocalNoteBullets();
+
+                          contentElements.push(
+                            <div key={`acc-note-${contentElements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm space-y-1">
+                              {noteElements}
+                            </div>
+                          );
+                        }
+                        localNoteBuffer = [];
+                        inLocalNote = false;
+                      };
+
                       accordionBuffer.forEach((lineText, li) => {
                         const t = lineText.trim();
+
+                        // Currently inside an open note block within this
+                        // accordion — swallow lines until the closing '<'.
+                        if (inLocalNote) {
+                          let lineContent = t.startsWith('> ') ? t.slice(2) : t;
+                          if (lineContent.endsWith('<')) {
+                            localNoteBuffer.push(lineContent.slice(0, -1).trim());
+                            flushLocalNote();
+                          } else {
+                            localNoteBuffer.push(lineContent);
+                          }
+                          return;
+                        }
+
                         if (t === '') {
                           flushLocalBullets();
                           contentElements.push(<div key={`acc-sp-${li}`} className="h-1" />);
                           return;
                         }
+
+                        // '> ... <' opens/closes a note block, same syntax as
+                        // the top-level description. Checked before the bullet
+                        // check below for the same reason as the top level.
+                        if (t.startsWith('> ') || t === '>') {
+                          flushLocalBullets();
+                          let content = t.startsWith('> ') ? t.slice(2) : '';
+                          if (content.endsWith('<')) {
+                            localNoteBuffer.push(content.slice(0, -1).trim());
+                            flushLocalNote();
+                          } else {
+                            inLocalNote = true;
+                            localNoteBuffer.push(content);
+                          }
+                          return;
+                        }
+
                         if (t.startsWith('- ')) {
                           localBulletBuffer.push(t.slice(2));
                           return;
@@ -1126,6 +1218,7 @@ const GenericContentPage = ({
                         );
                       });
                       flushLocalBullets();
+                      flushLocalNote(); // in case a note was left open at the end of this accordion's content
 
                       const isOpen = !!openSections[index];
                       elements.push(
@@ -1184,38 +1277,29 @@ const GenericContentPage = ({
                         });
 
                         elements.push(
-                          <div key={`table-${elements.length}`} className="rounded-2xl border border-gray-300 shadow-sm overflow-hidden">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm table-fixed border-collapse">
-                                <thead>
-                                  <tr className=" text-[#174873]">
-                                    {headerRow.map((cell, ci) => (
-                                      <th
-                                        key={ci}
-                                        className="px-4 py-3 text-left border border-gray-300 font-semibold"
-                                      >
+                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
+                            <table className="w-full text-sm text-left table-fixed">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  {headerRow.map((cell, ci) => (
+                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
+                                      {renderInlineFormatting(cell)}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="hover:bg-gray-50">
+                                    {cells.map((cell, ci) => (
+                                      <td key={ci} className="px-4 py-2 text-gray-700">
                                         {renderInlineFormatting(cell)}
-                                      </th>
+                                      </td>
                                     ))}
                                   </tr>
-                                </thead>
-                                <tbody>
-                                  {bodyRows.map((cells, ri) => (
-                                    <tr key={ri} className={ri % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                      {cells.map((cell, ci) => (
-                                        <td
-                                          key={ci}
-                                          className="px-4 py-3 text-gray-700 text-left border border-gray-300"
-                                        >
-                                          {renderInlineFormatting(cell)}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         );
                       }
@@ -1251,7 +1335,6 @@ const GenericContentPage = ({
                           flushAccordion();
                         } else {
                           accordionBuffer.push(line);
-
                         }
                         return;
                       }
@@ -1270,7 +1353,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h2 key={idx} className="text-2xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
+                          <h2 key={idx} className="text-3xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
                             {trimmed}
                           </h2>
                         );
@@ -1282,7 +1365,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h3 key={idx} className="text-lg font-semibold text-[#174873] mt-4">
+                          <h3 key={idx} className="text-xl font-semibold mt-4" style={{ color: '#2E6DA4' }}>
                             {trimmed.slice(3)}
                           </h3>
                         );
@@ -1294,7 +1377,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h4 key={idx} className="text-base font-semibold text-gray-800 mt-3">
+                          <h4 key={idx} className="text-lg font-semibold mt-3" style={{ color: '#5B93C4' }}>
                             {trimmed.slice(4)}
                           </h4>
                         );
@@ -1355,7 +1438,9 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <p key={idx} className="text-gray-800 text-base text-justify">
+                          <p key={idx} className="text-gray-800 text-lg text-justify">
+                          <p key={idx} className="text-gray-800 text-base text-left">
+
                             {renderInlineFormatting(trimmed)}
                           </p>
                         );
@@ -1374,7 +1459,7 @@ const GenericContentPage = ({
                       // Plain paragraph (may still contain inline bold/links)
                       flushBullets();
                       elements.push(
-                        <p key={idx} className="text-gray-700 text-base leading-relaxed text-justify">
+                        <p key={idx} className="text-[#000000] text-md leading-relaxed text-justify">
                           {renderInlineFormatting(trimmed)}
                         </p>
                       );
@@ -1397,13 +1482,13 @@ const GenericContentPage = ({
       {/* ── PDF VIEWER ── */}
       {galleryPdfs.length > 0 && (
         <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="bg-[#174873] px-6 py-4">
+          <div className="bg-[#174873] px-4 sm:px-6 py-4">
             <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
           </div>
 
           <div className="divide-y divide-gray-200">
             {galleryPdfs.map(pdf => (
-              <div key={pdf.id} className="px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between group">
+              <div key={pdf.id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors flex items-center justify-between gap-2 group">
                 <div className="flex items-center gap-4 flex-1">
                   <svg
                     className="w-6 h-6 text-red-500 shrink-0"
@@ -1430,7 +1515,7 @@ const GenericContentPage = ({
                 {isAdmin && (
                   <button
                     onClick={() => handleDeletePdf(pdf.id)}
-                    className="ml-4 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity text-sm font-medium"
+                    className="ml-2 sm:ml-4 shrink-0 px-3 py-2 text-red-500 hover:bg-red-50 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm font-medium"
                     title="Delete PDF"
                   >
                     Delete
@@ -1494,16 +1579,7 @@ const GenericContentPage = ({
                   <tr className="bg-[#174873] text-white">
                     {columns.map(col => (
                     <th key={col} className="px-4 py-3 text-left font-semibold">
-                      <span
-                        onClick={() => handleSortColumn(col)}
-                        className="cursor-pointer select-none inline-flex items-center gap-1 hover:underline"
-                        title="Click to sort alphabetically"
-                      >
-                        {col}
-                        <span className="text-xs opacity-80">
-                          {sortColumn === col ? (sortDirection === 'asc' ? '▲' : '▼') : '⇅'}
-                        </span>
-                      </span>
+                      {col}
                       {isAdmin && (
                         <button onClick={() => handleDeleteColumn(col)}
                           className="ml-2 text-red-300 hover:text-white text-xs">×</button>
@@ -1642,7 +1718,19 @@ const GenericContentPage = ({
                               </button>
                             </div>
                           ) : (
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
+                              <button onClick={() => handleMoveRow(idx, 'up')}
+                                disabled={idx === 0}
+                                title="Move row up"
+                                className={`text-xs font-bold ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-[#174873] hover:text-[#406BC7]'}`}>
+                                ▲
+                              </button>
+                              <button onClick={() => handleMoveRow(idx, 'down')}
+                                disabled={idx === rows.length - 1}
+                                title="Move row down"
+                                className={`text-xs font-bold ${idx === rows.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-[#174873] hover:text-[#406BC7]'}`}>
+                                ▼
+                              </button>
                               <button onClick={() => handleStartEditRow(idx)}
                                 className="text-[#174873] hover:text-[#406BC7] text-xs font-bold">
                                 Edit
