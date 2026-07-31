@@ -20,7 +20,7 @@ const pages = {
 
   'advisor': { 
     title: 'Student Advisor',                               
-    pageType: 'profile-photo-description' 
+    pageType: 'profile' 
   },
 
   'staff': { 
@@ -36,13 +36,13 @@ const pages = {
 
   'proctorial/uniboard': { 
     title: 'University Proctorial Board',           
-    pageType: 'table',
+    pageType: 'table-description',
     tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
   },
 
   'examination/universityexam': {  
     title: 'Controller of Examination — University', 
-    pageType: 'table', 
+    pageType: 'table-description', 
     tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
   },
   

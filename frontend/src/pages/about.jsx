@@ -339,9 +339,9 @@ const About = () => {
   return (
     <main>
       <Slideshow />
-       <MalviyaQuote/>
+      <MalviyaQuote/>
       <IntroSection />
-      
+
       <History />
       
     </main>

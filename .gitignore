@@ -1,9 +1,15 @@
-college_portal.db
-__pycache__/
-*.pyc
-*.pyo
 .venv/
 *.db
+__pycache__/
+node_modules
+
+#Database
+#*.db
+college_portal_backup.db
+
+#Uploads folder
+backend/uploads/
+
 frontend/.env
 frontend/.env.production
 backend/.env 
