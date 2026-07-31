@@ -1247,7 +1247,6 @@ const GenericContentPage = ({
                       accordionTitle = '';
                       inAccordion = false;
                     };
-
                     const flushTable = () => {
                       if (tableBuffer.length === 0) return;
 
@@ -1440,8 +1439,6 @@ const GenericContentPage = ({
                         flushTable();
                         elements.push(
                           <p key={idx} className="text-gray-800 text-lg text-justify">
-                          <p key={idx} className="text-gray-800 text-base text-left">
-
                             {renderInlineFormatting(trimmed)}
                           </p>
                         );
