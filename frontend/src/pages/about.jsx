@@ -185,7 +185,7 @@ const IntroSection = () => {
             src="/mmvimage2.jpeg"
             alt="MMV gate"
             className="w-full object-cover md:w-[520px] md:h-[520px]"
-            style={{ height: 'clamp(380px, 55vw, 580px)',
+            style={{ height: 'clamp(480px, 75vw, 680px)',
                      objectPosition:'top center'
              }}
           />
@@ -193,17 +193,17 @@ const IntroSection = () => {
 
         {/* RIGHT — Text */}
         <div className="md:w-1/2">
-          <h2 id="about-heading" className="text-3xl font-semibold text-[#174873] mb-4">
+          <h2 id="about-heading" className="text-4xl font-semibold text-[#174873] mb-4">
             About MMV
           </h2>
-          <p className="text-gray-600 text-sm leading-relaxed text-justify">
+          <p className="text-black text-2sm leading-relaxed text-justify">
            Mahila Mahavidyalaya (MMV), the Women’s College of Banaras Hindu University (BHU), is a premier, multi-faculty constituent
             college located within the main residential campus of BHU in Varanasi, Uttar Pradesh. Established as a dedicated space for women's higher 
             education, MMV brings together ancient Indian values and modern scientific academic rigor.  Spanning a lush 45-acre sub-campus inside the
              university, MMV stands out as an inclusive community providing undergraduate, postgraduate, and research-level education exclusively to 
              female students.
           </p>
-          <p className="text-gray-600 text-sm leading-relaxed text-justify mt-3">
+          <p className="text-black text-2sm leading-relaxed text-justify mt-3">
            The institution caters to thousands of young women, striking a balance between vibrant academic curriculums and holistic personal growth.
            MMV offers comprehensive programs across multiple disciplines including the Sciences, Humanities, Social Sciences,
           Education, and Performing & Visual Arts (such as specialized courses in Indian classical dance formats like Kathak and classical music). 
@@ -212,7 +212,7 @@ const IntroSection = () => {
             educational journals. 
   
           </p>
-          <p className="text-gray-600 text-sm leading-relaxed text-justify mt-3">
+          <p className="text-black text-2sm leading-relaxed text-justify mt-3">
 
            Mahila Mahavidyalaya, its steady
          growth and the development stands testimony to the
@@ -283,10 +283,10 @@ const History = () => {
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-start">
 
         <div className="md:w-1/2">
-          <h2 id="history-heading" className="text-3xl font-semibold text-[#174873] mb-4">
+          <h2 id="history-heading" className="text-4xl font-semibold text-[#174873] mb-4">
             Founding History
           </h2>
-          <p className="text-gray-600 text-sm leading-relaxed text-justify">
+          <p className="text-black text-2sm leading-relaxed text-justify">
           Vision on Women Education
           Right from its inception in 1916, the BHU has been
           striving towards women's education. Its visionary
@@ -300,7 +300,7 @@ const History = () => {
           towards shaping the Indian women to take on their
           role as capable citizens.
           </p>
-          <p className="text-gray-600 text-sm leading-relaxed text-justify mt-3">
+          <p className="text-black text-2sm leading-relaxed text-justify mt-3">
            In his convocation address
           delivered on 14th December, 1929 Mahamana
           announced the establishment of the Women's College
