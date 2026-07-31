@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -40,6 +40,13 @@ async def validate_upload(file: UploadFile, allowed_types: set):
 
 import models, database, auth
 from database import engine, get_db
+from chat_index import (
+    sync_facility_content_by_id,
+    sync_notice_by_id,
+    delete_chunks_for,
+    voyage_client,
+    EMBED_MODEL,
+)
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -257,6 +264,7 @@ def get_notices(db: Session = Depends(get_db)):
 
 @app.post("/admin/notice")
 async def add_notice(
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     content: str = Form(...),
     category: str = Form("General"),
@@ -288,11 +296,13 @@ async def add_notice(
     db.add(new_notice)
     db.commit()
     db.refresh(new_notice)
+    background_tasks.add_task(sync_notice_by_id, new_notice.id)
     return new_notice
 
 @app.delete("/admin/notice/{notice_id}")
 def delete_notice(
     notice_id: int,
+    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -307,6 +317,7 @@ def delete_notice(
             os.remove(stored_path)
     db.delete(notice)
     db.commit()
+    background_tasks.add_task(delete_chunks_for, "notices", notice_id)
     return {"message": "Notice deleted"}
 
 # ================emergency contact=======================
@@ -888,6 +899,7 @@ def get_facility_content(
 @app.put("/admin/facility-content")
 def upsert_facility_content(
     payload: dict,
+    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -920,6 +932,13 @@ def upsert_facility_content(
 
     db.commit()
     db.refresh(row)
+
+    # Stage D: re-index this row's search chunks in the background, so the
+    # admin's save feels instant — embedding takes ~20+ seconds per chunk.
+    # Pass just the ID (not the row object) — by the time this background task
+    # runs, the request's db session will already be closed.
+    background_tasks.add_task(sync_facility_content_by_id, row.id)
+
     return {
         "id": row.id,
         "section": row.section,
@@ -937,6 +956,7 @@ def upsert_facility_content(
 
 @app.post("/admin/facility-content/upload-pdf")
 async def upload_facility_content_pdf(
+    background_tasks: BackgroundTasks,
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -974,16 +994,24 @@ async def upload_facility_content_pdf(
         uploaded.append({"pdf_name": file.filename, "pdf_url": f"/uploads/{filename}"})
 
     db.commit()
+    background_tasks.add_task(sync_facility_content_by_id, row.id)
     return {"message": f"{len(uploaded)} PDF(s) uploaded", "pdfs": uploaded}
 
 
 @app.delete("/admin/facility-content/pdf/{pdf_id}")
-def delete_facility_content_pdf(pdf_id: int, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_facility_content_pdf(
+    pdf_id: int,
+    background_tasks: BackgroundTasks,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Called by handleDeletePdf in GenericContentPage.jsx."""
     ensure_admin(user)
     pdf = db.query(models.FacilityContentPdf).filter(models.FacilityContentPdf.id == pdf_id).first()
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
+
+    content_id = pdf.content_id  # capture before delete, needed for re-sync below
 
     filepath = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
     if os.path.exists(filepath):
@@ -991,11 +1019,13 @@ def delete_facility_content_pdf(pdf_id: int, user: models.User = Depends(get_cur
 
     db.delete(pdf)
     db.commit()
+    background_tasks.add_task(sync_facility_content_by_id, content_id)
     return {"message": "PDF deleted"}
 
 
 @app.post("/admin/facility-content/upload-photo")
 async def upload_facility_content_photo(
+    background_tasks: BackgroundTasks,
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -1034,16 +1064,24 @@ async def upload_facility_content_photo(
         uploaded.append({"photo_name": file.filename, "photo_url": f"/uploads/{filename}"})
 
     db.commit()
+    background_tasks.add_task(sync_facility_content_by_id, row.id)
     return {"message": f"{len(uploaded)} photo(s) uploaded", "photos": uploaded}
 
 
 @app.delete("/admin/facility-content/photo/{photo_id}")
-def delete_facility_content_photo(photo_id: int, user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_facility_content_photo(
+    photo_id: int,
+    background_tasks: BackgroundTasks,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """Called by handleDeletePhoto in GenericContentPage.jsx."""
     ensure_admin(user)
     photo = db.query(models.FacilityContentPhoto).filter(models.FacilityContentPhoto.id == photo_id).first()
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
+
+    content_id = photo.content_id  # capture before delete, needed for re-sync below
 
     filepath = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
     if os.path.exists(filepath):
@@ -1051,4 +1089,260 @@ def delete_facility_content_photo(photo_id: int, user: models.User = Depends(get
 
     db.delete(photo)
     db.commit()
+    background_tasks.add_task(sync_facility_content_by_id, content_id)
     return {"message": "Photo deleted"}
+
+# ============================================================
+# STAGE E + F — Chat search endpoint (public, no auth required)
+# ============================================================
+
+import groq as groq_lib
+
+_groq_client = groq_lib.Groq()
+
+
+def classify_question(question: str) -> str:
+    """Classify whether the question is MMV-related or off-topic.
+    Returns 'mmv' or 'offtopic'. When in doubt returns 'mmv'."""
+    try:
+        response = _groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{
+                "role": "user",
+                "content": (
+                    "You are a classifier for MMVerse, AI assistant of Mahila Maha Vidyalaya (MMV), BHU.\n"
+                    "Classify the question as 'mmv' or 'offtopic'. Reply with ONE word only.\n\n"
+                    "'mmv' = questions about MMV/BHU: admissions, fees, courses, faculty, hostels, "
+                    "library, canteen, sports, medical, administration, exams, notices, campus life.\n"
+                    "'offtopic' = clearly unrelated: general knowledge, coding, other universities, "
+                    "entertainment, translation, politics, science facts.\n"
+                    "When in doubt: 'mmv'.\n\n"
+                    f"Question: {question}"
+                )
+            }],
+            max_tokens=5,
+            temperature=0.0,
+        )
+        result = response.choices[0].message.content.strip().lower()
+        return "offtopic" if "offtopic" in result else "mmv"
+    except Exception:
+        return "mmv"
+
+
+def expand_query(question: str) -> list:
+    """Use Groq to generate 2 alternative phrasings of the student's question.
+    Handles vocabulary mismatches: 'timings' vs 'hours', 'charges' vs 'fees', etc.
+    Returns the original question + up to 2 alternatives."""
+    try:
+        response = _groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Rephrase this question in 2 different ways, keeping the same meaning. "
+                    f"Output only the 2 rephrased questions, one per line, no numbering, no explanation.\n\n"
+                    f"Question: {question}"
+                )
+            }],
+            max_tokens=80,
+            temperature=0.5,
+        )
+        lines = response.choices[0].message.content.strip().split("\n")
+        alternatives = [l.strip() for l in lines if l.strip() and l.strip() != question][:2]
+        return [question] + alternatives
+    except Exception:
+        return [question]
+
+
+def search_best_chunk(queries: list, db, section_filter: str = None):
+    """Embed all query variants, return the single best-matching chunk.
+    section_filter: optional section name to restrict search (e.g. 'facilities').
+    Returns (row, similarity) or (None, 0.0)."""
+    best_row = None
+    best_similarity = 0.0
+
+    try:
+        result = voyage_client.embed(
+            texts=queries,
+            model=EMBED_MODEL,
+            input_type="query",
+        )
+        embeddings = result.embeddings
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Embedding service unavailable: {e}")
+
+    # Build optional section filter clause
+    section_clause = ""
+    if section_filter:
+        # Match source_table containing section name, or section_url starting with /section
+        section_clause = f"AND (c.section_url LIKE '/{section_filter}%' OR c.source_table LIKE '%{section_filter}%')"
+
+    for emb in embeddings:
+        emb_str = str(emb)
+        row = db.execute(
+            text(f"""
+                SELECT
+                    c.id,
+                    c.chunk_text,
+                    c.section_title,
+                    c.section_url,
+                    c.content_type,
+                    1 - (c.embedding <=> '{emb_str}'::vector) AS similarity,
+                    a.asset_type,
+                    a.table_data,
+                    a.file_url,
+                    a.file_name
+                FROM chat_index_chunk c
+                LEFT JOIN chat_index_asset a ON a.chunk_id = c.id
+                {section_clause}
+                ORDER BY
+                    (c.embedding <=> '{emb_str}'::vector)
+                    - CASE WHEN c.content_type = 'text' THEN 0.15 ELSE 0 END
+                LIMIT 1
+            """)
+        ).fetchone()
+
+        if row and float(row.similarity) > best_similarity:
+            best_similarity = float(row.similarity)
+            best_row = row
+
+    return best_row, best_similarity
+
+
+def generate_answer(question: str, chunk_text: str, section_title: str) -> str:
+    """Generate a precise, grounded answer from the best matching chunk.
+    To upgrade to Claude: replace _groq_client and this function body."""
+    prompt = f"""You are MMVerse, the official AI assistant for Mahila Maha Vidyalaya (MMV), Banaras Hindu University (BHU).
+
+STUDENT QUESTION: {question}
+
+RETRIEVED INFORMATION FROM MMV PORTAL (section: {section_title}):
+---
+{chunk_text}
+---
+
+INSTRUCTIONS:
+- Answer ONLY using the information above. Do not add anything from outside.
+- Be direct and specific. If asked for a time give the exact time, if asked for a name give the exact name, if asked for a number give the exact number.
+- If the information does not directly answer the question, say: "I don't have specific information about that. Please visit the {section_title} section or contact the relevant department."
+- Never make up facts, dates, names, or numbers not present above.
+- Keep the answer concise — 2-4 sentences unless a list is genuinely needed.
+- Use plain, friendly language suitable for a student.
+- Do NOT start with "Based on the information" or "According to the text".
+- Do NOT include markdown links like [text](url) — write plain text only.
+- Format lists with bullet points using the "•" character."""
+
+    response = _groq_client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=250,
+        temperature=0.0,
+    )
+    return response.choices[0].message.content.strip()
+
+
+# Threshold: 0.30 — query expansion gives 3 chances to find a match.
+SIMILARITY_THRESHOLD = 0.30
+
+
+@app.post("/chat")
+def chat(payload: dict, db: Session = Depends(get_db)):
+    """Public endpoint — no auth required.
+
+    Request body:  { "question": "What are the hostel facilities?" }
+
+    Response — matched:
+    {
+        "matched": true,
+        "answer": "...",
+        "chunk_text": "...",
+        "section_title": "...",
+        "section_url": "/...",
+        "asset": { ... } | null
+    }
+
+    Response — no match (Stage F fallback):
+    {
+        "matched": false,
+        "message": "I couldn't find a specific answer...",
+        "section_title": "...",
+        "section_url": "/..."
+    }
+    """
+    question = (payload.get("question") or "").strip()
+    section_filter = (payload.get("section") or "").strip() or None
+    if not question:
+        raise HTTPException(status_code=400, detail="question is required")
+
+    # 1. Classify — off-topic check first.
+    intent = classify_question(question)
+    if intent == "offtopic":
+        return {
+            "matched": False,
+            "fallback_type": "offtopic",
+            "message": (
+                "I'm MMVerse, an assistant specifically for Mahila Maha Vidyalaya (MMV), BHU. "
+                "I can only answer questions about MMV — academics, facilities, administration, "
+                "hostel, library, and campus life. For other topics, please use a general search engine."
+            ),
+            "section_title": None,
+            "section_url": None,
+        }
+
+    # 2. Expand question into multiple phrasings.
+    queries = expand_query(question)
+
+    # 3. Search for best matching chunk with optional section filter.
+    row, similarity = search_best_chunk(queries, db, section_filter=section_filter)
+
+    if not row:
+        return {
+            "matched": False,
+            "fallback_type": "no_content",
+            "message": "The knowledge base is empty. Please contact the administrator.",
+            "section_title": None,
+            "section_url": None,
+        }
+
+    # 4. Stage F fallback — score too low.
+    if similarity < SIMILARITY_THRESHOLD:
+        return {
+            "matched": False,
+            "fallback_type": "no_content",
+            "message": (
+                "This looks like an MMV-related question, but I don't have specific information "
+                "about it yet. The content may not have been added to the portal. "
+                "Please contact the relevant department directly, or check the closest section below."
+            ),
+            "section_title": row.section_title,
+            "section_url": row.section_url,
+        }
+
+    # 5. Generate NLP answer from best matching chunk.
+    try:
+        answer = generate_answer(question, row.chunk_text, row.section_title)
+    except Exception:
+        answer = row.chunk_text
+
+    # 6. Build asset payload.
+    asset = None
+    if row.asset_type:
+        asset = {"asset_type": row.asset_type}
+        if row.asset_type == "table" and row.table_data:
+            asset["table_data"] = (
+                json.loads(row.table_data)
+                if isinstance(row.table_data, str)
+                else row.table_data
+            )
+        else:
+            asset["file_url"] = row.file_url
+            asset["file_name"] = row.file_name
+
+    return {
+        "matched": True,
+        "answer": answer,
+        "chunk_text": row.chunk_text,
+        "section_title": row.section_title,
+        "section_url": row.section_url,
+        "asset": asset,
+    }
