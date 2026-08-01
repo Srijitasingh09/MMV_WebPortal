@@ -1130,22 +1130,25 @@ def classify_question(question: str) -> str:
 
 
 def expand_query(question: str) -> list:
-    """Use Groq to generate 2 alternative phrasings of the student's question.
-    Handles vocabulary mismatches: 'timings' vs 'hours', 'charges' vs 'fees', etc.
-    Returns the original question + up to 2 alternatives."""
+    """Generate 2 alternative phrasings with MMV-specific vocabulary mapping.
+    Handles: 'timings'→'hours', 'charges'→'fees', 'ma'am'→proper title, etc."""
     try:
         response = _groq_client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{
                 "role": "user",
                 "content": (
-                    f"Rephrase this question in 2 different ways, keeping the same meaning. "
-                    f"Output only the 2 rephrased questions, one per line, no numbering, no explanation.\n\n"
+                    "You are helping search a college portal for Mahila Maha Vidyalaya (MMV), BHU. "
+                    "Rephrase this student question in 2 different ways using formal academic terminology. "
+                    "Common mappings: 'timings'→'hours/schedule', 'charges/fees'→'fee structure', "
+                    "'principal ma'am'→'principal', 'incharge'→'coordinator/in-charge', "
+                    "'hostel warden'→'chief warden', 'gym'→'gymnasium', 'OPD'→'outpatient department'. "
+                    "Output only the 2 rephrased questions, one per line, no numbering.\n\n"
                     f"Question: {question}"
                 )
             }],
             max_tokens=80,
-            temperature=0.5,
+            temperature=0.2,  # lower = more consistent rephrasing
         )
         lines = response.choices[0].message.content.strip().split("\n")
         alternatives = [l.strip() for l in lines if l.strip() and l.strip() != question][:2]
@@ -1209,28 +1212,39 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
     return best_row, best_similarity
 
 
-def generate_answer(question: str, chunk_text: str, section_title: str) -> str:
+def generate_answer(question: str, chunk_text: str, section_title: str, content_type: str = "text") -> str:
     """Generate a precise, grounded answer from the best matching chunk.
-    To upgrade to Claude: replace _groq_client and this function body."""
+    content_type hint helps the LLM handle table data vs prose differently."""
+
+    # Give the LLM a hint about what kind of data it's working with
+    if content_type == "table":
+        data_hint = "The information below is tabular data. Find the specific row(s) relevant to the question and extract the exact values."
+    elif content_type == "pdf":
+        data_hint = "The information below refers to a document/PDF. Describe what the document contains and how to access it."
+    elif content_type == "image":
+        data_hint = "The information below refers to an image or photo."
+    else:
+        data_hint = "The information below is descriptive text from the college portal."
+
     prompt = f"""You are MMVerse, the official AI assistant for Mahila Maha Vidyalaya (MMV), Banaras Hindu University (BHU).
 
 STUDENT QUESTION: {question}
 
 RETRIEVED INFORMATION FROM MMV PORTAL (section: {section_title}):
+{data_hint}
 ---
 {chunk_text}
 ---
 
 INSTRUCTIONS:
-- Answer ONLY using the information above. Do not add anything from outside.
-- Be direct and specific. If asked for a time give the exact time, if asked for a name give the exact name, if asked for a number give the exact number.
-- If the information does not directly answer the question, say: "I don't have specific information about that. Please visit the {section_title} section or contact the relevant department."
-- Never make up facts, dates, names, or numbers not present above.
-- Keep the answer concise — 2-4 sentences unless a list is genuinely needed.
-- Use plain, friendly language suitable for a student.
-- Do NOT start with "Based on the information" or "According to the text".
-- Do NOT include markdown links like [text](url) — write plain text only.
-- Format lists with bullet points using the "•" character."""
+- Answer ONLY using the information above. Never add facts from outside.
+- Be direct and specific: give exact times, exact names, exact numbers as they appear above.
+- For table data: find the specific row matching the question and quote the relevant values.
+- If the information does not contain a direct answer, say exactly: "I don't have specific information about that. Please visit the {section_title} section or contact the relevant department directly."
+- Never guess, invent, or approximate facts not present in the text above.
+- Keep answers concise — 1-3 sentences for simple facts, bullet points (using •) for lists.
+- Do NOT start with "Based on the information", "According to", or "The text says".
+- Do NOT include markdown links — plain text only."""
 
     response = _groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
@@ -1241,8 +1255,10 @@ INSTRUCTIONS:
     return response.choices[0].message.content.strip()
 
 
-# Threshold: 0.30 — query expansion gives 3 chances to find a match.
-SIMILARITY_THRESHOLD = 0.30
+# 0.35 is safer than 0.30 — at 0.30 some irrelevant chunks pass through
+# and produce confidently wrong answers. Better to say "I don't know"
+# than return a wrong answer.
+SIMILARITY_THRESHOLD = 0.35
 
 
 @app.post("/chat")
@@ -1320,11 +1336,14 @@ def chat(payload: dict, db: Session = Depends(get_db)):
 
     # 5. Generate NLP answer from best matching chunk.
     try:
-        answer = generate_answer(question, row.chunk_text, row.section_title)
+        answer = generate_answer(question, row.chunk_text, row.section_title, row.content_type or "text")
     except Exception:
         answer = row.chunk_text
 
     # 6. Build asset payload.
+    # file_url stored as relative path e.g. /uploads/file.pdf
+    # Return as-is — frontend uses API_BASE + file_url to build full URL.
+    # For section_url (internal page links), return as-is for React Router.
     asset = None
     if row.asset_type:
         asset = {"asset_type": row.asset_type}
@@ -1335,7 +1354,11 @@ def chat(payload: dict, db: Session = Depends(get_db)):
                 else row.table_data
             )
         else:
-            asset["file_url"] = row.file_url
+            # Ensure file_url starts with / so frontend can prefix API_BASE
+            file_url = row.file_url or ""
+            if file_url and not file_url.startswith("/"):
+                file_url = "/" + file_url
+            asset["file_url"] = file_url
             asset["file_name"] = row.file_name
 
     return {

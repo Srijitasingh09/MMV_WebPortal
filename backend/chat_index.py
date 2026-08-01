@@ -214,8 +214,18 @@ def index_facility_content_row(row: "models.FacilityContent"):
     url = f"/{base}/{row.category}" if row.category else f"/{base}"
     title = row.name or row.category or base
 
-    # 1. Text chunk
-    if row.description:
+    # 1. Text chunk — skip for profile pages since the profile block below
+    # creates a richer combined chunk (description + name/designation/phone/email).
+    # For non-profile pages, index the description as normal.
+    _has_profile = False
+    if row.details:
+        try:
+            _td = json.loads(row.details)
+            _has_profile = bool(_td.get("profile"))
+        except Exception:
+            pass
+
+    if row.description and not _has_profile:
         save_chunk(
             "facility_content", row.id, "text",
             chunk_text_value=f"{title}. {row.description}",
@@ -230,40 +240,35 @@ def index_facility_content_row(row: "models.FacilityContent"):
             # Check if this is a profile (has a 'profile' key)
             profile = table_data.get("profile")
             if profile and isinstance(profile, dict):
-                # Index profile as rich text so "Who is the dean?" finds their name/details
+                # Merge profile data INTO the description chunk so the LLM
+                # always has name/designation/phone in context when answering.
                 profile_parts = []
-                if profile.get("name"):
-                    profile_parts.append(f"Name: {profile['name']}")
-                if profile.get("designation"):
-                    profile_parts.append(f"Designation: {profile['designation']}")
-                if profile.get("university"):
-                    profile_parts.append(f"University: {profile['university']}")
-                if profile.get("phone"):
-                    profile_parts.append(f"Phone: {profile['phone']}")
-                if profile.get("officeContact"):
-                    profile_parts.append(f"Office Contact: {profile['officeContact']}")
-                if profile.get("email"):
-                    profile_parts.append(f"Email: {profile['email']}")
-                if profile.get("address"):
-                    profile_parts.append(f"Address: {profile['address']}")
-                if profile_parts:
-                    profile_text = f"{title} profile. " + ". ".join(profile_parts)
-                    save_chunk(
-                        "facility_content", row.id, "text",
-                        chunk_text_value=profile_text,
-                        section_url=url, section_title=title,
-                    )
+                for key, label in [
+                    ("name", "Name"), ("designation", "Designation"),
+                    ("university", "University"), ("phone", "Phone"),
+                    ("officeContact", "Office Contact"), ("email", "Email"),
+                    ("address", "Address"),
+                ]:
+                    if profile.get(key):
+                        profile_parts.append(f"{label}: {profile[key]}")
 
-            # Regular table
+                desc = row.description or ""
+                combined = f"{title}. {desc} " + ". ".join(profile_parts)
+                save_chunk(
+                    "facility_content", row.id, "text",
+                    chunk_text_value=combined.strip(),
+                    section_url=url, section_title=title,
+                )
+
+            # Regular table (not profile) — include row data so specific
+            # queries like "who is physics section incharge" match names.
             columns = table_data.get("columns", [])
             heading = table_data.get("tableHeading", "")
             rows_data = table_data.get("rows", [])
 
-            if columns:
-                # Include ALL row data in chunk_text so specific queries
-                # (e.g. "warden of Jyoti Kunj") can match actual cell values.
+            if columns and not profile:
                 row_texts = []
-                for r in rows_data[:5]:  # cap at 5 rows to keep chunk size reasonable
+                for r in rows_data[:10]:
                     if isinstance(r, dict):
                         vals = [f"{k}: {v}" for k, v in r.items() if v]
                         row_texts.append(", ".join(vals))
