@@ -232,7 +232,7 @@ export default function MMVerse() {
       const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, section: activeSection.value }),
+        body: JSON.stringify({ question: q, section: activeSection ? activeSection.value : null }),
       });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
