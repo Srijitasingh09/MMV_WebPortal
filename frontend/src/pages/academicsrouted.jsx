@@ -71,12 +71,8 @@ const pages = {
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
-  // Keep the base entry too in case navbar links directly to it
-  'section-incharge': {
-    title: 'Section In-Charge',
-    pageType: 'description-table',
-    tableColumns: ['Name', 'Section', 'Department', 'Contact']
-  },
+ 
+  
 
   // ── Calendar & Holidays ───────────────────────────────────────────────────
   'calendar': {
