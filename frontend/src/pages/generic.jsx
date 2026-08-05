@@ -505,12 +505,15 @@ const GenericContentPage = ({
           background, bold navy text). Change `bg-gray-200` / `text-[#174873]`
           here to restyle the badge, or swap `rounded-full` for e.g.
           `rounded-2xl` for a less pill-like shape. */}
-      <div className="w-full flex justify-center">
-        <h1 className="inline-block bg-gray-200 text-[#174873] font-bold text-lg sm:text-xl md:text-2xl text-center px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-sm break-words max-w-full">
-          {title}
-        </h1>
+       <div className="relative left-1/2 -translate-x-1/2 w-screen mb-10">
+        <div className="w-[50%] bg-[#E5E7EB] rounded-r-full shadow-sm">
+          <div className="max-w-5xl mx-auto h-16 flex items-center justify-center px-4 sm:px-6">
+            <h1 className="text-[#174873] font-semibold text-3xl sm:text-xl md:text-3xl text-center">
+              {title}
+            </h1>
+          </div>
+        </div>
       </div>
-
       {/* ── PROFILE SECTION ── */}
       {hasProfile && (
         <div className="bg-[#C3DDFF] rounded-2xl px-4 sm:px-8 py-6 sm:py-8 text-center relative">
@@ -606,51 +609,50 @@ const GenericContentPage = ({
                 />
               )}
 
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#174873] break-words">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#6E240D] break-words">
                 {profile.name}
               </h2>
 
               {profile.designation && (
-                <p className="text-2xl font-semibold text-[#174873] mt-1">
+                <p className="text-2xl font-semibold text-[#6E240D] mt-1">
                   {profile.designation}
                 </p>
               )}
 
               {profile.university && (
-                <p className="text-base text-gray-800 mt-3">
+                <p className="text-base text-black mt-3">
                   {profile.university}
                 </p>
               )}
 
               {profile.address && (
-                <p className="text-sm text-gray-700 mt-1">
+                <p className="text-sm text-black mt-1">
                   {profile.address}
                 </p>
               )}
 
               <div className="mt-4 space-y-1">
                 {profile.phone && (
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-black">
                     <span className="font-semibold">Contact:</span>{" "}
                     {profile.phone}
                   </p>
                 )}
 
                 {profile.officeContact && (
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-black">
                     <span className="font-semibold">Office Contact:</span>{" "}
                     {profile.officeContact}
                   </p>
                 )}
 
                 {profile.email && (
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-black">
                     <span className="font-semibold">Email:</span>{" "}
                     {profile.email}
                   </p>
                 )}
 
-                {/* FIX 8: Removed age display — not appropriate for college staff profiles */}
               </div>
             </>
           ) : (
@@ -1001,7 +1003,7 @@ const GenericContentPage = ({
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1.5 text-black text-md marker:text-[#174873] marker:font-bold">
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
@@ -1071,7 +1073,7 @@ const GenericContentPage = ({
                         flushNoteBullets();
 
                         elements.push(
-                          <div key={`note-${elements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm space-y-1">
+                          <div key={`note-${elements.length}`} className="bg-[#200000]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
                             {noteElements}
                           </div>
                         );
@@ -1095,7 +1097,7 @@ const GenericContentPage = ({
                       const flushLocalBullets = () => {
                         if (localBulletBuffer.length > 0) {
                           contentElements.push(
-                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-md marker:text-[#174873] marker:font-bold">
                               {localBulletBuffer.map((b, bi) => (
                                 <li key={bi}>{renderInlineFormatting(b)}</li>
                               ))}
@@ -1131,21 +1133,21 @@ const GenericContentPage = ({
                             if (lineText.startsWith('### ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h4 key={`acc-note-h4-${i}`} className="text-sm font-semibold text-[#174873] mt-2 not-italic">
+                                <h4 key={`acc-note-h4-${i}`} className="text-md font-bold text-amber-700 mt-2 not-italic">
                                   {renderInlineFormatting(lineText.slice(4))}
                                 </h4>
                               );
                             } else if (lineText.startsWith('## ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h3 key={`acc-note-h3-${i}`} className="text-base font-semibold text-[#174873] mt-2 not-italic">
+                                <h3 key={`acc-note-h3-${i}`} className="text-md font-bold text-amber-700 mt-2 not-italic">
                                   {renderInlineFormatting(lineText.slice(3))}
                                 </h3>
                               );
                             } else if (lineText === '---') {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <hr key={`acc-note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                                <hr key={`acc-note-hr-${i}`} className="border-amber-300 my-1" />
                               );
                             } else if (lineText.startsWith('- ')) {
                               localNoteBulletBuffer.push(lineText.slice(2));
@@ -1159,7 +1161,7 @@ const GenericContentPage = ({
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm space-y-1">
+                            <div key={`acc-note-${contentElements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
                               {noteElements}
                             </div>
                           );
@@ -1212,7 +1214,7 @@ const GenericContentPage = ({
                         }
                         flushLocalBullets();
                         contentElements.push(
-                          <p key={`acc-line-${li}`} className="text-gray-700 text-sm leading-relaxed">
+                          <p key={`acc-line-${li}`} className="text-black text-md leading-relaxed">
                             {renderInlineFormatting(t)}
                           </p>
                         );
@@ -1226,9 +1228,9 @@ const GenericContentPage = ({
                           <button
                             type="button"
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
-                            className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
+                            className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-[#174873]/[6%] hover:bg-[#174873]/[12%] text-left"
                           >
-                            <span className="font-semibold text-[#174873]">
+                            <span className="font-semibold text-[#174873] text-md">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
                             <span className={`text-[#174873] text-sm transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}>
@@ -1278,11 +1280,11 @@ const GenericContentPage = ({
 
                         elements.push(
                           <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
-                            <table className="w-full text-sm text-left table-fixed">
-                              <thead className="bg-gray-50">
-                                <tr>
+                            <table className="w-full text-md text-left table-fixed">
+                              <thead className="bg-[#fadccf]">
+                                <tr >
                                   {headerRow.map((cell, ci) => (
-                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
+                                    <th key={ci} className="px-4 py-3 text-black font-medium">
                                       {renderInlineFormatting(cell)}
                                     </th>
                                   ))}
@@ -1290,9 +1292,9 @@ const GenericContentPage = ({
                               </thead>
                               <tbody className="divide-y divide-gray-100">
                                 {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="hover:bg-gray-50">
+                                  <tr key={ri} className="hover:bg-gray-50 divide-x divide-gray-200">
                                     {cells.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2 text-gray-700">
+                                      <td key={ci} className="px-4 py-2.5 text-[#374151] text-sm">
                                         {renderInlineFormatting(cell)}
                                       </td>
                                     ))}
@@ -1353,7 +1355,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h2 key={idx} className="text-3xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
+                          <h2 key={idx} className="text-4xl font-semibold text-[#0F3A5F] text-center pb-3 border-b-2 border-[#174873]/20 tracking-tight">
                             {trimmed}
                           </h2>
                         );
@@ -1365,7 +1367,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h3 key={idx} className="text-xl font-semibold mt-4" style={{ color: '#2E6DA4' }}>
+                          <h3 key={idx} className="text-2xl font-bold mt-6 text-[#174873]">
                             {trimmed.slice(3)}
                           </h3>
                         );
@@ -1377,7 +1379,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h4 key={idx} className="text-lg font-semibold mt-3" style={{ color: '#5B93C4' }}>
+                          <h4 key={idx} className="text-lg font-semibold mt-4 text-[#2E6DA4]">
                             {trimmed.slice(4)}
                           </h4>
                         );
@@ -1433,18 +1435,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // **Bold** or mixed bold+plain line
-                      if (trimmed.includes('**')) {
-                        flushBullets();
-                        flushTable();
-                        elements.push(
-                          <p key={idx} className="text-gray-800 text-lg text-justify">
-                            {renderInlineFormatting(trimmed)}
-                          </p>
-                        );
-                        return;
-                      }
-
                       // --- Divider line
                       if (trimmed === '---') {
                         flushBullets();
@@ -1454,10 +1444,13 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Plain paragraph (may still contain inline bold/links)
+                      // Paragraph (bold **spans** and links are rendered inline
+                      // via renderInlineFormatting regardless of this branch —
+                      // so bold-containing and plain lines now share one
+                      // consistent size/color and never jump between the two)
                       flushBullets();
                       elements.push(
-                        <p key={idx} className="text-[#000000] text-md leading-relaxed text-justify">
+                        <p key={idx} className="text-[#1F2937] text-lg leading-relaxed text-justify">
                           {renderInlineFormatting(trimmed)}
                         </p>
                       );
@@ -1553,7 +1546,7 @@ const GenericContentPage = ({
               ) : (
                 <>
                   {tableHeading ? (
-                    <h3 className="text-xl font-bold text-[#174873]">{tableHeading}</h3>
+                    <h3 className="text-2xl font-bold text-[#174873]">{tableHeading}</h3>
                   ) : (
                     <span className="italic text-gray-400 text-sm">No table heading yet.</span>
                   )}
@@ -1574,7 +1567,7 @@ const GenericContentPage = ({
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-[#174873] text-white">
+                  <tr className="bg-[#174873] text-white ">
                     {columns.map(col => (
                     <th key={col} className="px-4 py-3 text-left font-semibold">
                       {col}
@@ -1618,9 +1611,9 @@ const GenericContentPage = ({
                   const idx = origIdx; // keeps existing edit/delete logic below untouched
                   const isEditingThisRow = isAdmin && editingRowIdx === idx;
                   return (
-                    <tr key={idx} className={`border-t border-gray-100 transition-colors ${isEditingThisRow ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                    <tr key={idx} className={`border-t border-gray-100 transition-colors  bg-white ${isEditingThisRow ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
                       {columns.map(col => (
-                        <td key={col} className="px-4 py-3 text-gray-700">
+                        <td key={col} className="px-8 py-3 text-black">
                           {isEditingThisRow ? (
                             /* ── EDIT MODE: show input for each cell ── */
                             col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
@@ -1629,7 +1622,7 @@ const GenericContentPage = ({
                                   <div className="flex items-center gap-1">
                                     <a href={editingRowData[col].startsWith('http') ? editingRowData[col] : `${API}${editingRowData[col]}`}
                                       target="_blank" rel="noopener noreferrer"
-                                      className="text-xs text-[#174873] hover:underline truncate max-w-[80px]">
+                                      className="text-sm text-[#174873] hover:underline truncate max-w-[80px]">
                                       Current PDF
                                     </a>
                                     <button onClick={() => setEditingRowData(prev => ({ ...prev, [col]: '' }))}
@@ -1688,7 +1681,7 @@ const GenericContentPage = ({
                                 ? (
                                   <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
                                     target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm">
+                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-3sm">
                                     <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                                     </svg>
@@ -1707,7 +1700,7 @@ const GenericContentPage = ({
                           {isEditingThisRow ? (
                             <div className="flex gap-2">
                               <button onClick={handleSaveEditRow}
-                                className="text-green-600 hover:text-green-800 text-xs font-bold">
+                                className="text-green-600 hover:text-green-800 text-sm font-bold">
                                 Save
                               </button>
                               <button onClick={handleCancelEditRow}
