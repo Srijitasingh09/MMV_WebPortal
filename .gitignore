@@ -9,7 +9,6 @@ college_portal_backup.db
 
 #Uploads folder
 backend/uploads/
-
 frontend/.env
 frontend/.env.production
 backend/.env 
