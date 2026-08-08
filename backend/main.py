@@ -954,6 +954,29 @@ def upsert_facility_content(
     }
 
 
+@app.delete("/admin/facility-content/{content_id}")
+def delete_facility_content(
+    content_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Deletes a FacilityContent row entirely — its pdfs/photos (cascade via
+    ORM relationship) and its chat index chunks. Use this for orphaned/duplicate
+    entries that aren't routed to by any frontend page (e.g. a leftover
+    'academics/section-incharge' row when the real pages live at
+    'section-incharge/science', '/socialscience', '/arts') — those stray rows
+    still get indexed for chat search and can out-compete the correct ones."""
+    ensure_admin(user)
+    row = db.query(models.FacilityContent).filter(models.FacilityContent.id == content_id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    delete_chunks_for("facility_content", row.id)  # remove chat index chunks first
+    db.delete(row)  # cascades to pdfs/photos via relationship
+    db.commit()
+    return {"message": "Deleted successfully"}
+
+
 @app.post("/admin/facility-content/upload-pdf")
 async def upload_facility_content_pdf(
     background_tasks: BackgroundTasks,
@@ -1200,7 +1223,7 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
                 {section_clause}
                 ORDER BY
                     (c.embedding <=> '{emb_str}'::vector)
-                    - CASE WHEN c.content_type = 'text' THEN 0.15 ELSE 0 END
+                    + CASE WHEN c.content_type IN ('pdf', 'image') THEN 0.15 ELSE 0 END
                 LIMIT 1
             """)
         ).fetchone()

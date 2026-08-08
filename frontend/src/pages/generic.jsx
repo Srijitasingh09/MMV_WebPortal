@@ -752,14 +752,14 @@ const GenericContentPage = ({
               )}
               
                 <div className="w-full max-w-full overflow-hidden mx-auto">
-                  <SlideshowBlock
-                    photos={galleryPhotos}
-                    isAdmin={isAdmin}
-                    onDelete={handleDeletePhoto}
-                    height={photoSettings.slideshowHeight}
-                    maxWidth={photoSettings.slideshowMaxWidth || "100%"}
-                  />
-                </div>
+                <SlideshowBlock
+                  photos={galleryPhotos}
+                  isAdmin={isAdmin}
+                  onDelete={handleDeletePhoto}
+                  height={photoSettings.slideshowHeight}
+                  maxWidth={photoSettings.slideshowMaxWidth || "100%"}
+                />      
+            </div>
             </div>
           )}
 
@@ -1283,26 +1283,26 @@ const GenericContentPage = ({
                             <table className="w-full text-md text-left table-fixed">
                               <thead className="bg-[#fadccf]">
                                 <tr >
-                                  {headerRow.map((cell, ci) => (
+                                    {headerRow.map((cell, ci) => (
                                     <th key={ci} className="px-4 py-3 text-black font-medium">
-                                      {renderInlineFormatting(cell)}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="hover:bg-gray-50 divide-x divide-gray-200">
-                                    {cells.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2.5 text-[#374151] text-sm">
                                         {renderInlineFormatting(cell)}
-                                      </td>
+                                      </th>
                                     ))}
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                                </thead>
+                              <tbody className="divide-y divide-gray-100">
+                                  {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="hover:bg-gray-50 divide-x divide-gray-200">
+                                      {cells.map((cell, ci) => (
+                                      <td key={ci} className="px-4 py-2.5 text-[#374151] text-sm">
+                                          {renderInlineFormatting(cell)}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                         );
                       }
                       tableBuffer = [];
@@ -1570,7 +1570,7 @@ const GenericContentPage = ({
                   <tr className="bg-[#174873] text-white ">
                     {columns.map(col => (
                     <th key={col} className="px-4 py-3 text-left font-semibold">
-                      {col}
+                        {col}
                       {isAdmin && (
                         <button onClick={() => handleDeleteColumn(col)}
                           className="ml-2 text-red-300 hover:text-white text-xs">×</button>

@@ -240,8 +240,6 @@ def index_facility_content_row(row: "models.FacilityContent"):
             # Check if this is a profile (has a 'profile' key)
             profile = table_data.get("profile")
             if profile and isinstance(profile, dict):
-                # Merge profile data INTO the description chunk so the LLM
-                # always has name/designation/phone in context when answering.
                 profile_parts = []
                 for key, label in [
                     ("name", "Name"), ("designation", "Designation"),
@@ -262,12 +260,32 @@ def index_facility_content_row(row: "models.FacilityContent"):
                     heading += f" — {name}"
                 if designation:
                     heading += f" ({designation})"
-                combined = f"{heading}. {desc} " + ". ".join(profile_parts)
+
+                # 1a. SHORT identity chunk — just heading + hard facts (name,
+                # designation, phone, email...), no long prose. This is what
+                # a "who is the chief proctor" style lookup needs: a tight,
+                # undiluted chunk where the name/title IS basically the whole
+                # embedding, instead of being buried inside several paragraphs
+                # of generic "About this office was established under the Act..."
+                # boilerplate that reads similarly across many different
+                # administrative roles and drags the embedding toward a vague
+                # "generic BHU official" signal instead of this specific one.
+                identity_chunk = f"{heading}. " + ". ".join(profile_parts)
                 save_chunk(
                     "facility_content", row.id, "text",
-                    chunk_text_value=combined.strip(),
+                    chunk_text_value=identity_chunk.strip(),
                     section_url=url, section_title=title,
                 )
+
+                # 1b. Separate chunk for the full narrative description, for
+                # questions like "tell me about the proctorial board" where
+                # the prose itself (not just who holds the role) is the answer.
+                if desc.strip():
+                    save_chunk(
+                        "facility_content", row.id, "text",
+                        chunk_text_value=f"{heading}. {desc.strip()}",
+                        section_url=url, section_title=title,
+                    )
 
             # Regular table (not profile) — include row data so specific
             # queries like "who is physics section incharge" match names.
@@ -295,6 +313,8 @@ def index_facility_content_row(row: "models.FacilityContent"):
                         if clean_vals:
                             row_texts.append(" | ".join(clean_vals))
 
+                # 2a. Whole-table chunk — good for broad queries like
+                # "show me all section incharges" where the full list is the answer.
                 description_for_embedding = f"{title} — {heading or 'table'}. Columns: {', '.join(columns)}."
                 if row_texts:
                     description_for_embedding += "\nEntries:\n" + "\n".join(row_texts)
@@ -305,6 +325,26 @@ def index_facility_content_row(row: "models.FacilityContent"):
                     section_url=url, section_title=title,
                     asset={"asset_type": "table", "table_data": table_data},
                 )
+
+                # 2b. One chunk PER ROW — critical for precise lookups like
+                # "who is the physics section incharge". Embedding the whole
+                # table as a single vector dilutes any one row's signal among
+                # every other row in the table (e.g. Physics gets drowned out
+                # by Chemistry, Botany, Zoology, ... in the same chunk), which
+                # causes low-similarity misses or matches on an unrelated but
+                # more sharply-focused chunk (like a Dean's profile that
+                # happens to mention "Deptt. of Physics"). A dedicated
+                # per-row chunk keeps that department's signal undiluted.
+                # Asset still points at the full table so the "view section"
+                # link/card shows complete context, not just one row.
+                if len(row_texts) > 1:
+                    for row_text in row_texts[:15]:
+                        save_chunk(
+                            "facility_content", row.id, "table",
+                            chunk_text_value=f"{title} — {heading or 'table'}. {row_text}",
+                            section_url=url, section_title=title,
+                            asset={"asset_type": "table", "table_data": table_data},
+                        )
         except (json.JSONDecodeError, AttributeError):
             pass
 

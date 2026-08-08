@@ -83,7 +83,7 @@ const Slideshow = () => {
           transform: 'translateY(-50%)',
           color: '#fff',
           zIndex: 2,
-          maxWidth: '520px',
+          maxWidth: 'min(520px, 82vw)',
           opacity: textVisible ? 1 : 0,
           transition: 'opacity 0.5s ease-in-out',
         }}
@@ -176,16 +176,16 @@ const Slideshow = () => {
 
 const IntroSection = () => {
   return (
-     <section aria-labelledby="about-heading" className="bg-white py-12 px-6">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-center">
+     <section aria-labelledby="about-heading" className="bg-white py-8 sm:py-12 px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-10 items-center">
 
         {/* LEFT — Photo */}
-        <div className="md:w-1/2">
+        <div className="md:w-1/2 w-full">
           <img
             src="/mmvimage2.jpeg"
             alt="MMV gate"
             className="w-full object-cover md:w-[520px] md:h-[520px]"
-            style={{ height: 'clamp(480px, 75vw, 680px)',
+            style={{ height: 'clamp(260px, 75vw, 680px)',
                      objectPosition:'top center'
              }}
           />
@@ -193,7 +193,7 @@ const IntroSection = () => {
 
         {/* RIGHT — Text */}
         <div className="md:w-1/2">
-          <h2 id="about-heading" className="text-4xl font-semibold text-[#174873] mb-4">
+          <h2 id="about-heading" className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#174873] mb-4">
             About MMV
           </h2>
           <p className="text-black text-2sm leading-relaxed text-justify">
@@ -242,7 +242,7 @@ const MalviyaQuote = () => (
       aria-labelledby="malviya-quote-heading"
       style={{
         background: '#f5f0e8',
-        padding: '28px 40px',
+        padding: 'clamp(20px, 6vw, 28px) clamp(16px, 6vw, 40px)',
         textAlign: 'center',
         borderTop: '3px solid #c8a04a',
         borderBottom: '3px solid #c8a04a',
@@ -255,7 +255,7 @@ const MalviyaQuote = () => (
       <p style={{
         fontFamily: 'Georgia, serif',
         fontStyle: 'italic',
-        fontSize: '16px',
+        fontSize: 'clamp(14px, 3.2vw, 16px)',
         lineHeight: '1.85',
         color: '#2c2a1e',
         maxWidth: '780px',
@@ -266,7 +266,7 @@ const MalviyaQuote = () => (
 
       <div aria-hidden="true" style={{ width: 50, height: 1.5, background: '#c8a04a', margin: '0 auto 16px' }} />
 
-      <p style={{ fontFamily: 'Georgia, serif', fontSize: '12px', letterSpacing: '0.12em',
+      <p style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(10px, 2.5vw, 12px)', letterSpacing: '0.12em',
                   textTransform: 'uppercase', color: '#5a5240' }}>
         Mahamana Pandit Madan Mohan Malviya
         <span style={{ display: 'block', fontSize: '11px', letterSpacing: '0.08em',
@@ -279,11 +279,11 @@ const MalviyaQuote = () => (
 );
 const History = () => {
   return (
-    <section aria-labelledby="history-heading" className="bg-white py-12 px-6">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-10 items-start">
+    <section aria-labelledby="history-heading" className="bg-white py-8 sm:py-12 px-4 sm:px-6">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-10 items-start">
 
         <div className="md:w-1/2">
-          <h2 id="history-heading" className="text-4xl font-semibold text-[#174873] mb-4">
+          <h2 id="history-heading" className="text-2xl sm:text-3xl md:text-4xl font-semibold text-[#174873] mb-4">
             Founding History
           </h2>
           <p className="text-black text-2sm leading-relaxed text-justify">
@@ -315,14 +315,14 @@ const History = () => {
           </p>
            
         </div>
-        <div className="md:w-1/2 flex justify-end">
+        <div className="md:w-1/2 w-full flex justify-end">
          
          <img
            src="/malviyaold2.jpeg"
            alt="Malviya ji"
            className="w-full md:w-[480px] md:h-[480px] object-cover"
            style={{
-             height: 'clamp(280px, 40vw, 480px)',
+             height: 'clamp(220px, 42vw, 480px)',
               objectPosition: 'center 15%',
       
     }}
