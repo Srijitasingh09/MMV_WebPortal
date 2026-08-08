@@ -11,7 +11,7 @@ import { Link } from 'react-router-dom';
 
 // ─── HERO ─────────────────────────────────────────────────────────────────────
 const Hero = () => (
-  <section className="relative w-full overflow-hidden" style={{ height: '105vh' }}>
+  <section className="relative w-full overflow-hidden h-[92vh] sm:h-[95vh] md:h-[105vh]">
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;600;700&display=swap');
       .font-cormorant { font-family: 'Cormorant Garamond', serif; }
@@ -43,29 +43,29 @@ const Hero = () => (
 
     {/* Left text panel */}
     <div className="relative z-10 h-full flex items-center">
-      <div className="px-10 md:px-20 max-w-xl">
-        <div className="h-40 w-40 rounded-full overflow-hiddenflex items-center justify-left">
+      <div className="px-6 sm:px-10 md:px-20 max-w-xl">
+        <div className="h-20 w-20 sm:h-28 sm:w-28 md:h-40 md:w-40 rounded-full overflow-hidden flex items-center justify-left">
           <img
             src="/bhu/mmv logo.png"
             alt="MMV Logo"
-            className="h-40 w-40 rounded-full object-contain m-4"
+            className="h-20 w-20 sm:h-28 sm:w-28 md:h-40 md:w-40 rounded-full object-contain m-2 sm:m-3 md:m-4"
           />
         </div>
 
         {/* Eyebrow */}
-        <p className="font-lato text-4xl md:text-5xl tracking-[0.25em] uppercase text-[#E8C97A] mb-5 anim-fade-up">
+        <p className="font-lato text-xl sm:text-3xl md:text-5xl tracking-[0.1em] sm:tracking-[0.18em] md:tracking-[0.25em] uppercase text-[#E8C97A] mb-3 sm:mb-4 md:mb-5 anim-fade-up">
           Mahila Maha Vidyalaya
         </p>
-        <p className="font-lato text-xl md:text-2xl tracking-[0.25em] uppercase text-[#E8C97A] mb-5 anim-fade-up">
+        <p className="font-lato text-sm sm:text-lg md:text-2xl tracking-[0.1em] sm:tracking-[0.18em] md:tracking-[0.25em] uppercase text-[#E8C97A] mb-3 sm:mb-4 md:mb-5 anim-fade-up">
          BHU · Est. 1929
         </p>
 
         {/* Gold rule */}
-        <div className="w-12 h-px bg-[#E8C97A] mb-6 anim-fade-up" />
+        <div className="w-12 h-px bg-[#E8C97A] mb-4 sm:mb-5 md:mb-6 anim-fade-up" />
 
         {/* Main heading */}
         <h1
-          className="font-cormorant text-2xl md:text-3xl font-medium text-white leading-tight mb-5 anim-fade-up-2"
+          className="font-cormorant text-xl sm:text-2xl md:text-3xl font-medium text-white leading-tight mb-4 sm:mb-5 anim-fade-up-2"
           style={{ letterSpacing: '-0.01em' }}
         >
           Your Complete<br />
@@ -73,22 +73,22 @@ const Hero = () => (
         </h1>
 
         {/* Subtext */}
-        <p className="font-lato text-[15px] text-blue-100 leading-relaxed mb-8 max-w-sm anim-fade-up-3">
+        <p className="font-lato text-sm sm:text-[15px] text-blue-100 leading-relaxed mb-6 sm:mb-8 max-w-sm anim-fade-up-3">
           Syllabus, notices, administration, hostel, library —
           everything you need, in one place.
         </p>
 
         {/* CTA */}
-        <div className="flex gap-3 anim-fade-up-3">
+        <div className="flex flex-wrap gap-3 anim-fade-up-3">
           <Link
             to="/ai-assistant"
-            className="font-lato text-sm font-semibold bg-[#C4561A] text-white px-6 py-3 rounded-full hover:bg-[#a34315] transition-colors"
+            className="font-lato text-xs sm:text-sm font-semibold bg-[#C4561A] text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-full hover:bg-[#a34315] transition-colors"
           >
             Ask MMVerse AI →
           </Link>
           <a
             href="#about"
-            className="font-lato text-sm font-semibold border border-white/40 text-white px-6 py-3 rounded-full hover:bg-white/10 transition-colors"
+            className="font-lato text-xs sm:text-sm font-semibold border border-white/40 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-full hover:bg-white/10 transition-colors"
           >
             Explore Portal
           </a>
@@ -101,19 +101,19 @@ const Hero = () => (
 
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
 const About = () => (
-  <section id="about" className="bg-[#FAF7F2] py-20 px-6">
+  <section id="about" className="bg-[#FAF7F2] py-14 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto">
 
       {/* Header */}
-      <div className="text-center mb-14">
+      <div className="text-center mb-10 sm:mb-14">
         <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3">
           About the Portal
         </p>
-        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-5 leading-snug">
+        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-5 leading-snug">
           One Portal, Every Answer
         </h2>
         <div className="w-10 h-px bg-[#E8C97A] mx-auto mb-6" />
-        <p className="font-lato text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
+        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
           The MMV Student Portal is the centralized information hub for all students of
           Mahila Maha Vidyalaya. Whether you need your syllabus, hostel details,
           administrative contacts, or the latest notices — it is all organized here.
@@ -121,7 +121,7 @@ const About = () => (
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
         {[
           ['1929', 'Year Established'],
           ['30+',  'Departments'],
@@ -130,9 +130,9 @@ const About = () => (
         ].map(([n, l]) => (
           <div
             key={l}
-            className="bg-[#FFDEA9] rounded-2xl py-8 px-5 text-center border border-[#0D1F3C]/10"
+            className="bg-[#FFDEA9] rounded-2xl py-6 sm:py-8 px-4 sm:px-5 text-center border border-[#0D1F3C]/10"
           >
-            <div className="font-cormorant text-5xl font-semibold text-[#C4561A] mb-1">{n}</div>
+            <div className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#C4561A] mb-1">{n}</div>
             <div className="font-lato text-2xs text-[#0D1F3C] font-semibold uppercase tracking-wider">{l}</div>
           </div>
         ))}
@@ -143,133 +143,133 @@ const About = () => (
 
 
 // ─── WHAT'S IN THE PORTAL — 3-column feature grid ─────────────────────────────
-const portalSections = [
-  {
-    eyebrow: 'Academics',
-    heading: 'Syllabi, Exams & NEP',
-    body: 'Download UG & PG syllabi for every department. Find exam schedules, NEP 2020 credit structure, academic calendar, and SWAYAM course details.',
-    icon: '📚',
-    href: '/academics/nep',
-  },
-  {
-    eyebrow: 'Administration',
-    heading: 'Offices & Key Contacts',
-    body: 'Principal, Dean, Vice Chancellor, Student Advisor, Chief Proctor — profiles, contact numbers, and office details for every administrative role.',
-    icon: '🏛️',
-    href: '/administration/principal',
-  },
-  {
-    eyebrow: 'Notices',
-    heading: 'Latest Announcements',
-    body: 'Stay updated with exam notifications, fee deadlines, admission windows, and urgent circulars from MMV and BHU administration.',
-    icon: '📢',
-    href: '/Notices',
-  },
-  {
-    eyebrow: 'Hostels',
-    heading: 'Hostel Life & Wardens',
-    body: 'Details for all five MMV hostels — Chief Warden, Hostel Coordinator, room types, and warden contacts for Jyoti Kunj, Kirti Kunj, and more.',
-    icon: '🏠',
-    href: '/facilities/hostels/chiefwarden',
-  },
-  {
-    eyebrow: 'Library',
-    heading: 'Books, OPAC & Hours',
-    body: 'MMV Library, BHU Central Library, and Cyber Library — collection size, borrowing rules, staff contacts, and digital access details.',
-    icon: '📖',
-    href: '/facilities/library/mmvlibrary',
-  },
-  {
-    eyebrow: 'Medical & Sports',
-    heading: 'Health & Campus Life',
-    body: 'Sir Sundarlal Hospital, Trauma Centre, Health Centre, Gymnasium, and Sports Board — facilities, timings, and contact information.',
-    icon: '⚕️',
-    href: '/facilities/medical/health',
-  },
-];
+// const portalSections = [
+//   {
+//     eyebrow: 'Academics',
+//     heading: 'Syllabi, Exams & NEP',
+//     body: 'Download UG & PG syllabi for every department. Find exam schedules, NEP 2020 credit structure, academic calendar, and SWAYAM course details.',
+//     icon: '📚',
+//     href: '/academics/nep',
+//   },
+//   {
+//     eyebrow: 'Administration',
+//     heading: 'Offices & Key Contacts',
+//     body: 'Principal, Dean, Vice Chancellor, Student Advisor, Chief Proctor — profiles, contact numbers, and office details for every administrative role.',
+//     icon: '🏛️',
+//     href: '/administration/principal',
+//   },
+//   {
+//     eyebrow: 'Notices',
+//     heading: 'Latest Announcements',
+//     body: 'Stay updated with exam notifications, fee deadlines, admission windows, and urgent circulars from MMV and BHU administration.',
+//     icon: '📢',
+//     href: '/Notices',
+//   },
+//   {
+//     eyebrow: 'Hostels',
+//     heading: 'Hostel Life & Wardens',
+//     body: 'Details for all five MMV hostels — Chief Warden, Hostel Coordinator, room types, and warden contacts for Jyoti Kunj, Kirti Kunj, and more.',
+//     icon: '🏠',
+//     href: '/facilities/hostels/chiefwarden',
+//   },
+//   {
+//     eyebrow: 'Library',
+//     heading: 'Books, OPAC & Hours',
+//     body: 'MMV Library, BHU Central Library, and Cyber Library — collection size, borrowing rules, staff contacts, and digital access details.',
+//     icon: '📖',
+//     href: '/facilities/library/mmvlibrary',
+//   },
+//   {
+//     eyebrow: 'Medical & Sports',
+//     heading: 'Health & Campus Life',
+//     body: 'Sir Sundarlal Hospital, Trauma Centre, Health Centre, Gymnasium, and Sports Board — facilities, timings, and contact information.',
+//     icon: '⚕️',
+//     href: '/facilities/medical/health',
+//   },
+// ];
 
-const PortalSections = () => (
-  <section className="bg-white py-20 px-6">
-    <div className="max-w-5xl mx-auto">
+// const PortalSections = () => (
+//   <section className="bg-white py-20 px-6">
+//     <div className="max-w-5xl mx-auto">
 
-      <div className="text-center mb-14">
-        <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3">
-          What's Inside
-        </p>
-        <h2 className="font-cormorant text-4xl md:text-5xl font-semibold text-[#0D1F3C] leading-snug mb-4">
-          Everything Organized for You
-        </h2>
-        <div className="w-10 h-px bg-[#E8C97A] mx-auto" />
-      </div>
+//       <div className="text-center mb-14">
+//         <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3">
+//           What's Inside
+//         </p>
+//         <h2 className="font-cormorant text-4xl md:text-5xl font-semibold text-[#0D1F3C] leading-snug mb-4">
+//           Everything Organized for You
+//         </h2>
+//         <div className="w-10 h-px bg-[#E8C97A] mx-auto" />
+//       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {portalSections.map((s) => (
-          <Link
-            key={s.eyebrow}
-            to={s.href}
-            className="group bg-[#FFD9BF] rounded-2xl p-7 border border-transparent hover:border-[#0D1F3C]/20 hover:bg-white hover:shadow-md transition-all duration-200"
-          >
-            <div className="text-3xl mb-4">{s.icon}</div>
-            <p className="font-lato text-xs font-semibold tracking-[0.18em] uppercase text-[#C4561A] mb-1 font-semibold">
-              {s.eyebrow}
-            </p>
-            <h3 className="font-cormorant text-2xl font-semibold text-[#0D1F3C] mb-3 leading-snug group-hover:text-[#0D1F3C] transition-colors">
-              {s.heading}
-            </h3>
-            <p className="font-lato text-[15px] text-[#1A1A1A] leading-relaxed">
-              {s.body}
-            </p>
-            <div className="mt-4 font-lato text-2xs font-semibold text-[#C4561A] group-hover:underline">
-              View section →
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  </section>
-);
+//       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+//         {portalSections.map((s) => (
+//           <Link
+//             key={s.eyebrow}
+//             to={s.href}
+//             className="group bg-[#FFD9BF] rounded-2xl p-7 border border-transparent hover:border-[#0D1F3C]/20 hover:bg-white hover:shadow-md transition-all duration-200"
+//           >
+//             <div className="text-3xl mb-4">{s.icon}</div>
+//             <p className="font-lato text-xs font-semibold tracking-[0.18em] uppercase text-[#C4561A] mb-1 font-semibold">
+//               {s.eyebrow}
+//             </p>
+//             <h3 className="font-cormorant text-2xl font-semibold text-[#0D1F3C] mb-3 leading-snug group-hover:text-[#0D1F3C] transition-colors">
+//               {s.heading}
+//             </h3>
+//             <p className="font-lato text-[15px] text-[#1A1A1A] leading-relaxed">
+//               {s.body}
+//             </p>
+//             <div className="mt-4 font-lato text-2xs font-semibold text-[#C4561A] group-hover:underline">
+//               View section →
+//             </div>
+//           </Link>
+//         ))}
+//       </div>
+//     </div>
+//   </section>
+// );
 
 
 // ─── FACILITIES HIGHLIGHT ─────────────────────────────────────────────────────
 const facilities = [
   { label: 'Hostels',       detail: 'Five on-campus hostels with mess, security & Wi-Fi.' },
   { label: 'Libraries',     detail: 'MMV, Central & Cyber Library — 1 lakh+ books & digital access.' },
-  { label: 'Sports',        detail: 'Courts, athletics track, gymnasium & yoga centre.' },
-  { label: 'Health Centre', detail: 'On-campus doctor, Sir Sundarlal Hospital & Trauma Centre.' },
-  { label: 'Canteen',       detail: 'Subsidised meals and snacks within the campus.' },
-  { label: 'Computer Labs', detail: 'High-speed internet, licensed software & printing.' },
-  { label: 'Auditorium',    detail: 'Seminars, cultural programmes & guest lectures.' },
+  { label: 'Sports',        detail: 'Courts, athletics track, gymnasium & sports ground' },
+  { label: 'Health Centre', detail: 'On-campus medical facilities, Sir Sundarlal Hospital & Trauma Centre.' },
+  { label: 'Canteen',       detail: 'Access to affordable, hygienic meals and snacks within the campus.' },
+  { label: 'Computer Labs', detail: 'High-speed internet connectivity with well-equipped computer facilities.' },
+  { label: 'Auditorium',    detail: 'Spacious halls and facilities for seminars, cultural programmes, and guest lectures.' },
   { label: 'Transport',     detail: 'BHU bus routes connecting all campus points.' },
 ];
 
 const Facilities = () => (
-  <section id="facilities" className="bg-[#0D1F3C] py-20 px-6">
+  <section id="facilities" className="bg-[#0D1F3C] py-14 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto">
 
-      <div className="text-center mb-14">
+      <div className="text-center mb-10 sm:mb-14">
         <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#E8C97A] mb-3">
           Campus Resources
         </p>
-        <h2 className="font-cormorant text-5xl md:text-5xl font-semibold text-white leading-snug mb-4">
+        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-snug mb-4">
           Facilities at MMV
         </h2>
         <div className="w-10 h-px bg-[#E8C97A] mx-auto mb-5" />
-        <p className="font-lato text-[16px] text-blue-200 leading-relaxed max-w-xl mx-auto">
+        <p className="font-lato text-[15px] sm:text-[16px] text-blue-200 leading-relaxed max-w-xl mx-auto">
           MMV provides a comprehensive range of campus facilities to support students'
           academic, physical, and personal well-being.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {facilities.map((f) => (
           <div
             key={f.label}
-            className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/10 transition-colors"
+            className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 hover:bg-white/10 transition-colors"
           >
-            <div className="font-cormorant text-lg font-semibold text-[#E8C97A] mb-2">
+            <div className="font-cormorant text-base sm:text-lg font-semibold text-[#E8C97A] mb-2">
               {f.label}
             </div>
-            <div className="font-lato text-sm text-white leading-relaxed">{f.detail}</div>
+            <div className="font-lato text-xs sm:text-sm text-white leading-relaxed">{f.detail}</div>
           </div>
         ))}
       </div>
@@ -280,36 +280,34 @@ const Facilities = () => (
 
 // ─── ACADEMICS FEATURE ────────────────────────────────────────────────────────
 const Academics = () => (
-  <section id="academics" className="bg-[#FAF7F2] py-20 px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-14 items-center">
+  <section id="academics" className="bg-[#FAF7F2] py-14 sm:py-20 px-4 sm:px-6">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
 
       <div className="md:w-5/12 w-full rounded-2xl overflow-hidden shadow-sm">
-        <img src="/bhu/academics.png" alt="Academics" className="w-full h-80 object-cover" />
+        <img src="/bhu/academics.png" alt="Academics" className="w-full h-56 sm:h-72 md:h-80 object-cover" />
       </div>
 
       <div className="md:w-7/12 w-full">
         <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
           Academics
         </p>
-        <h2 className="font-cormorant text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
+        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
           Academic Information
         </h2>
         <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
           All academic resources for every department at MMV — semester syllabi,
-          examination schedules, and updates related to the NEP 2020 curriculum,
-          organized by department for easy navigation.
+          Annual schedules, and contact information of section In-charge.
         </p>
         <ul className="space-y-3">
           {[
             ['Syllabus',         'Semester syllabus for all UG & PG programmes.'],
             ['Annual Calendar',  'Holiday list and academic calendar updated each semester.'],
-            ['Exam Schedule',    'Internal assessment and university examination date sheets.'],
             ['NEP 2020',         'Revised curriculum details and credit structure.'],
           ].map(([label, detail]) => (
             <li key={label} className="flex items-start gap-3">
               <span className="text-[#C4561A] font-bold mt-0.5 flex-shrink-0">➥</span>
-              <div className="font-lato text-[16px] text-[#1A1A1A]">
+              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
                 <span className="font-semibold">{label}: </span>{detail}
               </div>
             </li>
@@ -323,22 +321,22 @@ const Academics = () => (
 
 // ─── ADMINISTRATION FEATURE ───────────────────────────────────────────────────
 const Administration = () => (
-  <section id="administration" className="bg-white py-20 px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row-reverse gap-14 items-center">
+  <section id="administration" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row-reverse gap-8 sm:gap-10 md:gap-14 items-center">
 
       <div className="md:w-5/12 w-full rounded-2xl overflow-hidden shadow-sm">
-        <img src="/bhu/admin.png" alt="Administration" className="w-full h-80 object-cover" />
+        <img src="/bhu/admin.png" alt="Administration" className="w-full h-56 sm:h-72 md:h-80 object-cover" />
       </div>
 
       <div className="md:w-7/12 w-full">
         <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
           Administration
         </p>
-        <h2 className="font-cormorant text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
+        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
           College Administration & Governance
         </h2>
         <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
           Official information about the college's governance structure —
           contacts for the Principal's office, administrative departments,
           committees, and institutional policies.
@@ -348,11 +346,10 @@ const Administration = () => (
             ["Principal's Office",        'Contact details, notices, and official communications.'],
             ['Controller of Examination', 'Queries related to semester examinations.'],
             ['Staff Directory',           'Administrative and teaching staff contact information.'],
-            ['Student Advisor',           'Student conduct rules, attendance policies, and guidelines.'],
           ].map(([label, detail]) => (
             <li key={label} className="flex items-start gap-3">
               <span className="text-[#C4561A] font-bold mt-0.5 flex-shrink-0">➥</span>
-              <div className="font-lato text-[16px] text-[#1A1A1A]">
+              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
                 <span className="font-semibold">{label}: </span>{detail}
               </div>
             </li>
@@ -366,34 +363,34 @@ const Administration = () => (
 
 // ─── NOTICES FEATURE ──────────────────────────────────────────────────────────
 const Notices = () => (
-  <section id="notices" className="bg-[#FAF7F2] py-20 px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-14 items-center">
+  <section id="notices" className="bg-[#FAF7F2] py-14 sm:py-20 px-4 sm:px-6">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
 
       <div className="md:w-5/12 w-full rounded-2xl overflow-hidden shadow-sm">
-        <img src="/bhu/notice.png" alt="Notices" className="w-full h-80 object-cover" />
+        <img src="/bhu/notice.png" alt="Notices" className="w-full h-56 sm:h-72 md:h-80 object-cover" />
       </div>
 
       <div className="md:w-7/12 w-full">
         <p className="font-lato text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
           Notices
         </p>
-        <h2 className="font-cormorant text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
+        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
           Latest Announcements & Circulars
         </h2>
         <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
-          The official communication board of MMV — exam notifications, admission updates,
+        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+          The official communication board of MMV — exam notifications,
           event schedules, fee deadlines, and urgent circulars organized by category and date.
         </p>
         <ul className="space-y-3">
           {[
             ['Urgent Notices', 'Time-sensitive updates like exam changes or fee deadlines.'],
-            ['Admissions',     'Open application windows for UG, PG, and Research programmes.'],
+            ['Examination',     'Timely notifications on examination schedules, results, and related updates.'],
             ['Circulars',      'Official orders from BHU administration and MMV management.'],
           ].map(([label, detail]) => (
             <li key={label} className="flex items-start gap-3">
               <span className="text-[#C4561A] font-bold mt-0.5 flex-shrink-0">➥</span>
-              <div className="font-lato text-[16px] text-[#1A1A1A]">
+              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
                 <span className="font-semibold">{label}: </span>{detail}
               </div>
             </li>
@@ -407,19 +404,19 @@ const Notices = () => (
 
 // ─── AI ASSISTANT ─────────────────────────────────────────────────────────────
 const AIAssistant = () => (
-  <section id="ai-assistant" className="bg-white py-20 px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-14 items-center">
+  <section id="ai-assistant" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
+    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
 
       {/* Text */}
       <div className="md:w-7/12 w-full">
         <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
           AI Assistant
         </p>
-        <h2 className="font-cormorant text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
+        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
           Get Instant Answers with MMVerse
         </h2>
         <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
           MMVerse is a conversational AI assistant built specifically for MMV students.
           Instead of searching through multiple pages, simply type your question
           and get an accurate answer within seconds.
@@ -432,7 +429,7 @@ const AIAssistant = () => (
           ].map(([icon, label, detail]) => (
             <li key={label} className="flex items-start gap-3">
               <span className="text-xl mt-0.5 flex-shrink-0">{icon}</span>
-              <div className="font-lato text-[16px] text-[#1A1A1A]">
+              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
                 <span className="font-semibold">{label}: </span>{detail}
               </div>
             </li>
@@ -447,26 +444,26 @@ const AIAssistant = () => (
       </div>
 
       {/* Chat preview — matches MMVerse design */}
-      <div className="md:w-5/12 w-full">
+      <div className="md:w-5/12 w-full max-w-sm sm:max-w-none mx-auto">
         <div className="bg-white rounded-2xl shadow-md border-4 border-[#0D1F3C]">
           {/* Header */}
-          <div className="flex items-center gap-3 bg-[#132C58] rounded-t-xl px-4 py-3">
-            <div className="w-10 h-10 rounded-full bg-[#EEF3FC] flex items-center justify-center overflow-hidden flex-shrink-0">
-              <img src="/bhu/AI-icon.png" alt="MMVerse" className="w-10 h-10 rounded-full object-cover"
+          <div className="flex items-center gap-2.5 sm:gap-3 bg-[#132C58] rounded-t-xl px-3.5 sm:px-4 py-2.5 sm:py-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#EEF3FC] flex items-center justify-center overflow-hidden flex-shrink-0">
+              <img src="/bhu/AI-icon.png" alt="MMVerse" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
                 onError={(e) => { e.target.style.display='none'; e.target.parentNode.innerText='🤖'; }} />
             </div>
             <div>
-              <div className="font-lato text-base font-bold text-white leading-none">MMVerse</div>
-              <div className="font-lato text-xs text-blue-200 mt-0.5">AI Campus Assistant</div>
+              <div className="font-lato text-sm sm:text-base font-bold text-white leading-none">MMVerse</div>
+              <div className="font-lato text-2xs sm:text-xs text-blue-200 mt-0.5">AI Campus Assistant</div>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="font-lato text-xs text-blue-200">Online</span>
+              <span className="font-lato text-2xs sm:text-xs text-blue-200">Online</span>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="p-4 space-y-3">
+          <div className="p-3.5 sm:p-4 space-y-2.5 sm:space-y-3">
             {[
               { from: 'user', text: 'What are the Cyber Library timings?' },
               { from: 'bot',  text: 'The Cyber Library is open Monday–Saturday, 8:00 AM to 5:00 PM.' },
@@ -474,7 +471,7 @@ const AIAssistant = () => (
               { from: 'bot',  text: 'Hostel allotment forms are available at the Hostel Office in the MMV Campus. You can also find details in the Facilities section of this portal.' },
             ].map((m, i) => (
               <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`font-lato text-sm rounded-2xl px-4 py-2.5 max-w-[82%] leading-relaxed
+                <div className={`font-lato text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2 sm:py-2.5 max-w-[82%] leading-relaxed
                   ${m.from === 'user'
                     ? 'bg-[#02226E] text-white rounded-br-sm'
                     : 'bg-[#FFC6AD] text-black rounded-bl-sm'}`}>
@@ -485,12 +482,12 @@ const AIAssistant = () => (
           </div>
 
           {/* Input */}
-          <div className="px-4 pb-4">
+          <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4">
             <div className="flex gap-2">
-              <div className="flex-1 bg-white rounded-xl px-4 py-2.5 font-lato text-sm text-gray-400 border-2 border-[#02226E]">
+              <div className="flex-1 bg-white rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 font-lato text-xs sm:text-sm text-gray-400 border-2 border-[#02226E]">
                 Ask a question...
               </div>
-              <div className="w-10 h-10 bg-[#02226E] rounded-xl flex items-center justify-center text-white text-base">→</div>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#02226E] rounded-xl flex items-center justify-center text-white text-base flex-shrink-0">→</div>
             </div>
           </div>
         </div>
@@ -505,11 +502,12 @@ const Home = () => (
   <div className="font-lato">
     <Hero />
     <About />
-    <PortalSections />
+    <Facilities />
+    {/* <PortalSections /> */}
     <Academics />
     <Administration />
     <Notices />
-    <Facilities />
+    {/* <Facilities /> */}
     <AIAssistant />
   </div>
 );
