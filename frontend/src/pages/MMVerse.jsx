@@ -4,10 +4,26 @@ import { Link } from "react-router-dom";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const SECTIONS = [
-  { label: "\u27A4 Administration", value: "administration" },
-  { label: "\u27A4 Academics", value: "academics" },
-  { label: "\u27A4 Facilities", value: "facilities" },
-  { label: "\u27A4 Notices", value: "notices" },
+  {
+    label: "🏛️ Administration",
+    value: "administration",
+    welcome: "You've selected Administration. I can help you with:\n• Vice Chancellor & Principal details\n• Dean of Students information\n• Student Advisor & Chief Proctor contacts\n• Office staff directory\n• Examination controllers\n• Administrative office incontacts\n\nWhat would you like to know?"
+  },
+  {
+    label: "📚 Academics",
+    value: "academics",
+    welcome: "You've selected Academics. I can help you with:\n• UG & PG syllabus downloads (Science, Arts, Social Science)\n• National Education Policy (NEP) details\n• Elective courses and credit structure\n• SWAYAM online courses\n• Section In-Charge contacts (Science, Arts, Social Science)\n• Academic calendar & holiday list\n\nWhat would you like to know?"
+  },
+  {
+    label: "🏫 Facilities",
+    value: "facilities",
+    welcome: "You've selected Facilities. I can help you with:\n• Hostels (Chief Warden, Coordinator, Jyoti Kunj, Kirti Kunj, Pragya Kunj, Swasti Kunj, Kundan Devi)\n• Libraries (MMV Library, Central Library, Cyber Library)\n• Medical (Sir Sundarlal Hospital, Trauma Centre, Health Centre)\n• Sports & Gymnasium\n• Canteen, Banks, Transport\n• NSS, NCC, NLSC & extracurricular activities\n• Training & Placement Cell\n• Auditorium, Guest Houses & other campus facilities\n\nWhat would you like to know?"
+  },
+  {
+    label: "📢 Notices",
+    value: "notices",
+    welcome: "You've selected Notices. I can help you with:\n• Latest notices and announcements from MMV\n• Exam notices and important dates\n• General college announcements\n\nWhat would you like to know?"
+  },
 ];
 
 // ── Render answer text with bullet points ─────────────────────────────────
@@ -214,9 +230,12 @@ export default function MMVerse() {
 
   const handleSectionSelect = (section) => {
     setActiveSection(section);
-    // Show user picked the section as a bubble
-    setItems((prev) => [...prev, { type: "section-label", label: section.label }]);
-    // Focus input
+    // Show user picked the section as a bubble, then show welcome message
+    setItems((prev) => [
+      ...prev,
+      { type: "section-label", label: section.label },
+      { type: "section-welcome", text: section.welcome },
+    ]);
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
@@ -234,7 +253,20 @@ export default function MMVerse() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q, section: activeSection ? activeSection.value : null }),
       });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
+      if (!res.ok) {
+        // Server responded but with an error status — treat as fallback, not connection error
+        const botId2 = (Date.now() + 1).toString();
+        setItems((prev) => [...prev,
+          {
+            type: "fallback",
+            text: "I'm having trouble processing that question. Please try rephrasing it or selecting a specific section.",
+            section_url: null, section_title: null, fallback_type: "no_content",
+          },
+          { type: "section-menu" },
+        ]);
+        setActiveSection(null);
+        return;
+      }
       const data = await res.json();
 
       if (data.matched) {
@@ -261,11 +293,13 @@ export default function MMVerse() {
         ]);
       }
       setActiveSection(null); // reset section after each answer
-    } catch {
+    } catch (err) {
+      // Only reaches here for actual network failures (no internet, server down)
+      // Server-side errors (503, Groq issues) are handled above via res.ok check
       setItems((prev) => [...prev,
         {
           type: "fallback",
-          text: "Sorry, I couldn't connect to the server. Please try again.",
+          text: "Unable to connect to the server. Please check your internet connection and try again.",
           section_url: null, section_title: null, fallback_type: "no_content",
         },
         { type: "section-menu" },
@@ -338,6 +372,15 @@ export default function MMVerse() {
 
               if (item.type === "section-label") return (
                 <SectionLabel key={i} label={item.label} />
+              );
+
+              if (item.type === "section-welcome") return (
+                <div key={i} className="flex items-start gap-2">
+                  <BotAvatar />
+                  <div className="bg-[#FFC6AD] text-black text-base rounded-2xl rounded-bl-sm px-4 py-3 max-w-[87%] leading-relaxed">
+                    <AnswerText text={item.text} />
+                  </div>
+                </div>
               );
 
               if (item.type === "user") return (

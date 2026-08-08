@@ -57,26 +57,22 @@ const pages = {
   // ── Section In-Charge (three separate subject pages) ─────────────────────
   // Navbar links to /academics/section-incharge/science etc. individually.
   'section-incharge/science': {
-    title: 'Section In-Charge — Science',
+    title: 'Section Incharge — Science',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/socialscience': {
-    title: 'Section In-Charge — Social Science',
+    title: 'Section Incharge — Social Science',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/arts': {
-    title: 'Section In-Charge — Arts',
+    title: 'Section Incharge — Arts',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
-  // Keep the base entry too in case navbar links directly to it
-  'section-incharge': {
-    title: 'Section In-Charge',
-    pageType: 'description-table',
-    tableColumns: ['Name', 'Section', 'Department', 'Contact']
-  },
+ 
+  
 
   // ── Calendar & Holidays ───────────────────────────────────────────────────
   'calendar': {

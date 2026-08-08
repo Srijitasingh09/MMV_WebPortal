@@ -17,6 +17,21 @@ const PROFILE_PHOTO_TAG = '__profile_photo__';
 // show up in the generic "Documents" viewer below the description.
 const TABLE_PDF_TAG = '__table_pdf__';
 
+// ─── Shared heading / subheading styles ─────────────────────────────────────
+const HEADING_STYLES = {
+  heading:        'text-3xl font-semibold text-[#7D311F]',   // main page-level heading (first line of description)
+  subheading:     'text-2xl font-bold text-[#7D311F]',       // '## ' — description body, description notes, accordion notes
+  subSubheading:  'text-lg font-bold text-[#174873]',    // '### ' — description body, description notes, accordion notes
+  accordionTitle: 'text-[16px] font-semibold text-[#174873]',    // accordion bar title ('+++ Title')
+};
+
+// ─── Body text size per description section ────────────────────────────────
+const BODY_STYLES = {
+  default:       'text-md',   // text before any '## '/'### ' has appeared yet
+  subheading:    'text-md', // text under the most recent '## ' subheading
+  subSubheading: 'text-md',   // text under the most recent '### ' sub-subheading
+};
+
 // Defined outside component so it never causes stale closure issues inside useCallback/useEffect
 const blankProfile = {
   name: '', designation: '', university: '', address: '',
@@ -493,32 +508,25 @@ const GenericContentPage = ({
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
-
-      {/* Back */}
-      <button onClick={() => navigate(backPath)}
-        className="text-sm font-medium text-[#174873] hover:text-[#406BC7]">
-        ← Back to {backLabel}
-      </button>
-
-      {/* Main page heading — centered pill/badge style (light gray rounded
-          background, bold navy text). Change `bg-gray-200` / `text-[#174873]`
-          here to restyle the badge, or swap `rounded-full` for e.g.
-          `rounded-2xl` for a less pill-like shape. */}
-      <div className="w-full flex justify-center">
-        <h1 className="inline-block bg-gray-200 text-[#174873] font-bold text-lg sm:text-xl md:text-2xl text-center px-8 sm:px-10 py-3 sm:py-4 rounded-full shadow-sm break-words max-w-full">
-          {title}
-        </h1>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-4">
+      {/*---PILL HEADING---*/}
+       <div className="relative left-1/2 -translate-x-1/2 w-screen mb-10">
+        <div className="w-[50%] bg-[#585858] rounded-r-full shadow-sm">
+          <div className="max-w-5xl mx-auto h-16 flex items-center justify-center px-4 sm:px-6">
+            <h1 className="text-white font-semibold text-3xl sm:text-xl md:text-3xl text-center">
+              {title}
+            </h1>
+          </div>
+        </div>
       </div>
-
       {/* ── PROFILE SECTION ── */}
       {hasProfile && (
-        <div className="bg-[#C3DDFF] rounded-2xl px-4 sm:px-8 py-6 sm:py-8 text-center relative">
-
+        <div className="bg-[#0D1F3C] rounded-2xl px-4 sm:px-8 py-6 sm:py-8 text-center relative">
+          {/*--admin profile edit --*/}
           {isAdmin && !isEditingProfile && (
             <button
               onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }}
-              className="absolute top-4 right-4 px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium bg-white/70 hover:bg-white"
+              className="absolute top-4 right-4 px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium bg-white "
             >
               Edit Profile
             </button>
@@ -526,7 +534,7 @@ const GenericContentPage = ({
 
           {isEditingProfile ? (
             <div className="text-left max-w-xl mx-auto space-y-3">
-              <h3 className="text-lg font-bold text-[#174873] text-center mb-2">Edit Profile</h3>
+              <h3 className="text-lg font-bold text-white text-center mb-2">Edit Profile</h3>
 
               {/* PROFILE PHOTO */}
               <div className="flex flex-col items-center gap-2 mb-2">
@@ -546,14 +554,14 @@ const GenericContentPage = ({
                 <div className="flex gap-2">
                   <button
                     onClick={() => profileImageRef.current?.click()}
-                    className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium"
+                    className="px-3 py-1.5 bg-white text-black rounded-lg text-xs font-medium"
                   >
                     {profilePhoto ? 'Change Photo' : 'Upload Photo'}
                   </button>
                   {profilePhoto && (
                     <button
                       onClick={handleRemoveProfilePhoto}
-                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50"
+                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg text-xs font-medium bg-white"
                     >
                       Remove Photo
                     </button>
@@ -572,7 +580,7 @@ const GenericContentPage = ({
                 { key: 'email',         label: 'Email' },
               ].map(field => (
                 <div key={field.key}>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1">
+                  <label className="block text-base font-semibold text-white mb-1">
                     {field.label}
                   </label>
                   <input
@@ -586,71 +594,70 @@ const GenericContentPage = ({
 
               <div className="flex gap-3 justify-center pt-2">
                 <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                  className="px-4 py-2 bg-white text-black rounded-lg text-sm font-medium disabled:opacity-50 ">
                   {savingProfile ? 'Saving...' : 'Save'}
                 </button>
                 <button onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 text-gray-500 text-sm">
+                  className="px-4 py-2 text-black rounded-lg font-medium bg-white text-sm">
                   Cancel
                 </button>
               </div>
             </div>
           ) : profile.name ? (
-            <>
+            <> {/*--user view profile--*/}
               {profilePhoto && (
                 <img
                   src={`${API}${profilePhoto.photo_url}`}
                   alt={profilePhoto.photo_name}
-                  className="rounded-lg object-cover border border-gray-200 mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                  className="rounded-lg object-cover border-3 border-white mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
                   style={{ objectPosition: 'top center' }}
                 />
               )}
 
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#174873] break-words">
+              <h2 className="text-2xl sm:text-3xl font-bold text-[#E8C97A] break-words">
                 {profile.name}
               </h2>
 
               {profile.designation && (
-                <p className="text-2xl font-semibold text-[#174873] mt-1">
+                <p className="text-2xl font-semibold text-[#E8C97A] mt-1">
                   {profile.designation}
                 </p>
               )}
 
               {profile.university && (
-                <p className="text-base text-gray-800 mt-3">
+                <p className="text-base text-white mt-1">
                   {profile.university}
                 </p>
               )}
 
               {profile.address && (
-                <p className="text-sm text-gray-700 mt-1">
+                <p className="text-sm text-white mt-1">
                   {profile.address}
                 </p>
               )}
 
               <div className="mt-4 space-y-1">
                 {profile.phone && (
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-white">
                     <span className="font-semibold">Contact:</span>{" "}
                     {profile.phone}
                   </p>
                 )}
 
                 {profile.officeContact && (
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-white">
                     <span className="font-semibold">Office Contact:</span>{" "}
                     {profile.officeContact}
                   </p>
                 )}
 
                 {profile.email && (
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-white">
                     <span className="font-semibold">Email:</span>{" "}
                     {profile.email}
                   </p>
                 )}
 
-                {/* FIX 8: Removed age display — not appropriate for college staff profiles */}
               </div>
             </>
           ) : (
@@ -761,8 +768,7 @@ const GenericContentPage = ({
             </div>
           )}
 
-          {/* FIX 3: Now renders ALL gallery photos in a responsive grid
-              respecting the photoCols prop (1, 2, or 3 columns per row) */}
+          {/*---photo grid options---*/}
           {hasPhoto && galleryPhotos.length > 0 && (
             <div className={`min-w-0 ${
               !hasDesc ? 'md:col-span-3' :
@@ -882,8 +888,8 @@ const GenericContentPage = ({
                   : 'md:col-span-3'
             }`}>
 
-              {/* FIX 7: Changed min-h-180px → min-h-[180px] (valid Tailwind arbitrary value) */}
-              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8 w-full min-h-[180px]">
+              {/*---description--*/}
+              <div className="bg-[#fff8cd] rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -919,7 +925,7 @@ const GenericContentPage = ({
                     const raw = data.description || '';
                     if (!raw.trim()) {
                       return (
-                        <p className="italic text-gray-400 text-center">
+                        <p className="italic text-black text-center">
                           {isAdmin ? 'No content yet. Click Edit Description.' : 'Content coming soon.'}
                         </p>
                       );
@@ -932,21 +938,19 @@ const GenericContentPage = ({
                     let noteBuffer = [];   // lines collected between '>' open and '<' close
                     let inNote = false;    // whether we're currently inside an open note block
 
-                    // Collapsible block syntax — completely separate from
-                    // '## '/'### ' headings. An admin writes:
-                    //   +++ Title shown on the closed bar
-                    //   ...any lines...
-                    //   +++
-                    // and it renders as its own click-to-expand widget,
-                    // independent of the description's normal heading levels.
+                    // Which BODY_STYLES entry paragraphs/bullets should use right
+                    // now. Starts at 'default' and switches to 'subheading' /
+                    // 'subSubheading' the moment a '## ' / '### ' line is hit —
+                    // then stays that way until the next heading changes it again.
+                    let currentBodyLevel = 'default';
+                     let tableBuffer = [];  // consecutive '| a | b | c |' lines collected into one table
+                    
                     let accordionBuffer = [];   // lines collected between the opening '+++ Title' and the closing '+++'
                     let accordionTitle = '';
                     let inAccordion = false;
                     let accordionCount = 0;     // gives each rendered block a stable index for open/closed state
-
-                    // Converts plain URLs and [text](url) markdown links into
-                    // clickable blue <a> elements. Returns an array of strings/nodes.
-                    const renderTextWithLinks = (text) => {
+                    {/*--links---*/}
+                    const renderTextWithLinks = (text) => {      
                       // Regex: matches [label](url) OR bare http(s):// URLs
                       const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
                       const parts = [];
@@ -994,14 +998,11 @@ const GenericContentPage = ({
                         return <span key={i}>{renderTextWithLinks(part)}</span>;
                       });
                     };
-
-
-                    let tableBuffer = [];  // consecutive '| a | b | c |' lines collected into one table
-
+                    {/*bullets*/}
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-lg">
+                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-black marker:text-[#174873] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
@@ -1010,7 +1011,8 @@ const GenericContentPage = ({
                         bulletBuffer = [];
                       }
                     };
-
+                    
+                    {/*notes*/}
                     // Renders the whole accumulated note block as ONE callout box.
                     // Supports the same formatting as the main description:
                     // - '## ' / '### ' become headings (smaller, since they're
@@ -1043,14 +1045,14 @@ const GenericContentPage = ({
                           if (lineText.startsWith('### ')) {
                             flushNoteBullets();
                             noteElements.push(
-                              <h4 key={`note-h4-${i}`} className="text-sm font-semibold text-[#174873] mt-2 not-italic">
+                              <h4 key={`note-h4-${i}`} className={`${HEADING_STYLES.subSubheading} mt-2 not-italic`}>
                                 {renderInlineFormatting(lineText.slice(4))}
                               </h4>
                             );
                           } else if (lineText.startsWith('## ')) {
                             flushNoteBullets();
                             noteElements.push(
-                              <h3 key={`note-h3-${i}`} className="text-base font-semibold text-[#174873] mt-2 not-italic">
+                              <h3 key={`note-h3-${i}`} className={`${HEADING_STYLES.subheading} mt-2 not-italic`}>
                                 {renderInlineFormatting(lineText.slice(3))}
                               </h3>
                             );
@@ -1069,9 +1071,9 @@ const GenericContentPage = ({
                           }
                         });
                         flushNoteBullets();
-
+                        {/*notes normal text*/}
                         elements.push(
-                          <div key={`note-${elements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm space-y-1">
+                          <div key={`note-${elements.length}`} className="bg-[#FFFBEA] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
                             {noteElements}
                           </div>
                         );
@@ -1080,6 +1082,7 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
+                    //---accordion or collapsible headings
                     // Renders one '+++ Title ... +++' block as a self-contained
                     // click-to-expand widget. Unlike the note/table/bullet
                     // helpers above, this doesn't touch `elements` incrementally
@@ -1095,7 +1098,7 @@ const GenericContentPage = ({
                       const flushLocalBullets = () => {
                         if (localBulletBuffer.length > 0) {
                           contentElements.push(
-                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-gray-700 text-sm">
+                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-md marker:text-[#174873] marker:font-bold">
                               {localBulletBuffer.map((b, bi) => (
                                 <li key={bi}>{renderInlineFormatting(b)}</li>
                               ))}
@@ -1105,10 +1108,7 @@ const GenericContentPage = ({
                         }
                       };
 
-                      // Renders a note block found inside this accordion using
-                      // the exact same static callout box as the top-level
-                      // description notes — not collapsible, just "active"
-                      // (parsed/rendered) wherever it's written.
+                      
                       const flushLocalNote = () => {
                         if (localNoteBuffer.length > 0) {
                           const noteElements = [];
@@ -1131,14 +1131,14 @@ const GenericContentPage = ({
                             if (lineText.startsWith('### ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h4 key={`acc-note-h4-${i}`} className="text-sm font-semibold text-[#174873] mt-2 not-italic">
+                                <h4 key={`acc-note-h4-${i}`} className={`${HEADING_STYLES.subSubheading} mt-2 not-italic`}>
                                   {renderInlineFormatting(lineText.slice(4))}
                                 </h4>
                               );
                             } else if (lineText.startsWith('## ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h3 key={`acc-note-h3-${i}`} className="text-base font-semibold text-[#174873] mt-2 not-italic">
+                                <h3 key={`acc-note-h3-${i}`} className={`${HEADING_STYLES.subheading} mt-2 not-italic`}>
                                   {renderInlineFormatting(lineText.slice(3))}
                                 </h3>
                               );
@@ -1159,7 +1159,7 @@ const GenericContentPage = ({
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#174873]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-gray-700 italic text-sm space-y-1">
+                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FFF4C2] border-l-4 border-[#D4A017] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
                               {noteElements}
                             </div>
                           );
@@ -1211,24 +1211,26 @@ const GenericContentPage = ({
                           return;
                         }
                         flushLocalBullets();
+
+                        //normal text in accordian
                         contentElements.push(
-                          <p key={`acc-line-${li}`} className="text-gray-700 text-sm leading-relaxed">
+                          <p key={`acc-line-${li}`} className="text-black text-md leading-relaxed">
                             {renderInlineFormatting(t)}
                           </p>
                         );
                       });
                       flushLocalBullets();
                       flushLocalNote(); // in case a note was left open at the end of this accordion's content
-
+                      //accordian topmost view
                       const isOpen = !!openSections[index];
                       elements.push(
                         <div key={`accordion-${index}`} className="border border-gray-200 rounded-xl overflow-hidden">
                           <button
                             type="button"
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
-                            className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 text-left"
+                            className="w-full flex items-center justify-between gap-2 px-4 py-1.5 bg-white  text-left"
                           >
-                            <span className="font-semibold text-[#174873]">
+                            <span className={HEADING_STYLES.accordionTitle}>
                               {renderInlineFormatting(accordionTitle)}
                             </span>
                             <span className={`text-[#174873] text-sm transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}>
@@ -1236,7 +1238,7 @@ const GenericContentPage = ({
                             </span>
                           </button>
                           {isOpen && (
-                            <div className="px-4 py-3 space-y-1 border-t border-gray-100">
+                            <div className="px-4 py-3 space-y-1 border-t-2 border-[#174873] bg-[#E6F0F5]/[60%]">
                               {contentElements}
                             </div>
                           )}
@@ -1247,6 +1249,8 @@ const GenericContentPage = ({
                       accordionTitle = '';
                       inAccordion = false;
                     };
+
+                    //flush table inside description
                     const flushTable = () => {
                       if (tableBuffer.length === 0) return;
 
@@ -1278,11 +1282,11 @@ const GenericContentPage = ({
 
                         elements.push(
                           <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
-                            <table className="w-full text-sm text-left table-fixed">
-                              <thead className="bg-gray-50">
-                                <tr>
+                            <table className="w-full text-md text-left table-fixed">
+                              <thead className="bg-white">
+                                <tr >
                                   {headerRow.map((cell, ci) => (
-                                    <th key={ci} className="px-4 py-2 font-semibold text-[#174873] border-b border-gray-200">
+                                    <th key={ci} className="px-4 py-3 text-black font-medium">
                                       {renderInlineFormatting(cell)}
                                     </th>
                                   ))}
@@ -1290,9 +1294,9 @@ const GenericContentPage = ({
                               </thead>
                               <tbody className="divide-y divide-gray-100">
                                 {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="hover:bg-gray-50">
+                                  <tr key={ri} className="hover:bg-gray-50 divide-x divide-gray-200">
                                     {cells.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2 text-gray-700">
+                                      <td key={ci} className="px-4 py-2.5 text-[#374151] text-sm">
                                         {renderInlineFormatting(cell)}
                                       </td>
                                     ))}
@@ -1305,17 +1309,12 @@ const GenericContentPage = ({
                       }
                       tableBuffer = [];
                     };
-
+                    
+                    //description normal
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
 
-                      // Currently inside an open note block (started with '>',
-                      // not yet closed with a trailing '<') — every line is
-                      // swallowed into the note until the closing line is hit.
-                      // Continuation lines are allowed to repeat the leading
-                      // '> ' (the natural way people write multi-line quotes)
-                      // — strip it so bullets/bold on those lines still match
-                      // the same '- ' / '**' checks flushNote() looks for.
+                    //if note in description
                       if (inNote) {
                         let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
                         if (lineContent.endsWith('<')) {
@@ -1353,7 +1352,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h2 key={idx} className="text-3xl font-bold text-[#174873] text-center pb-2 border-b border-gray-200">
+                          <h2 key={idx} className={`${HEADING_STYLES.heading} text-center pb-3 border-b-2 border-[#174873]/20 tracking-tight`}>
                             {trimmed}
                           </h2>
                         );
@@ -1364,8 +1363,9 @@ const GenericContentPage = ({
                       if (trimmed.startsWith('## ')) {
                         flushBullets();
                         flushTable();
+                        currentBodyLevel = 'subheading'; // everything below this, until the next heading, uses BODY_STYLES.subheading
                         elements.push(
-                          <h3 key={idx} className="text-xl font-semibold mt-4" style={{ color: '#2E6DA4' }}>
+                          <h3 key={idx} className={`${HEADING_STYLES.subheading} mt-6`}>
                             {trimmed.slice(3)}
                           </h3>
                         );
@@ -1376,21 +1376,16 @@ const GenericContentPage = ({
                       if (trimmed.startsWith('### ')) {
                         flushBullets();
                         flushTable();
+                        currentBodyLevel = 'subSubheading'; // everything below this, until the next heading, uses BODY_STYLES.subSubheading
                         elements.push(
-                          <h4 key={idx} className="text-lg font-semibold mt-3" style={{ color: '#5B93C4' }}>
+                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-4`}>
                             {trimmed.slice(4)}
                           </h4>
                         );
                         return;
                       }
 
-                      // > Opens a note block. Everything from here through the
-                      // line ending in '<' becomes ONE callout box (line breaks
-                      // preserved inside it). A line can open and close on its
-                      // own (e.g. "> just this line <"). This check runs BEFORE
-                      // the bullet/bold checks below — otherwise a line like
-                      // "> some **bold** text" would get caught by the bold
-                      // check first and never open the note at all.
+                     //notes in description
                       if (trimmed.startsWith('> ') || trimmed === '>') {
                         flushBullets();
                         let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
@@ -1419,7 +1414,7 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // - Bullet point
+                      // - list
                       if (trimmed.startsWith('- ')) {
                         bulletBuffer.push(trimmed.slice(2));
                         return;
@@ -1433,18 +1428,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // **Bold** or mixed bold+plain line
-                      if (trimmed.includes('**')) {
-                        flushBullets();
-                        flushTable();
-                        elements.push(
-                          <p key={idx} className="text-gray-800 text-lg text-justify">
-                            {renderInlineFormatting(trimmed)}
-                          </p>
-                        );
-                        return;
-                      }
-
                       // --- Divider line
                       if (trimmed === '---') {
                         flushBullets();
@@ -1454,10 +1437,17 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Plain paragraph (may still contain inline bold/links)
+                      // Paragraph (bold **spans** and links are rendered inline
+                      // via renderInlineFormatting regardless of this branch —
+                      // so bold-containing and plain lines share one consistent
+                      // size/color and never jump between the two). The size
+                      // itself comes from BODY_STYLES[currentBodyLevel], so it
+                      // stays fixed for every paragraph AND bullet under the
+                      // same '## '/'### ' heading, and only changes when a new
+                      // heading is hit above.
                       flushBullets();
                       elements.push(
-                        <p key={idx} className="text-[#000000] text-md leading-relaxed text-justify">
+                        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify ${BODY_STYLES[currentBodyLevel]}`}>
                           {renderInlineFormatting(trimmed)}
                         </p>
                       );
@@ -1553,7 +1543,7 @@ const GenericContentPage = ({
               ) : (
                 <>
                   {tableHeading ? (
-                    <h3 className="text-xl font-bold text-[#174873]">{tableHeading}</h3>
+                    <h3 className="text-3xl font-bold text-[#174873]">{tableHeading}</h3>
                   ) : (
                     <span className="italic text-gray-400 text-sm">No table heading yet.</span>
                   )}
@@ -1572,9 +1562,9 @@ const GenericContentPage = ({
 
           <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-base">
                 <thead>
-                  <tr className="bg-[#174873] text-white">
+                  <tr className="bg-[#174873] text-white ">
                     {columns.map(col => (
                     <th key={col} className="px-4 py-3 text-left font-semibold">
                       {col}
@@ -1618,9 +1608,15 @@ const GenericContentPage = ({
                   const idx = origIdx; // keeps existing edit/delete logic below untouched
                   const isEditingThisRow = isAdmin && editingRowIdx === idx;
                   return (
-                    <tr key={idx} className={`border-t border-gray-100 transition-colors ${isEditingThisRow ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                    <tr
+                      key={idx}
+                      className={`border-t border-gray-100 transition-colors
+                        odd:bg-white even:bg-[#DFE3E6]
+                        ${isEditingThisRow ? 'bg-[#FFF8CD]' : ''}
+                      `}
+                    >
                       {columns.map(col => (
-                        <td key={col} className="px-4 py-3 text-gray-700">
+                        <td key={col} className="px-8 py-3 text-black">
                           {isEditingThisRow ? (
                             /* ── EDIT MODE: show input for each cell ── */
                             col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
@@ -1629,7 +1625,7 @@ const GenericContentPage = ({
                                   <div className="flex items-center gap-1">
                                     <a href={editingRowData[col].startsWith('http') ? editingRowData[col] : `${API}${editingRowData[col]}`}
                                       target="_blank" rel="noopener noreferrer"
-                                      className="text-xs text-[#174873] hover:underline truncate max-w-[80px]">
+                                      className="text-sm text-[#174873] hover:underline truncate max-w-[80px]">
                                       Current PDF
                                     </a>
                                     <button onClick={() => setEditingRowData(prev => ({ ...prev, [col]: '' }))}
@@ -1688,7 +1684,7 @@ const GenericContentPage = ({
                                 ? (
                                   <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
                                     target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm">
+                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-3sm">
                                     <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
                                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                                     </svg>
@@ -1707,7 +1703,7 @@ const GenericContentPage = ({
                           {isEditingThisRow ? (
                             <div className="flex gap-2">
                               <button onClick={handleSaveEditRow}
-                                className="text-green-600 hover:text-green-800 text-xs font-bold">
+                                className="text-green-600 hover:text-green-800 text-sm font-bold">
                                 Save
                               </button>
                               <button onClick={handleCancelEditRow}
@@ -1774,8 +1770,6 @@ const GenericContentPage = ({
                                       form.append('sub_category', '');
                                       form.append('files', taggedFile);
 
-                                      // FIX 5: Removed debug console.log that was left in by mistake
-
                                       const res = await axios.post(
                                         `${API}/admin/facility-content/upload-pdf`, form,
                                         { headers: { Authorization: `Bearer ${token}` } }
@@ -1822,7 +1816,7 @@ const GenericContentPage = ({
                         )}
                       </td>
                     ))}
-                    {/* FIX 9: Removed extra blank <td /> here too — only one Action cell */}
+                   
                     <td className="px-4 py-2">
                       <button onClick={handleAddRow}
                         className="px-3 py-1 bg-[#174873] text-white rounded text-xs font-bold">

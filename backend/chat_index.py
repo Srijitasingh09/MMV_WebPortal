@@ -253,7 +253,16 @@ def index_facility_content_row(row: "models.FacilityContent"):
                         profile_parts.append(f"{label}: {profile[key]}")
 
                 desc = row.description or ""
-                combined = f"{title}. {desc} " + ". ".join(profile_parts)
+                # Use title + designation in chunk heading so "who is the dean"
+                # matches this chunk even if description doesn't mention the role
+                designation = profile.get("designation", "")
+                name = profile.get("name", "")
+                heading = f"{title}"
+                if name:
+                    heading += f" — {name}"
+                if designation:
+                    heading += f" ({designation})"
+                combined = f"{heading}. {desc} " + ". ".join(profile_parts)
                 save_chunk(
                     "facility_content", row.id, "text",
                     chunk_text_value=combined.strip(),
@@ -268,16 +277,27 @@ def index_facility_content_row(row: "models.FacilityContent"):
 
             if columns and not profile:
                 row_texts = []
-                for r in rows_data[:10]:
+                for r in rows_data[:15]:  # include up to 15 rows
                     if isinstance(r, dict):
-                        vals = [f"{k}: {v}" for k, v in r.items() if v]
-                        row_texts.append(", ".join(vals))
+                        # Clean tab chars and extra whitespace from cell values,
+                        # then format as "Col: Value" pairs for readability
+                        vals = []
+                        for k, v in r.items():
+                            clean_v = " / ".join(
+                                part.strip() for part in str(v).replace("\t", " ").split("/") if part.strip()
+                            ) if v else ""
+                            if clean_v:
+                                vals.append(f"{k}: {clean_v}")
+                        if vals:
+                            row_texts.append(" | ".join(vals))
                     elif isinstance(r, list):
-                        row_texts.append(", ".join(str(v) for v in r if v))
+                        clean_vals = [str(v).replace("\t", "").strip() for v in r if v]
+                        if clean_vals:
+                            row_texts.append(" | ".join(clean_vals))
 
                 description_for_embedding = f"{title} — {heading or 'table'}. Columns: {', '.join(columns)}."
                 if row_texts:
-                    description_for_embedding += " Data: " + "; ".join(row_texts)
+                    description_for_embedding += "\nEntries:\n" + "\n".join(row_texts)
 
                 save_chunk(
                     "facility_content", row.id, "table",
