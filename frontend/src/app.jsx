@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import Notices from './pages/notice';
 import Contact from './pages/contact';
 import MMVerse from './pages/MMVerse';
+import AdminContentGuide from './pages/adminreadme'; 
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -72,6 +73,16 @@ function App() {
           element={
             <ProtectedRoute adminOnly={true}>
               <LayoutWrapper><AdminDashboard /></LayoutWrapper>
+
+            </ProtectedRoute>
+          } 
+        />
+        {/* Content Guide (admin) */}
+        <Route 
+          path="/admin/content-guide" 
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <LayoutWrapper><AdminContentGuide /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />

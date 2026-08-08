@@ -16,21 +16,21 @@ const SubSubMenu = ({ label, children }) => {
   onMouseLeave={() => setIsOpen(false)}
 >
       <div className="flex items-center justify-between px-1 py-1
-                      text-sm text-white hover:bg-[#2d54a8]
-                      border-b border-blue-800 cursor-pointer">
+                      text-sm text-white hover:bg-[#26468C]
+                      border-b border-[#1B3263] cursor-pointer">
         {label}
         <span className="text-xs ml-4">►</span>
       </div>
                                              
       {isOpen && (
-        <div className="absolute top-0 left-full bg-[#406BC7]
-                        shadow-lg min-w-48 z-[999] border border-blue-900">
+        <div className="absolute top-0 left-full bg-[#2d54a8]
+                        shadow-lg min-w-48 z-[999] border border-[#1B3263]">
           {children.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className="block px-4 py-2 text-sm text-white
-                         hover:bg-[#2d54a8] border-b border-blue-800"
+                         hover:bg-[#26468C] border-b border-[#1B3263]"
             >
               {item.label}
             </Link>
@@ -55,15 +55,15 @@ const SubMenu = ({ label, children }) => {
       onMouseLeave={() => setIsOpen(false)}   
     >
       <div className="flex items-center justify-between px-2 py-1
-                      text-sm text-white hover:bg-[#2d54a8]
-                      border-b border-blue-800 cursor-pointer">
+                      text-sm text-white hover:bg-[#26468C]
+                      border-b border-[#1B3263] cursor-pointer">
         {label}
         <span className="text-xs ml-4">►</span>
       </div>
 
       {isOpen && (
-        <div className="absolute top-0 left-full bg-[#406BC7]
-                        shadow-lg min-w-48 z-[999] border border-blue-900">
+        <div className="absolute top-0 left-full bg-[#2d54a8]
+                        shadow-lg min-w-48 z-[999] border border-[#1B3263]">
           {children.map((item) =>
             item.children ? (
               <SubSubMenu
@@ -76,7 +76,7 @@ const SubMenu = ({ label, children }) => {
                 key={item.path}
                 to={item.path}
                 className="block px-4 py-2 text-sm text-white
-                           hover:bg-[#2d54a8] border-b border-blue-800"
+                           hover:bg-[#26468C] border-b border-[#1B3263]"
               >
                 {item.label}
               </Link>
@@ -102,7 +102,7 @@ const DropdownMenu = ({ title, items }) => {
       onMouseLeave={() => setIsOpen(false)}
     >
      <button className="flex items-center gap-1 px-3 py-1 text-white
-                   text-1.5xl font-medium hover:bg-[#406BC7] 
+                   text-1.5xl font-medium hover:bg-[#2d54a8]
                    hover:text-white transition-colors duration-200 
                    h-full">
         {title}
@@ -110,8 +110,8 @@ const DropdownMenu = ({ title, items }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 bg-[#406BC7] shadow-lg
-                        min-w-48 z-[999] border border-blue-900">
+        <div className="absolute top-full left-0 bg-[#2d54a8] shadow-lg
+                        min-w-48 z-[999] border border-[#1B3263]">
           {items.map((item) =>
             item.children ? (
               <SubMenu
@@ -124,7 +124,7 @@ const DropdownMenu = ({ title, items }) => {
                 key={item.path}
                 to={item.path}
                 className="block px-3 py-1 text-sm text-white
-                           hover:bg-[#2d54a8] border-b border-blue-800"
+                           hover:bg-[#26468C] border-b border-[#1B3263]"
               >
                 {item.label}
               </Link>
@@ -217,13 +217,13 @@ const Navbar = () => {
         <div className='flex relative justify-end'>
           <Link to="/"
             className="px-5 py-3 text-white text-1.5xl font-medium
-                    hover:bg-[#406BC7] hover:text-white
+                    hover:bg-[#2d54a8] hover:text-white
                     transition-colors duration-200">
             Home
           </Link>
           <Link to="/about"
             className="px-5 py-3 text-white text-1.5xl font-medium
-                    hover:bg-[#406BC7] hover:text-white
+                    hover:bg-[#2d54a8] hover:text-white
                     transition-colors duration-200">
             About MMV
           </Link>
@@ -337,21 +337,30 @@ const Navbar = () => {
 
           <Link to="/notices"
             className="px-5 py-3 text-white text-1.5xl font-medium
-                    hover:bg-[#406BC7] hover:text-white
+                    hover:bg-[#2d54a8] hover:text-white
                     transition-colors duration-200">
             Notices
           </Link>
 
-          <Link to="/ai-assistant"
-            className="px-5 py-3 text-white text-1.5xl font-medium
-                    hover:bg-[#406BC7] hover:text-white
-                    transition-colors duration-200">
-            AI Assistant
-          </Link>
+          {isAdmin ? (
+            <Link to="/admin/content-guide"
+              className="px-5 py-3 text-white text-1.5xl font-medium
+                      hover:bg-[#2d54a8] hover:text-white
+                      transition-colors duration-200">
+              Content Guide
+            </Link>
+          ) : (
+            <Link to="/ai-assistant"
+              className="px-5 py-3 text-white text-1.5xl font-medium
+                      hover:bg-[#2d54a8] hover:text-white
+                      transition-colors duration-200">
+              AI Assistant
+            </Link>
+          )}
 
           <Link to="/contact"
             className="px-5 py-3 text-white text-1.5xl font-medium
-                    hover:bg-[#406BC7] hover:text-white
+                    hover:bg-[#2d54a8] hover:text-white
                     transition-colors duration-200">
             Contact
           </Link>
