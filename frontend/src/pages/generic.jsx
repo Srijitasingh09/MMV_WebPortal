@@ -19,10 +19,10 @@ const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
-  heading:        'text-3xl font-semibold text-[#7D311F]',   // main page-level heading (first line of description)
-  subheading:     'text-2xl font-bold text-[#7D311F]',       // '## ' — description body, description notes, accordion notes
-  subSubheading:  'text-lg font-bold text-[#174873]',    // '### ' — description body, description notes, accordion notes
-  accordionTitle: 'text-[16px] font-semibold text-[#174873]',    // accordion bar title ('+++ Title')
+  heading:        'text-2xl sm:text-3xl font-semibold text-[#7D311F]',   // main page-level heading (first line of description)
+  subheading:     'text-xl sm:text-2xl font-bold text-[#7D311F]',       // '## ' — description body, description notes, accordion notes
+  subSubheading:  'text-base sm:text-lg font-bold text-[#174873]',    // '### ' — description body, description notes, accordion notes
+  accordionTitle: 'text-sm sm:text-[16px] font-semibold text-[#174873]',    // accordion bar title ('+++ Title')
 };
 
 // ─── Body text size per description section ────────────────────────────────
@@ -511,9 +511,9 @@ const GenericContentPage = ({
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-4">
       {/*---PILL HEADING---*/}
        <div className="relative left-1/2 -translate-x-1/2 w-screen mb-10">
-        <div className="w-[50%] bg-[#585858] rounded-r-full shadow-sm">
-          <div className="max-w-5xl mx-auto h-16 flex items-center justify-center px-4 sm:px-6">
-            <h1 className="text-white font-semibold text-3xl sm:text-xl md:text-3xl text-center">
+        <div className="w-[90%] sm:w-[75%] md:w-[60%] lg:w-[50%] bg-[#585858] rounded-r-full shadow-sm">
+          <div className="max-w-5xl mx-auto min-h-16 flex items-center justify-center px-4 sm:px-6 py-3">
+            <h1 className="text-white font-semibold text-lg sm:text-2xl md:text-3xl text-center leading-snug">
               {title}
             </h1>
           </div>
@@ -614,12 +614,12 @@ const GenericContentPage = ({
                 />
               )}
 
-              <h2 className="text-2xl sm:text-3xl font-bold text-[#E8C97A] break-words">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#E8C97A] break-words">
                 {profile.name}
               </h2>
 
               {profile.designation && (
-                <p className="text-2xl font-semibold text-[#E8C97A] mt-1">
+                <p className="text-base sm:text-lg md:text-2xl font-semibold text-[#E8C97A] mt-1">
                   {profile.designation}
                 </p>
               )}

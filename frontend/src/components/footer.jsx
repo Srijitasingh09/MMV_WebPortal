@@ -22,7 +22,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-[#174873] text-white">
-      <div className="max-w-6xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
 
         {/* Col 1 — College blurb */}
         <div>
@@ -95,7 +95,7 @@ const Footer = () => {
 
       </div>
 
-      <div className="border-t border-blue-800 py-3 text-center text-blue-300 text-xs">
+      <div className="border-t border-blue-800 py-3 text-center text-blue-300 text-[11px] sm:text-xs px-4">
         © 2026 Mahila Maha Vidyalaya, Banaras Hindu University. All rights reserved.
       </div>
     </footer>
