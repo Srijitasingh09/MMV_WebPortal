@@ -14,31 +14,31 @@ const pages = {
   },
   'hostels/swastikunj': {
     title: 'Swasti Kunj Hostel',
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
   },
   'hostels/kirtikunj': {
     title: 'Kirti Kunj Hostel',
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
   },
   'hostels/kundandevi': {
-    title: 'Kundan Devi Malviya Girls Hostel',
-    pageType: 'photo-description-table',
+    title: 'Kundan Devi Malviya Hostel',
+    pageType: 'slideshow-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
   },
   'hostels/pragyakunj': {
     title: 'Pragya Kunj Hostel',
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
   },
   'hostels/jyotikunj': {
     title: 'Jyoti Kunj Hostel',
-    pageType: 'photo-description-table',
+    pageType: 'slideshow-description-table',
     photoAlign: 'center',
     tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
   },
@@ -73,19 +73,19 @@ const pages = {
   },
   'sports/gym': {
     title: 'Open-Gym',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
   // ── Well-being ────────────────────────────────────────────────────────────
   'wellbeing/wbsc': {              // key matches navbar: /facilities/wellbeing/wbsc
     title: 'Well Being Service Cell, BHU',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'wellbeing/mmvwell': {
     title: 'MMV PAHAL',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
@@ -101,8 +101,8 @@ const pages = {
 
   // ── CDC / Samarth / Namaste ───────────────────────────────────────────────
   'cdc': {
-    title: 'Central Discovery Centre, BHU',
-    pageType: 'photo-description',
+    title: 'Central Discovery Centre',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'samarth': {
@@ -121,17 +121,17 @@ const pages = {
   // ── Medical ───────────────────────────────────────────────────────────────
   'medical/ssh': {                 // key must be 'ssh' not 'ssr' — matches navbar
     title: 'Sir Sundarlal Hospital',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'medical/tc': {
     title: 'Trauma Centre',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'medical/health': {
     title: 'Student Health Center',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
 
@@ -173,12 +173,12 @@ const pages = {
   // ── City & Other ──────────────────────────────────────────────────────────
   'citydelegacy': {
     title: 'City Delegacy',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'other/vt': {
     title: 'Vishwanath Temple',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'other/bkb': {
@@ -193,12 +193,12 @@ const pages = {
   },
   'other/banks': {
     title: 'Banks & Post Offices',
-    pageType: 'photo-description',
+    pageType: 'slideshow-description',
     photoAlign: 'center'
   },
   'other/guesthouses': {
     title: 'Guest Houses',
-    pageType: 'photo-description-pdf-list',
+    pageType: 'slideshow-description-pdf-list',
     photoAlign: 'center'
   },
   'other/auditorium': {

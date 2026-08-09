@@ -125,7 +125,6 @@ const mobileNavItems = [
 // ============================================
 const SubSubMenu = ({ label, children }) => {
   const [isOpen, setIsOpen] = useState(false);
-
   return (
     <div
   className="relative"
@@ -356,6 +355,8 @@ const Navbar = () => {
   const token = localStorage.getItem('token');
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('isAdmin');
@@ -460,7 +461,7 @@ const Navbar = () => {
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             Notices
-          </Link>
+        </Link>
 
           <Link to="/ai-assistant"
             className="px-2 lg:px-4 py-3 text-white text-xs lg:text-sm font-medium
@@ -474,7 +475,7 @@ const Navbar = () => {
                     hover:bg-[#406BC7] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             Contact
-          </Link>
+        </Link>
         </div>
 
       </nav>

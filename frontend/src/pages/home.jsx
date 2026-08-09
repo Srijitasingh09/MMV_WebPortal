@@ -126,7 +126,7 @@ const About = () => (
           ['1929', 'Year Established'],
           ['30+',  'Departments'],
           ['2,500+', 'Students Enrolled'],
-          ['200+', 'Faculty Members'],
+          ['75+', 'Faculty Members'],
         ].map(([n, l]) => (
           <div
             key={l}
@@ -495,7 +495,6 @@ const AIAssistant = () => (
     </div>
   </section>
 );
-
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const Home = () => (
