@@ -329,20 +329,20 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 px-3 sm:px-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
          <div>
-           <h1 className="text-3xl font-bold text-primary">
+           <h1 className="text-2xl sm:text-3xl font-bold text-primary">
             Admin Control Panel
           </h1>
-          <p className="text-muted mt-1">
+          <p className="text-muted mt-1 text-sm sm:text-base">
             Manage university announcements and campus life.
           </p>
         </div>
 
         <button
           onClick={handleLogout}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+          className="self-start sm:self-auto px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm sm:text-base"
         >
           Logout
         </button>
@@ -377,7 +377,7 @@ const AdminDashboard = () => {
       </div>
 
       {activeTab === 'notice' && (
-        <form onSubmit={handleSubmitNotice} className="glass-card p-10 rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+        <form onSubmit={handleSubmitNotice} className="glass-card p-5 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Notice Title</label>
             <input
@@ -446,7 +446,7 @@ const AdminDashboard = () => {
 
       {editingKnowledge && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={submitKnowledgeEdit} className="w-full max-w-2xl bg-white rounded-3xl p-6 space-y-4">
+          <form onSubmit={submitKnowledgeEdit} className="w-full max-w-2xl bg-white rounded-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-primary">Edit MMV Knowledge</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <select value={knowledgeEditForm.type} onChange={(e) => setKnowledgeEditForm({ ...knowledgeEditForm, type: e.target.value })} className="w-full px-4 py-3 bg-gray-50 border border-gray-100 rounded-xl outline-none">
@@ -472,7 +472,7 @@ const AdminDashboard = () => {
       )}
 
       {activeTab === 'college-info' && (
-        <form onSubmit={handleSubmitCollegeInfo} className="glass-card p-10 rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+        <form onSubmit={handleSubmitCollegeInfo} className="glass-card p-5 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Title</label>
@@ -605,7 +605,7 @@ const AdminDashboard = () => {
       )}
 
       {activeTab === 'mmv-knowledge' && (
-        <form onSubmit={handleSubmitKnowledge} className="glass-card p-10 rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+        <form onSubmit={handleSubmitKnowledge} className="glass-card p-5 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select
               value={knowledgeForm.type}
@@ -678,7 +678,7 @@ const AdminDashboard = () => {
       )}
 
       {activeTab === 'contact-info' && (
-        <form onSubmit={handleSubmitContactInfo} className="glass-card p-10 rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+        <form onSubmit={handleSubmitContactInfo} className="glass-card p-5 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2.5rem] space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div>
             <h3 className="font-bold text-lg text-gray-900">Contact Page Details</h3>
             <p className="text-muted text-sm mt-1">
