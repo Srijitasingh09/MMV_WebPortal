@@ -1171,7 +1171,7 @@ def expand_query(question: str) -> list:
                 )
             }],
             max_tokens=80,
-            temperature=0.2,  # lower = more consistent rephrasing
+            temperature=0.0,  # deterministic — same question should always search the same way
         )
         lines = response.choices[0].message.content.strip().split("\n")
         alternatives = [l.strip() for l in lines if l.strip() and l.strip() != question][:2]
@@ -1267,7 +1267,8 @@ INSTRUCTIONS:
 - Never guess, invent, or approximate facts not present in the text above.
 - Keep answers concise — 1-3 sentences for simple facts, bullet points (using •) for lists.
 - Do NOT start with "Based on the information", "According to", or "The text says".
-- Do NOT include markdown links — plain text only."""
+- Do NOT include markdown links — plain text only.
+- Do NOT include raw file paths or upload URLs (anything containing "/uploads/" or ending in .pdf, .docx, etc.) in your answer text. If the retrieved information is a document, just say it's available and that the link is shown below — the actual file link is already displayed to the user separately."""
 
     response = _groq_client.chat.completions.create(
         model="llama-3.1-8b-instant",
