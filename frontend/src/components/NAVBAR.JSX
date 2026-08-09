@@ -436,7 +436,7 @@ const Navbar = () => {
       </div>
 
        {/* ---- NAVIGATION BAR (desktop / tablet-landscape) ---- */}
-      <nav className="hidden md:flex bg-[#0f3358] px-2 border-b border-gray-200 relative justify-end overflow-x-auto">
+      <nav className="hidden md:flex bg-[#0f3358] px-2 border-b border-gray-200 relative justify-end">
 
         <div className='flex relative justify-end'>
           <Link to="/"
