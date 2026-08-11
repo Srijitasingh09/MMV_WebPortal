@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
@@ -1165,7 +1166,7 @@ def expand_query(question: str) -> list:
                     "Rephrase this student question in 2 different ways using formal academic terminology. "
                     "Common mappings: 'timings'→'hours/schedule', 'charges/fees'→'fee structure', "
                     "'principal ma'am'→'principal', 'incharge'→'coordinator/in-charge', "
-                    "'hostel warden'→'chief warden', 'gym'→'gymnasium', 'OPD'→'outpatient department'. "
+                    "'gym'→'gymnasium', 'OPD'→'outpatient department'. "
                     "Output only the 2 rephrased questions, one per line, no numbering.\n\n"
                     f"Question: {question}"
                 )
@@ -1187,15 +1188,33 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
     best_row = None
     best_similarity = 0.0
 
-    try:
-        result = voyage_client.embed(
-            texts=queries,
-            model=EMBED_MODEL,
-            input_type="query",
+    # Short, live-appropriate retry for transient Voyage failures (mainly the
+    # free-tier 3 RPM rate limit). Deliberately short (a few seconds total) —
+    # a real person is waiting on a chat reply, unlike batch indexing where
+    # nobody's watching, so we don't use the same long 10s/20s/30s backoff
+    # chat_index.py uses.
+    last_error = None
+    embeddings = None
+    for attempt, wait in enumerate([0, 2, 4], start=1):
+        if wait:
+            time.sleep(wait)
+        try:
+            result = voyage_client.embed(
+                texts=queries,
+                model=EMBED_MODEL,
+                input_type="query",
+            )
+            embeddings = result.embeddings
+            last_error = None
+            break
+        except Exception as e:
+            last_error = e
+
+    if embeddings is None:
+        raise HTTPException(
+            status_code=503,
+            detail=f"The assistant is a bit busy right now — please wait a few seconds and try again. ({last_error})",
         )
-        embeddings = result.embeddings
-    except Exception as e:
-        raise HTTPException(status_code=503, detail=f"Embedding service unavailable: {e}")
 
     # Build optional section filter clause
     section_clause = ""
@@ -1203,9 +1222,58 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
         # Match source_table containing section name, or section_url starting with /section
         section_clause = f"AND (c.section_url LIKE '/{section_filter}%' OR c.source_table LIKE '%{section_filter}%')"
 
-    for emb in embeddings:
+    for q_text, emb in zip(queries, embeddings):
         emb_str = str(emb)
+
+        # Keyword-based disambiguation. Your portal has many pages that are
+        # structurally similar and easy for embeddings to confuse: parallel
+        # MMV/University pages (mmvcanteen vs universitycanteen, mmvexam vs
+        # universityexam...), five separate hostels that share near-identical
+        # templates (only the hostel NAME differs), and several distinct
+        # "other amenities" pages (CDC, Bharat Kala Bhawan, guest houses,
+        # auditorium) that were confirmed pulling in an unrelated hostel
+        # page instead. All confirmed via real similarity checks, not
+        # guessed. If a query variant explicitly names one of these, nudge
+        # toward the matching page and away from its known confusable
+        # neighbors. No effect on queries that don't mention any of these.
+        lexical_adjustment = ""
+        q_lower = f" {q_text.lower()} "
+
+        DISAMBIGUATION_RULES = [
+            # (keywords that trigger this rule, url fragment to prefer, confusable url fragments to deprioritize)
+            (["mmv"], "mmv", ["university"]),
+            (["university"], "university", ["mmv"]),
+            (["jyoti kunj", "jyotikunj"], "jyotikunj", ["swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["swasti kunj", "swastikunj"], "swastikunj", ["jyotikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["kirti kunj", "kirtikunj"], "kirtikunj", ["jyotikunj", "swastikunj", "kundandevi", "pragyakunj"]),
+            (["kundan devi", "kundandevi"], "kundandevi", ["jyotikunj", "swastikunj", "kirtikunj", "pragyakunj"]),
+            (["pragya kunj", "pragyakunj"], "pragyakunj", ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi"]),
+            (["guest house", "guesthouse", "guesthouses"], "guesthouses",
+                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["cdc", "central discovery centre", "central discovery center"], "/cdc",
+                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["bharat kala bhawan", "bkb"], "bkb",
+                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["auditorium"], "auditorium",
+                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["vishwanath temple"], "/vt",
+                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["postgraduate", " pg "], "syllabus/pg", ["syllabus/ug"]),
+            (["undergraduate", " ug "], "syllabus/ug", ["syllabus/pg"]),
+        ]
+
+        for keywords, preferred, conflicting in DISAMBIGUATION_RULES:
+            if any(kw in q_lower for kw in keywords):
+                conflict_check = " OR ".join(f"c.section_url ILIKE '%{frag}%'" for frag in conflicting)
+                lexical_adjustment += f"""
+                    + CASE
+                        WHEN c.section_url ILIKE '%{preferred}%' THEN -0.05
+                        WHEN ({conflict_check}) THEN 0.05
+                        ELSE 0
+                      END"""
+
         row = db.execute(
+
             text(f"""
                 SELECT
                     c.id,
@@ -1223,7 +1291,8 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
                 {section_clause}
                 ORDER BY
                     (c.embedding <=> '{emb_str}'::vector)
-                    + CASE WHEN c.content_type IN ('pdf', 'image') THEN 0.15 ELSE 0 END
+                    + CASE WHEN c.content_type IN ('pdf', 'image') THEN 0.10 ELSE 0 END
+                    {lexical_adjustment}
                 LIMIT 1
             """)
         ).fetchone()
@@ -1250,8 +1319,7 @@ def generate_answer(question: str, chunk_text: str, section_title: str, content_
         data_hint = "The information below is descriptive text from the college portal."
 
     prompt = f"""You are MMVerse, the official AI assistant for Mahila Maha Vidyalaya (MMV), Banaras Hindu University (BHU).
-
-STUDENT QUESTION: {question}
+A student asked you: "{question}"
 
 RETRIEVED INFORMATION FROM MMV PORTAL (section: {section_title}):
 {data_hint}
@@ -1263,9 +1331,14 @@ INSTRUCTIONS:
 - Answer ONLY using the information above. Never add facts from outside.
 - Be direct and specific: give exact times, exact names, exact numbers as they appear above.
 - For table data: find the specific row matching the question and quote the relevant values.
+- If the retrieved information above contains multiple facts, entries, or Q&A pairs, answer
+  ONLY the one the student actually asked about — do not list or repeat the others.
 - If the information does not contain a direct answer, say exactly: "I don't have specific information about that. Please visit the {section_title} section or contact the relevant department directly."
 - Never guess, invent, or approximate facts not present in the text above.
 - Keep answers concise — 1-3 sentences for simple facts, bullet points (using •) for lists.
+- Write a natural, direct answer in your own words. Do NOT repeat the student's question
+  back, and do NOT include any labels or headers in your answer — no "Q:", "A:",
+  "STUDENT QUESTION:", "Answer:", or similar, even if the retrieved text above uses that format.
 - Do NOT start with "Based on the information", "According to", or "The text says".
 - Do NOT include markdown links — plain text only.
 - Do NOT include raw file paths or upload URLs (anything containing "/uploads/" or ending in .pdf, .docx, etc.) in your answer text. If the retrieved information is a document, just say it's available and that the link is shown below — the actual file link is already displayed to the user separately."""

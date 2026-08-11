@@ -24,6 +24,7 @@ HOW TO USE:
 
 import os
 import json
+import re
 import time
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
@@ -201,6 +202,67 @@ def sync_facility_content_by_id(content_id: int):
         fresh_db.close()
 
 
+def _split_by_paragraph(text, max_len=600):
+    """Split text on blank-line paragraph breaks, merging consecutive short
+    paragraphs so we don't create a flood of tiny, near-meaningless chunks
+    (e.g. single list bullets)."""
+    paragraphs = [p.strip() for p in re.split(r'\n\s*\n', text) if p.strip()]
+    if not paragraphs:
+        return [text] if text.strip() else []
+    merged = []
+    buffer = ""
+    for p in paragraphs:
+        candidate = (buffer + "\n\n" + p).strip() if buffer else p
+        if len(candidate) <= max_len:
+            buffer = candidate
+        else:
+            if buffer:
+                merged.append(buffer)
+            buffer = p
+    if buffer:
+        merged.append(buffer)
+    return merged
+
+
+def split_description_into_chunks(description, max_single_chunk_len=600):
+    """Splits a long admin-typed description into smaller, topic-focused
+    pieces before embedding, instead of one giant blob.
+
+    Why this matters: some pages (e.g. an FAQ-style "Q: ... A: ..." block)
+    have several unrelated facts in one description. Embedding all of it as
+    a single chunk means (1) the embedding is diluted/vague — matches many
+    unrelated questions about the page instead of any one specific fact
+    precisely, and (2) when that chunk IS retrieved, the ENTIRE blob —
+    every unrelated fact in it — gets fed to the AI as context, which is
+    why unrelated Q&A pairs were showing up dumped together in one answer.
+
+    Short descriptions (the vast majority of pages) are returned unchanged
+    as a single-item list — this only kicks in for genuinely long text.
+    """
+    text = (description or "").strip()
+    if not text:
+        return []
+    if len(text) <= max_single_chunk_len:
+        return [text]
+
+    chunks = []
+    # Detect explicit "Q: ... A: ..." FAQ-style content and split each
+    # question into its own chunk.
+    first_q_match = re.search(r'\bQ:\s', text)
+    if first_q_match:
+        leading = text[:first_q_match.start()].strip()
+        if leading:
+            chunks.extend(_split_by_paragraph(leading, max_single_chunk_len))
+        qa_section = text[first_q_match.start():]
+        qa_pattern = re.compile(r'Q:\s*.*?(?=\n\s*Q:|\Z)', re.DOTALL)
+        qa_blocks = [b.strip() for b in qa_pattern.findall(qa_section) if b.strip()]
+        chunks.extend(qa_blocks)
+    else:
+        chunks.extend(_split_by_paragraph(text, max_single_chunk_len))
+
+    return chunks if chunks else [text]
+
+
 def index_facility_content_row(row: "models.FacilityContent"):
     """FacilityContent is the richest table: text + table JSON + many photos + many pdfs.
     Powers facilities/* and any other GenericContentPage-routed section."""
@@ -226,11 +288,33 @@ def index_facility_content_row(row: "models.FacilityContent"):
             pass
 
     if row.description and not _has_profile:
-        save_chunk(
-            "facility_content", row.id, "text",
-            chunk_text_value=f"{title}. {row.description}",
-            section_url=url, section_title=title,
-        )
+        # Long descriptions (e.g. FAQ-style pages with several "Q: ... A: ..."
+        # entries) get split into smaller, focused pieces so one specific
+        # question doesn't retrieve — and dump into the answer — the entire
+        # page's worth of unrelated facts. Short descriptions are returned
+        # as a single chunk, unchanged from before.
+        description_pieces = split_description_into_chunks(row.description)
+        if len(description_pieces) > 1:
+            # Keep one whole-description chunk too, for broad "tell me about
+            # X" queries where the full picture is the actual answer —
+            # same pattern already used for tables (whole-table + per-row).
+            save_chunk(
+                "facility_content", row.id, "text",
+                chunk_text_value=f"{title}. {row.description}",
+                section_url=url, section_title=title,
+            )
+            for piece in description_pieces:
+                save_chunk(
+                    "facility_content", row.id, "text",
+                    chunk_text_value=f"{title}. {piece}",
+                    section_url=url, section_title=title,
+                )
+        else:
+            save_chunk(
+                "facility_content", row.id, "text",
+                chunk_text_value=f"{title}. {row.description}",
+                section_url=url, section_title=title,
+            )
 
     # 2. Table/Profile chunk
     if row.details:
