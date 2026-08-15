@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API = `http://${window.location.hostname}:8000`;
+const API =import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const SlideshowBlock = ({ photos, isAdmin, onDelete , height = 360, maxWidth = '100%' }) => {
   const [current, setCurrent] = useState(0);

@@ -200,6 +200,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
 
+    #upgrade old sha256_crypt hashes to bcrypt on successful login
+    if auth.pwd_context.needs_update(user.hashed_password):
+        user.hashed_password = auth.get_password_hash(form_data.password)
+        db.commit()
+
     access_token = auth.create_access_token(data={"sub": user.email})
     return {
         "access_token": access_token,
