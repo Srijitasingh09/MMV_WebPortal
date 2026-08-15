@@ -169,14 +169,14 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete }) => {
           <h3
             id="notice-modal-title"
             className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-4 leading-snug pr-8"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
           >
             {notice.title}
           </h3>
 
           <p
             className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
-            style={{ fontFamily: "'EB Garamond', serif" }}
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
             {notice.content}
           </p>
@@ -217,7 +217,7 @@ const NoticeCard = ({ notice, isAdmin, onDelete, onExpand }) => {
   return (
     <article
       onClick={() => onExpand(notice)}
-      className="bg-white border border-gray-200 rounded-lg p-5 sm:p-6 hover:shadow-md hover:border-gray-300 transition-all duration-200 flex flex-col cursor-pointer"
+      className="bg-[#FAF7F2] border-2 border-[#0f3358]/20 rounded-xl p-5 sm:p-6 hover:shadow-md hover:border-[#d4af37] transition-all duration-200 flex flex-col cursor-pointer"
     >
 
       <MetaRow
@@ -230,7 +230,7 @@ const NoticeCard = ({ notice, isAdmin, onDelete, onExpand }) => {
       {/* Title — clamped to 2 lines so height stays consistent */}
       <h3
         className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-3 leading-snug line-clamp-2 flex-shrink-0"
-        style={{ fontFamily: "'Cormorant Garamond', serif" }}
+        style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
       >
         {notice.title}
       </h3>
@@ -316,24 +316,27 @@ const Notices = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#EAEFF5]">
 
-      {/* PAGE HEADER */}
-      <div className="bg-[#0f3358] py-6 sm:py-8 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
+      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
+            Official Circulars &amp; Notifications
+          </div>
           <h1
-            className="text-4xl sm:text-5xl font-semibold text-white mb-1"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide"
           >
             Notices &amp; Announcements
           </h1>
-          <p className="text-blue-200 text-sm sm:text-base mt-2">
-            Stay updated with the latest announcements from MMV
+          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
+            Stay updated with the latest official announcements from Mahila Maha Vidyalaya
           </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-8">
 
         {/* FILTER BAR */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-6">
@@ -345,7 +348,7 @@ const Notices = () => {
                 className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
                   ${activeCategory === cat
                     ? 'bg-[#174873] text-white border-[#174873]'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-[#174873] hover:text-[#174873]'
+                    : 'bg-[#FAF7F2] text-[#0f3358] border-[#0f3358]/20 hover:border-[#174873] hover:text-[#174873]'
                   }`}
               >
                 {cat}

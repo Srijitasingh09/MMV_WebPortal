@@ -433,19 +433,22 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#EAEFF5]">
 
-      {/* PAGE HEADER */}
-      <div className="bg-[#0f3358] py-6 sm:py-8 px-4">
-        <div className="max-w-4xl mx-auto text-center">
+      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
+      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
+            Official Administrative Directory
+          </div>
           <h1
-            className="text-4xl sm:text-5xl font-semibold text-white mb-1"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide"
           >
             Contact Us
           </h1>
-          <p className="text-blue-200 text-sm sm:text-base mt-2">
-            Reach out to Mahila Mahavidyalaya — we're here to help
+          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
+            Reach out to Mahila Maha Vidyalaya — official contact channels &amp; administrative directory
           </p>
         </div>
       </div>
@@ -473,7 +476,7 @@ const Contact = () => {
               <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 h-full">
                 <h2
                   className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-6"
-                  style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                  style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
                 >
                   Connect with us
                 </h2>
@@ -491,7 +494,7 @@ const Contact = () => {
               </div>
             </div>
             <div className="lg:col-span-3">
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden h-72 sm:h-full sm:min-h-[420px]">
+              <div className="bg-[#FAF7F2] border border-gray-200 rounded-xl overflow-hidden h-72 sm:h-full sm:min-h-[420px]">
                 {getMapEmbedUrl() ? (
                   <iframe
                     title="MMV Location Map" src={getMapEmbedUrl()}
@@ -517,7 +520,7 @@ const Contact = () => {
               <ShieldAlert size={20} className="text-red-500" />
               <h2
                 className="text-2xl sm:text-3xl font-bold text-[#0f3358]"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
               >
                 Emergency Contact
               </h2>

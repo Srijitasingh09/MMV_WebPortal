@@ -8,7 +8,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const BrandFonts = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
-    .mmv-font-display { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .mmv-font-display { font-family: 'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', 'Manrope', 'Montserrat', sans-serif; }
     .mmv-font-body { font-family: 'Inter', system-ui, sans-serif; }
   `}</style>
 );
@@ -435,38 +435,28 @@ export default function MMVerse() {
   // const showInput = !!activeSection && !loading;
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] py-6 sm:py-10 px-3 sm:px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-50 py-6 sm:py-8 px-3 sm:px-4 relative overflow-hidden">
       <BrandFonts />
 
-      {/* Faint ambient temple-spire watermark on the page itself */}
-      <TempleMotif
-        className="hidden lg:block absolute -right-10 top-10 w-72 h-72 text-[#C4561A] pointer-events-none"
-        opacity={0.05}
-      />
-      <TempleMotif
-        className="hidden lg:block absolute -left-16 bottom-10 w-64 h-64 text-[#0D1F3C] pointer-events-none scale-x-[-1]"
-        opacity={0.04}
-      />
-
-      <div className="max-w-4xl mx-auto relative">
-
-        {/* Page header */}
-        <div className="mb-5 sm:mb-8 text-center">
-          <span
-            className="mmv-font-display inline-block bg-[#0D1F3C] text-[#FBF1DA] text-2xl sm:text-4xl font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] px-5 sm:px-7 py-2 sm:py-2.5 rounded-full mb-3 sm:mb-4 leading-snug shadow-sm"
-          >
-            MMVerse
-          </span>
-          <div className="w-16 h-0.5 bg-[#E3B94F] mx-auto mb-3 sm:mb-4" />
-          <p className="mmv-font-body text-black text-base sm:text-lg leading-relaxed max-w-lg mx-auto px-2">
-            Your AI assistant for Mahila Maha Vidyalaya, BHU. Select a section below and ask your question.
-          </p>
+      <div className="max-w-5xl mx-auto space-y-6">
+        {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
+        <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-8 rounded-2xl shadow-xl border-b-4 border-[#d4af37]">
+          <div className="text-center relative z-10">
+           
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 font-cinzel tracking-wide">
+              MMVerse Assistant
+            </h1>
+             
+            <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto font-sans-official">
+              Your official AI assistant for Mahila Maha Vidyalaya, BHU. Select a topic section and ask any inquiry.
+            </p>
+          </div>
         </div>
 
-        {/* Chat card */}
+        {/* Chat card — identical width as header banner */}
         <div
-          className="mmv-font-body bg-white rounded-2xl shadow-xl border-2 border-[#0D1F3C]/50 flex flex-col overflow-hidden"
-          style={{ height: "clamp(480px, 88vh, 800px)" }}
+          className="mmv-font-body bg-[#FAF7F2] rounded-2xl shadow-xl border-2 border-[#0f3358]/30 flex flex-col overflow-hidden w-full"
+          style={{ height: "clamp(480px, 80vh, 750px)" }}
         >
           {/* Header */}
           <div className="relative flex items-center gap-2.5 sm:gap-3 bg-[#0D1F3C] px-3.5 sm:px-5 py-3 sm:py-4 flex-shrink-0 overflow-hidden">
