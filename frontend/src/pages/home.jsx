@@ -14,7 +14,7 @@ const Hero = () => (
   <section className="relative w-full overflow-hidden h-[92vh] sm:h-[95vh] md:h-[105vh]">
     <style>{`
       @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;600;700&display=swap');
-      .font-cormorant { font-family: 'Cormorant Garamond', serif; }
+      .font-cormorant { font-family: 'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', 'Manrope', 'Montserrat', sans-serif; }
       .font-lato { font-family: 'Lato', sans-serif; }
       @keyframes fade-up {
         from { opacity: 0; transform: translateY(24px); }
@@ -101,19 +101,19 @@ const Hero = () => (
 
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
 const About = () => (
-  <section id="about" className="bg-[#FAF7F2] py-14 sm:py-20 px-4 sm:px-6">
+  <section id="about" className="bg-[#FAF7F2] py-12 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto">
 
       {/* Header */}
-      <div className="text-center mb-10 sm:mb-14">
-        <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3">
+      <div className="text-center mb-8 sm:mb-14">
+        <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           About the Portal
         </p>
-        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-5 leading-snug">
+        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-semibold text-[#0f3358] mb-4 leading-snug">
           One Portal, Every Answer
         </h2>
-        <div className="w-10 h-px bg-[#E8C97A] mx-auto mb-6" />
-        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
+        <div className="w-12 h-0.5 bg-[#d4af37] mx-auto mb-5" />
+        <p className="font-lato text-xs sm:text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
           The MMV Student Portal is the centralized information hub for all students of
           Mahila Maha Vidyalaya. Whether you need your syllabus, hostel details,
           administrative contacts, or the latest notices — it is all organized here.
@@ -130,104 +130,16 @@ const About = () => (
         ].map(([n, l]) => (
           <div
             key={l}
-            className="bg-[#FFDEA9] rounded-2xl py-6 sm:py-8 px-4 sm:px-5 text-center border border-[#0D1F3C]/10"
+            className="bg-white rounded-xl py-4 sm:py-7 px-3 sm:px-5 text-center border-2 border-[#0f3358]/20 shadow-xs"
           >
-            <div className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#C4561A] mb-1">{n}</div>
-            <div className="font-lato text-2xs text-[#0D1F3C] font-semibold uppercase tracking-wider">{l}</div>
+            <div className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#7d311f] mb-1">{n}</div>
+            <div className="font-lato text-[10px] sm:text-xs text-[#0f3358] font-bold uppercase tracking-wider">{l}</div>
           </div>
         ))}
       </div>
     </div>
   </section>
 );
-
-
-// ─── WHAT'S IN THE PORTAL — 3-column feature grid ─────────────────────────────
-// const portalSections = [
-//   {
-//     eyebrow: 'Academics',
-//     heading: 'Syllabi, Exams & NEP',
-//     body: 'Download UG & PG syllabi for every department. Find exam schedules, NEP 2020 credit structure, academic calendar, and SWAYAM course details.',
-//     icon: '📚',
-//     href: '/academics/nep',
-//   },
-//   {
-//     eyebrow: 'Administration',
-//     heading: 'Offices & Key Contacts',
-//     body: 'Principal, Dean, Vice Chancellor, Student Advisor, Chief Proctor — profiles, contact numbers, and office details for every administrative role.',
-//     icon: '🏛️',
-//     href: '/administration/principal',
-//   },
-//   {
-//     eyebrow: 'Notices',
-//     heading: 'Latest Announcements',
-//     body: 'Stay updated with exam notifications, fee deadlines, admission windows, and urgent circulars from MMV and BHU administration.',
-//     icon: '📢',
-//     href: '/Notices',
-//   },
-//   {
-//     eyebrow: 'Hostels',
-//     heading: 'Hostel Life & Wardens',
-//     body: 'Details for all five MMV hostels — Chief Warden, Hostel Coordinator, room types, and warden contacts for Jyoti Kunj, Kirti Kunj, and more.',
-//     icon: '🏠',
-//     href: '/facilities/hostels/chiefwarden',
-//   },
-//   {
-//     eyebrow: 'Library',
-//     heading: 'Books, OPAC & Hours',
-//     body: 'MMV Library, BHU Central Library, and Cyber Library — collection size, borrowing rules, staff contacts, and digital access details.',
-//     icon: '📖',
-//     href: '/facilities/library/mmvlibrary',
-//   },
-//   {
-//     eyebrow: 'Medical & Sports',
-//     heading: 'Health & Campus Life',
-//     body: 'Sir Sundarlal Hospital, Trauma Centre, Health Centre, Gymnasium, and Sports Board — facilities, timings, and contact information.',
-//     icon: '⚕️',
-//     href: '/facilities/medical/health',
-//   },
-// ];
-
-// const PortalSections = () => (
-//   <section className="bg-white py-20 px-6">
-//     <div className="max-w-5xl mx-auto">
-
-//       <div className="text-center mb-14">
-//         <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3">
-//           What's Inside
-//         </p>
-//         <h2 className="font-cormorant text-4xl md:text-5xl font-semibold text-[#0D1F3C] leading-snug mb-4">
-//           Everything Organized for You
-//         </h2>
-//         <div className="w-10 h-px bg-[#E8C97A] mx-auto" />
-//       </div>
-
-//       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-//         {portalSections.map((s) => (
-//           <Link
-//             key={s.eyebrow}
-//             to={s.href}
-//             className="group bg-[#FFD9BF] rounded-2xl p-7 border border-transparent hover:border-[#0D1F3C]/20 hover:bg-white hover:shadow-md transition-all duration-200"
-//           >
-//             <div className="text-3xl mb-4">{s.icon}</div>
-//             <p className="font-lato text-xs font-semibold tracking-[0.18em] uppercase text-[#C4561A] mb-1 font-semibold">
-//               {s.eyebrow}
-//             </p>
-//             <h3 className="font-cormorant text-2xl font-semibold text-[#0D1F3C] mb-3 leading-snug group-hover:text-[#0D1F3C] transition-colors">
-//               {s.heading}
-//             </h3>
-//             <p className="font-lato text-[15px] text-[#1A1A1A] leading-relaxed">
-//               {s.body}
-//             </p>
-//             <div className="mt-4 font-lato text-2xs font-semibold text-[#C4561A] group-hover:underline">
-//               View section →
-//             </div>
-//           </Link>
-//         ))}
-//       </div>
-//     </div>
-//   </section>
-// );
 
 
 // ─── FACILITIES HIGHLIGHT ─────────────────────────────────────────────────────
@@ -243,18 +155,18 @@ const facilities = [
 ];
 
 const Facilities = () => (
-  <section id="facilities" className="bg-[#0D1F3C] py-14 sm:py-20 px-4 sm:px-6">
+  <section id="facilities" className="bg-[#EAEFF5] py-12 sm:py-16 px-4 sm:px-6 border-y border-slate-200">
     <div className="max-w-5xl mx-auto">
 
-      <div className="text-center mb-10 sm:mb-14">
-        <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#E8C97A] mb-3">
+      <div className="text-center mb-8 sm:mb-12">
+        <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           Campus Resources
         </p>
-        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-white leading-snug mb-4">
+        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#0f3358] leading-snug mb-3">
           Facilities at MMV
         </h2>
-        <div className="w-10 h-px bg-[#E8C97A] mx-auto mb-5" />
-        <p className="font-lato text-[15px] sm:text-[16px] text-blue-200 leading-relaxed max-w-xl mx-auto">
+        <div className="w-12 h-0.5 bg-[#d4af37] mx-auto mb-4" />
+        <p className="font-lato text-xs sm:text-[16px] text-slate-600 leading-relaxed max-w-xl mx-auto">
           MMV provides a comprehensive range of campus facilities to support students'
           academic, physical, and personal well-being.
         </p>
@@ -264,12 +176,12 @@ const Facilities = () => (
         {facilities.map((f) => (
           <div
             key={f.label}
-            className="bg-white/5 border border-white/10 rounded-2xl p-4 sm:p-5 hover:bg-white/10 transition-colors"
+            className="bg-white border border-slate-200/90 rounded-xl p-3.5 sm:p-5 shadow-xs hover:border-[#d4af37] hover:shadow-md transition-all"
           >
-            <div className="font-cormorant text-base sm:text-lg font-semibold text-[#E8C97A] mb-2">
+            <div className="font-cormorant text-sm sm:text-lg font-bold text-[#0f3358] mb-1 sm:mb-2">
               {f.label}
             </div>
-            <div className="font-lato text-xs sm:text-sm text-white leading-relaxed">{f.detail}</div>
+            <div className="font-lato text-[11px] sm:text-sm text-slate-600 leading-relaxed">{f.detail}</div>
           </div>
         ))}
       </div>
@@ -278,37 +190,41 @@ const Facilities = () => (
 );
 
 
-// ─── ACADEMICS FEATURE ────────────────────────────────────────────────────────
+// ─── ACADEMICS FEATURE — Side-by-side on mobile ──────────────────────────────
 const Academics = () => (
-  <section id="academics" className="bg-[#FAF7F2] py-14 sm:py-20 px-4 sm:px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
+  <section id="academics" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
+    <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
 
-      <div className="md:w-5/12 w-full rounded-2xl overflow-hidden shadow-sm">
-        <img src="/bhu/academics.png" alt="Academics" className="w-full h-56 sm:h-72 md:h-80 object-cover" />
+      {/* Photo left side on mobile & desktop */}
+      <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
+        <img src="/bhu/academics.png" alt="Academics" className="w-full h-28 sm:h-72 md:h-80 object-cover" />
       </div>
 
-      <div className="md:w-7/12 w-full">
-        <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
+      {/* Text right side on mobile & desktop */}
+      <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
+        <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Academics
         </p>
-        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
+        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
           Academic Information
         </h2>
-        <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+        <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
+        <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
           All academic resources for every department at MMV — semester syllabi,
-          Annual schedules, and contact information of section In-charge.
+          annual schedules, and contact details of section In-charge.
         </p>
-        <ul className="space-y-3">
+        <ul className="space-y-1.5 sm:space-y-3">
           {[
-            ['Syllabus',         'Semester syllabus for all UG & PG programmes.'],
-            ['Annual Calendar',  'Holiday list and academic calendar updated each semester.'],
-            ['NEP 2020',         'Revised curriculum details and credit structure.'],
+            ['Syllabus',         'UG & PG semester syllabus.'],
+            ['Annual Calendar',  'Exam list & holiday calendar.'],
+            ['NEP 2020',         'Curriculum credit structure.'],
           ].map(([label, detail]) => (
-            <li key={label} className="flex items-start gap-3">
-              <span className="text-[#C4561A] font-bold mt-0.5 flex-shrink-0">➥</span>
-              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
-                <span className="font-semibold">{label}: </span>{detail}
+            <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
+              <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
+              <div className="font-lato text-slate-800">
+                <span className="font-bold text-[#0f3358]">{label}: </span>
+                <span className="hidden sm:inline">{detail}</span>
+                <span className="sm:hidden text-[11px]">{detail}</span>
               </div>
             </li>
           ))}
@@ -319,38 +235,41 @@ const Academics = () => (
 );
 
 
-// ─── ADMINISTRATION FEATURE ───────────────────────────────────────────────────
+// ─── ADMINISTRATION FEATURE — Side-by-side on mobile ─────────────────────────
 const Administration = () => (
-  <section id="administration" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row-reverse gap-8 sm:gap-10 md:gap-14 items-center">
+  <section id="administration" className="bg-[#EAEFF5] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
+    <div className="max-w-5xl mx-auto flex flex-row-reverse gap-3 sm:gap-8 items-center">
 
-      <div className="md:w-5/12 w-full rounded-2xl overflow-hidden shadow-sm">
-        <img src="/bhu/admin.png" alt="Administration" className="w-full h-56 sm:h-72 md:h-80 object-cover" />
+      {/* Photo right side on mobile & desktop */}
+      <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
+        <img src="/bhu/admin.png" alt="Administration" className="w-full h-28 sm:h-72 md:h-80 object-cover" />
       </div>
 
-      <div className="md:w-7/12 w-full">
-        <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
+      {/* Text left side on mobile & desktop */}
+      <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
+        <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Administration
         </p>
-        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
-          College Administration & Governance
+        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
+          Governance & Leadership
         </h2>
-        <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
-          Official information about the college's governance structure —
-          contacts for the Principal's office, administrative departments,
-          committees, and institutional policies.
+        <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
+        <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
+          Official information about the governance structure —
+          Principal office, administrative departments, and institutional policies.
         </p>
-        <ul className="space-y-3">
+        <ul className="space-y-1.5 sm:space-y-3">
           {[
-            ["Principal's Office",        'Contact details, notices, and official communications.'],
-            ['Controller of Examination', 'Queries related to semester examinations.'],
-            ['Staff Directory',           'Administrative and teaching staff contact information.'],
+            ["Principal's Office",        'Contact details & communications.'],
+            ['Controller of Exam',        'Semester exam queries.'],
+            ['Staff Directory',           'Teaching & admin staff directory.'],
           ].map(([label, detail]) => (
-            <li key={label} className="flex items-start gap-3">
-              <span className="text-[#C4561A] font-bold mt-0.5 flex-shrink-0">➥</span>
-              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
-                <span className="font-semibold">{label}: </span>{detail}
+            <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
+              <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
+              <div className="font-lato text-slate-800">
+                <span className="font-bold text-[#0f3358]">{label}: </span>
+                <span className="hidden sm:inline">{detail}</span>
+                <span className="sm:hidden text-[11px]">{detail}</span>
               </div>
             </li>
           ))}
@@ -361,37 +280,41 @@ const Administration = () => (
 );
 
 
-// ─── NOTICES FEATURE ──────────────────────────────────────────────────────────
+// ─── NOTICES FEATURE — Side-by-side on mobile ────────────────────────────────
 const Notices = () => (
-  <section id="notices" className="bg-[#FAF7F2] py-14 sm:py-20 px-4 sm:px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
+  <section id="notices" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
+    <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
 
-      <div className="md:w-5/12 w-full rounded-2xl overflow-hidden shadow-sm">
-        <img src="/bhu/notice.png" alt="Notices" className="w-full h-56 sm:h-72 md:h-80 object-cover" />
+      {/* Photo left side on mobile & desktop */}
+      <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
+        <img src="/bhu/notice.png" alt="Notices" className="w-full h-28 sm:h-72 md:h-80 object-cover" />
       </div>
 
-      <div className="md:w-7/12 w-full">
-        <p className="font-lato text-2xs tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
+      {/* Text right side on mobile & desktop */}
+      <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
+        <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Notices
         </p>
-        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
-          Latest Announcements & Circulars
+        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
+          Announcements & Circulars
         </h2>
-        <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+        <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
+        <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
           The official communication board of MMV — exam notifications,
-          event schedules, fee deadlines, and urgent circulars organized by category and date.
+          event schedules, fee deadlines, and urgent circulars.
         </p>
-        <ul className="space-y-3">
+        <ul className="space-y-1.5 sm:space-y-3">
           {[
-            ['Urgent Notices', 'Time-sensitive updates like exam changes or fee deadlines.'],
-            ['Examination',     'Timely notifications on examination schedules, results, and related updates.'],
-            ['Circulars',      'Official orders from BHU administration and MMV management.'],
+            ['Urgent Notices', 'Time-sensitive exam & fee updates.'],
+            ['Examination',    'Schedule notifications & results.'],
+            ['Circulars',      'Official orders from BHU & MMV.'],
           ].map(([label, detail]) => (
-            <li key={label} className="flex items-start gap-3">
-              <span className="text-[#C4561A] font-bold mt-0.5 flex-shrink-0">➥</span>
-              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
-                <span className="font-semibold">{label}: </span>{detail}
+            <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
+              <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
+              <div className="font-lato text-slate-800">
+                <span className="font-bold text-[#0f3358]">{label}: </span>
+                <span className="hidden sm:inline">{detail}</span>
+                <span className="sm:hidden text-[11px]">{detail}</span>
               </div>
             </li>
           ))}
@@ -404,77 +327,77 @@ const Notices = () => (
 
 // ─── AI ASSISTANT ─────────────────────────────────────────────────────────────
 const AIAssistant = () => (
-  <section id="ai-assistant" className="bg-white py-14 sm:py-20 px-4 sm:px-6">
+  <section id="ai-assistant" className="bg-[#EAEFF5] py-12 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
 
       {/* Text */}
       <div className="md:w-7/12 w-full">
-        <p className="font-lato text-2xs font-semibold tracking-[0.2em] uppercase text-[#C4561A] mb-3 font-semibold">
+        <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           AI Assistant
         </p>
-        <h2 className="font-cormorant text-3xl sm:text-4xl md:text-5xl font-semibold text-[#0D1F3C] mb-2 leading-snug">
+        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#0f3358] mb-2 leading-snug">
           Get Instant Answers with MMVerse
         </h2>
-        <div className="w-8 h-px bg-[#E8C97A] mb-5" />
-        <p className="font-lato text-[15px] sm:text-[17px] text-[#1A1A1A] leading-relaxed mb-6">
+        <div className="w-12 h-0.5 bg-[#d4af37] mb-5" />
+        <p className="font-lato text-xs sm:text-[17px] text-slate-700 leading-relaxed mb-6">
           MMVerse is a conversational AI assistant built specifically for MMV students.
           Instead of searching through multiple pages, simply type your question
           and get an accurate answer within seconds.
         </p>
         <ul className="space-y-3 mb-8">
           {[
-            ['➥', 'Natural Language',  'Ask in plain English — no keywords needed.'],
-            ['➥', 'Available 24/7',    'Get answers anytime, even outside office hours.'],
-            ['➥', 'MMV-Specific',      'Trained on MMV and BHU data, not generic answers.'],
-          ].map(([icon, label, detail]) => (
+            ['Natural Language',  'Ask in plain English — no keywords needed.'],
+            ['Available 24/7',    'Get answers anytime, even outside office hours.'],
+            ['MMV-Specific',      'Trained on MMV and BHU data, not generic answers.'],
+          ].map(([label, detail]) => (
             <li key={label} className="flex items-start gap-3">
-              <span className="text-xl mt-0.5 flex-shrink-0">{icon}</span>
-              <div className="font-lato text-sm sm:text-[16px] text-[#1A1A1A]">
-                <span className="font-semibold">{label}: </span>{detail}
+              <span className="text-[#7d311f] font-bold text-sm mt-0.5 flex-shrink-0">✦</span>
+              <div className="font-lato text-xs sm:text-[16px] text-slate-800">
+                <span className="font-bold text-[#0f3358]">{label}: </span>{detail}
               </div>
             </li>
           ))}
         </ul>
         <Link
           to="/ai-assistant"
-          className="inline-block font-lato text-sm font-semibold bg-[#0D1F3C] text-white px-7 py-3 rounded-full hover:bg-[#C4561A] transition-colors"
+          className="inline-block font-lato text-xs sm:text-sm font-bold bg-[#0f3358] text-[#fce8b2] border border-[#d4af37] px-6 sm:px-7 py-3 rounded-full hover:bg-[#174873] hover:text-white transition-all shadow-sm"
         >
-          Open MMVerse →
+          Open MMVerse AI →
         </Link>
       </div>
 
-      {/* Chat preview — matches MMVerse design */}
+      {/* Chat preview — matches real MMVerse page colors 100% */}
       <div className="md:w-5/12 w-full max-w-sm sm:max-w-none mx-auto">
-        <div className="bg-white rounded-2xl shadow-md border-4 border-[#0D1F3C]">
+        <div className="bg-[#FAF7F2] rounded-2xl shadow-xl border-2 border-[#0D1F3C]/30 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-2.5 sm:gap-3 bg-[#132C58] rounded-t-xl px-3.5 sm:px-4 py-2.5 sm:py-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#EEF3FC] flex items-center justify-center overflow-hidden flex-shrink-0">
-              <img src="/bhu/AI-icon.png" alt="MMVerse" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+          <div className="flex items-center gap-2.5 sm:gap-3 bg-[#0D1F3C] px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-[#E3B94F]/40">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FBF1DA] ring-2 ring-[#E3B94F] flex items-center justify-center overflow-hidden flex-shrink-0 shadow-xs">
+              <img src="/bhu/AI-icon.png" alt="MMVerse AI" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
                 onError={(e) => { e.target.style.display='none'; e.target.parentNode.innerText='🤖'; }} />
             </div>
             <div>
               <div className="font-lato text-sm sm:text-base font-bold text-white leading-none">MMVerse</div>
-              <div className="font-lato text-2xs sm:text-xs text-blue-200 mt-0.5">AI Campus Assistant</div>
+              <div className="font-lato text-2xs sm:text-xs text-[#E3B94F] mt-0.5 font-semibold">AI Campus Assistant</div>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400" />
-              <span className="font-lato text-2xs sm:text-xs text-blue-200">Online</span>
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="font-lato text-2xs sm:text-xs text-[#FBF1DA] font-medium">Online</span>
             </div>
           </div>
 
-          {/* Messages */}
-          <div className="p-3.5 sm:p-4 space-y-2.5 sm:space-y-3">
+          {/* Messages — exact real MMVerse bubble colors (#E5C29C & #0D1F3C) */}
+          <div className="p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 bg-[#FAF7F2]">
             {[
               { from: 'user', text: 'What are the Cyber Library timings?' },
               { from: 'bot',  text: 'The Cyber Library is open Monday–Saturday, 8:00 AM to 5:00 PM.' },
               { from: 'user', text: 'Where do I get my hostel allotment form?' },
-              { from: 'bot',  text: 'Hostel allotment forms are available at the Hostel Office in the MMV Campus. You can also find details in the Facilities section of this portal.' },
+              { from: 'bot',  text: 'Hostel allotment forms are available at the Hostel Office in MMV Campus.' },
             ].map((m, i) => (
               <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`font-lato text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2 sm:py-2.5 max-w-[82%] leading-relaxed
+                <div className={`font-lato text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2.5 max-w-[85%] leading-relaxed shadow-xs
                   ${m.from === 'user'
-                    ? 'bg-[#02226E] text-white rounded-br-sm'
-                    : 'bg-[#FFC6AD] text-black rounded-bl-sm'}`}>
+                    ? 'bg-[#0D1F3C] text-white rounded-br-xs'
+                    : 'bg-[#E5C29C] text-black font-medium rounded-bl-xs'}`}>
                   {m.text}
                 </div>
               </div>
@@ -482,12 +405,12 @@ const AIAssistant = () => (
           </div>
 
           {/* Input */}
-          <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4">
+          <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-2 bg-[#FAF7F2] border-t border-slate-200">
             <div className="flex gap-2">
-              <div className="flex-1 bg-white rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 font-lato text-xs sm:text-sm text-gray-400 border-2 border-[#02226E]">
+              <div className="flex-1 bg-white rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 font-lato text-xs sm:text-sm text-slate-400 border-2 border-[#0D1F3C]/40">
                 Ask a question...
               </div>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#02226E] rounded-xl flex items-center justify-center text-white text-base flex-shrink-0">→</div>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#C4561A] hover:bg-[#a3450f] rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0 shadow-xs">→</div>
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ from passlib.context import CryptContext
 import os
 
 # Password hashing configuration
-pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt", "sha256_crypt"], deprecated="auto")
 
 # JWT configuration
 SECRET_KEY = os.getenv("SECRET_KEY")

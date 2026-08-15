@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
 
-const API = `http://${window.location.hostname}:8000`;
+const API =import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Profile photos are tagged via a filename prefix so they can be told apart
 // from any other photos uploaded on the same page (e.g. via the old
@@ -19,10 +19,10 @@ const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
-  heading:        'text-2xl sm:text-3xl font-semibold text-[#7D311F]',   // main page-level heading (first line of description)
-  subheading:     'text-xl sm:text-2xl font-bold text-[#7D311F]',       // '## ' — description body, description notes, accordion notes
-  subSubheading:  'text-base sm:text-lg font-bold text-[#174873]',    // '### ' — description body, description notes, accordion notes
-  accordionTitle: 'text-sm sm:text-[16px] font-semibold text-[#174873]',    // accordion bar title ('+++ Title')
+  heading:        'text-2xl sm:text-3xl font-bold text-[#0f3358] font-cinzel tracking-wide pb-1.5',   // main page-level heading (first line of description)
+  subheading:     'text-xl sm:text-2xl font-bold text-[#0f3358] font-cinzel',       // '## ' — description body, description notes, accordion notes
+  subSubheading:  'text-base sm:text-lg font-bold text-[#174873] font-sans-official',    // '### ' — description body, description notes, accordion notes
+  accordionTitle: 'text-sm sm:text-base font-semibold text-[#0f3358]',    // accordion bar title ('+++ Title')
 };
 
 // ─── Body text size per description section ────────────────────────────────
@@ -508,46 +508,49 @@ const GenericContentPage = ({
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-4">
-      {/*---PILL HEADING---*/}
-       <div className="relative left-1/2 -translate-x-1/2 w-screen mb-10">
-        <div className="w-[90%] sm:w-[75%] md:w-[60%] lg:w-[50%] bg-[#585858] rounded-r-full shadow-sm">
-          <div className="max-w-5xl mx-auto min-h-16 flex items-center justify-center px-4 sm:px-6 py-3">
-            <h1 className="text-white font-semibold text-lg sm:text-2xl md:text-3xl text-center leading-snug">
-              {title}
-            </h1>
-          </div>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
+      {/* ── BHU OFFICIAL CENTERED PILL HEADING ── */}
+      <div className="flex justify-left">
+        <div className="inline-flex items-center justify-center gap-3 sm:gap-4 px-8 sm:px-12 py-3.5 sm:py-4.5 rounded-full bg-[#FAF7F2] border-2 border-[#d4af37] shadow-md text-center max-w-full sm:max-w-max">
+          <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl tracking-wide leading-tight text-center">
+            {title}
+          </h1>
         </div>
       </div>
+
       {/* ── PROFILE SECTION ── */}
       {hasProfile && (
-        <div className="bg-[#0D1F3C] rounded-2xl px-4 sm:px-8 py-6 sm:py-8 text-center relative">
-          {/*--admin profile edit --*/}
+        <div className="relative overflow-hidden rounded-3xl text-center bg-[#0f3358] p-6 sm:p-10 shadow-2xl border-2 border-[#d4af37]">
+          {/* Admin Edit Button */}
           {isAdmin && !isEditingProfile && (
             <button
               onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }}
-              className="absolute top-4 right-4 px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium bg-white "
+              className="absolute top-4 right-4 z-20 px-4 py-2 bg-[#d4af37] text-[#0f3358] hover:bg-[#e5c158] rounded-xl text-xs font-bold shadow-md transition-all border border-amber-300 flex items-center gap-1.5"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Edit Profile
             </button>
           )}
 
           {isEditingProfile ? (
             <div className="text-left max-w-xl mx-auto space-y-3">
-              <h3 className="text-lg font-bold text-white text-center mb-2">Edit Profile</h3>
-
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-xl font-bold text-[#bfccda] font-cinzel">Edit Profile</h3>
+                <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
+              </div>
               {/* PROFILE PHOTO */}
-              <div className="flex flex-col items-center gap-2 mb-2">
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-4">
                 {profilePhoto ? (
                   <img
                     src={`${API}${profilePhoto.photo_url}`}
                     alt={profilePhoto.photo_name}
-                    className="rounded-lg object-cover border border-gray-200 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                    className="rounded-xl object-cover border-2 border-[#d4af37] w-36 h-44 shadow-md"
                     style={{ objectPosition: 'top center' }}
                   />
                 ) : (
-                  <div className="w-[160px] h-[190px] sm:w-[220px] sm:h-[260px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-sm bg-white">
-                    No photo yet
+                  <div className="w-36 h-44 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 text-xs bg-white p-2 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-1 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    No Photo Uploaded
                   </div>
                 )}
                 <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
@@ -569,17 +572,17 @@ const GenericContentPage = ({
                 </div>
               </div>
 
-         
+              {/* INPUT FIELDS */}
               {[
-                { key: 'name',          label: 'Name' },
+                { key: 'name',          label: 'Full Name' },
                 { key: 'designation',   label: 'Designation' },
                 { key: 'university',    label: 'University / Department' },
                 { key: 'address',       label: 'Address' },
                 { key: 'phone',         label: 'Contact' },
                 { key: 'officeContact', label: 'Office Contact' },
-                { key: 'email',         label: 'Email' },
+                { key: 'email',         label: 'Official Email' },
               ].map(field => (
-                <div key={field.key}>
+                <div key={field.key} >
                   <label className="block text-base font-semibold text-white mb-1">
                     {field.label}
                   </label>
@@ -587,73 +590,75 @@ const GenericContentPage = ({
                     value={editProfile[field.key] || ''}
                     onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
                     placeholder={field.label}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]/20 bg-white"
-                  />
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"  />
                 </div>
               ))}
 
-              <div className="flex gap-3 justify-center pt-2">
+              <div className="flex gap-3 justify-center pt-3 border-t">
                 <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-4 py-2 bg-white text-black rounded-lg text-sm font-medium disabled:opacity-50 ">
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50 ">
                   {savingProfile ? 'Saving...' : 'Save'}
                 </button>
                 <button onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 text-black rounded-lg font-medium bg-white text-sm">
+                  className="px-4 py-2 text-white rounded-lg font-semibold bg-red-500 text-sm">
                   Cancel
                 </button>
               </div>
             </div>
           ) : profile.name ? (
-            <> {/*--user view profile--*/}
+            <> 
+            {/* ── EXECUTIVE USER VIEW ── */}
               {profilePhoto && (
                 <img
                   src={`${API}${profilePhoto.photo_url}`}
                   alt={profilePhoto.photo_name}
-                  className="rounded-lg object-cover border-3 border-white mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                  className="rounded-lg object-cover border-3 border-[#d4af37] mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
                   style={{ objectPosition: 'top center' }}
                 />
               )}
 
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#E8C97A] break-words">
+              {/* Profile Details & Metadata */}
+
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#E8C97A] break-words">
                 {profile.name}
               </h2>
 
               {profile.designation && (
-                <p className="text-base sm:text-lg md:text-2xl font-semibold text-[#E8C97A] mt-1">
+                <p className="text-base sm:text-xl md:text-2xl font-semibold text-[#E8C97A] mt-1">
                   {profile.designation}
                 </p>
               )}
 
               {profile.university && (
-                <p className="text-base text-white mt-1">
+                <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
                   {profile.university}
                 </p>
               )}
 
               {profile.address && (
-                <p className="text-sm text-white mt-1">
+                <p className="text-xs sm:text-sm text-slate-400 mt-1 flex items-center justify-center gap-1.5">
                   {profile.address}
                 </p>
               )}
 
               <div className="mt-4 space-y-1">
                 {profile.phone && (
-                  <p className="text-sm text-white">
+                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
                     <span className="font-semibold">Contact:</span>{" "}
                     {profile.phone}
                   </p>
                 )}
 
                 {profile.officeContact && (
-                  <p className="text-sm text-white">
+                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
                     <span className="font-semibold">Office Contact:</span>{" "}
                     {profile.officeContact}
                   </p>
                 )}
 
                 {profile.email && (
-                  <p className="text-sm text-white">
-                    <span className="font-semibold">Email:</span>{" "}
+                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                    <span className="font-semibold">Official Email:</span>{" "}
                     {profile.email}
                   </p>
                 )}
@@ -661,9 +666,9 @@ const GenericContentPage = ({
               </div>
             </>
           ) : (
-            <p className="italic text-gray-400">
-              {isAdmin ? 'No profile yet. Click Edit Profile to add one.' : 'Profile coming soon.'}
-            </p>
+            <div className="text-center py-8 text-slate-300 italic">
+              {isAdmin ? 'No profile details saved. Click Edit Profile above to configure.' : 'Official leadership profile coming soon.'}
+            </div>
           )}
         </div>
       )}
@@ -851,7 +856,7 @@ const GenericContentPage = ({
                 'sm:grid-cols-2'
               }`}>
                 {galleryPhotos.map((photo) => (
-                  <div key={photo.id} className="relative min-w-0 border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl text-center">
+                  <div key={photo.id} className="relative min-w-0 border border-slate-200 shadow-md bg-slate-50 p-3 rounded-2xl text-center">
                     <img
                       src={`${API}${photo.photo_url}`}
                       alt={photo.photo_name}
@@ -889,7 +894,7 @@ const GenericContentPage = ({
             }`}>
 
               {/*---description--*/}
-              <div className="bg-[#fff8cd] rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8 w-full min-h-[180px]">
+              <div className="bg-white rounded-2xl border-2 border-[#0f3358]/20 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -1002,7 +1007,7 @@ const GenericContentPage = ({
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-black marker:text-[#174873] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
+                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#0f3358] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
@@ -1159,8 +1164,7 @@ const GenericContentPage = ({
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FFF4C2] border-l-4 border-[#D4A017] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
-                              {noteElements}
+                            <div key={`note-${elements.length}`} className="bg-amber-50/90 border-l-4 border-[#7d311f] border-r border-t border-b border-amber-200/80 p-4 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3">                              {noteElements}
                             </div>
                           );
                         }
@@ -1224,21 +1228,20 @@ const GenericContentPage = ({
                       //accordian topmost view
                       const isOpen = !!openSections[index];
                       elements.push(
-                        <div key={`accordion-${index}`} className="border border-gray-200 rounded-xl overflow-hidden">
-                          <button
+                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">                          <button
                             type="button"
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
-                            className="w-full flex items-center justify-between gap-2 px-4 py-1.5 bg-white  text-left"
+                            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
                           >
-                            <span className={HEADING_STYLES.accordionTitle}>
+                            <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
-                            <span className={`text-[#174873] text-sm transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}>
+                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}>
                               ▶
                             </span>
                           </button>
                           {isOpen && (
-                            <div className="px-4 py-3 space-y-1 border-t-2 border-[#174873] bg-[#E6F0F5]/[60%]">
+                            <div className="px-5 py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
                               {contentElements}
                             </div>
                           )}
@@ -1271,40 +1274,47 @@ const GenericContentPage = ({
                         const colCount = headerRow.length;
 
                         // Normalize every body row to exactly colCount cells —
-                        // pad short rows with empty cells, drop extra cells on
-                        // long rows — so every <tr> lines up under the header
-                        // regardless of how many '|' the admin typed on a line.
                         const bodyRows = rawBodyRows.map(cells => {
                           const normalized = cells.slice(0, colCount);
                           while (normalized.length < colCount) normalized.push('');
                           return normalized;
                         });
 
+                        const colWidthPct = `${(100 / colCount).toFixed(2)}%`;
+
                         elements.push(
-                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
-                            <table className="w-full text-md text-left table-fixed">
-                              <thead className="bg-white">
-                                <tr >
-                                    {headerRow.map((cell, ci) => (
-                                    <th key={ci} className="px-4 py-3 text-black font-medium">
+                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white">
+                            <table className="w-full text-left border-collapse table-fixed min-w-[500px]">
+                              <thead>
+                                <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                                  {headerRow.map((cell, ci) => (
+                                    <th
+                                      key={ci}
+                                      style={{ width: colWidthPct }}
+                                      className="px-3 sm:px-4 py-2 sm:py-2.5 text-left font-cinzel font-bold text-xs sm:text-sm text-[#fce8b2] tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle"
+                                    >
+                                      {renderInlineFormatting(cell)}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-200">
+                                {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="odd:bg-[#F8FAFC] even:bg-[#EEF2F6] hover:bg-[#E2E8F0] transition-colors">
+                                    {cells.map((cell, ci) => (
+                                      <td
+                                        key={ci}
+                                        style={{ width: colWidthPct }}
+                                        className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle"
+                                      >
                                         {renderInlineFormatting(cell)}
-                                      </th>
+                                      </td>
                                     ))}
                                   </tr>
-                                </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                  {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="hover:bg-gray-50 divide-x divide-gray-200">
-                                      {cells.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2.5 text-[#374151] text-sm">
-                                          {renderInlineFormatting(cell)}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         );
                       }
                       tableBuffer = [];
@@ -1346,15 +1356,17 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // very first non-blank line → big centered heading
+                      // very first non-blank line → big centered main heading with simple elegant single underline
                       if (firstLine) {
                         firstLine = false;
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h2 key={idx} className={`${HEADING_STYLES.heading} text-center pb-3 border-b-2 border-[#174873]/20 tracking-tight`}>
-                            {trimmed}
-                          </h2>
+                           <div key={idx} className="mb-3.5 sm:mb-4 text-center">
+                            <h2 className={`${HEADING_STYLES.heading} font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#d4af37]`}>
+                              {trimmed}
+                            </h2>
+                          </div>
                         );
                         return;
                       }
@@ -1365,9 +1377,11 @@ const GenericContentPage = ({
                         flushTable();
                         currentBodyLevel = 'subheading'; // everything below this, until the next heading, uses BODY_STYLES.subheading
                         elements.push(
-                          <h3 key={idx} className={`${HEADING_STYLES.subheading} mt-6`}>
-                            {trimmed.slice(3)}
-                          </h3>
+                          <div key={idx} className="mt-5 mb-2.5">
+                            <h3 className={`${HEADING_STYLES.subheading} inline-block pb-1.5 border-b-2 border-[#d4af37] text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl tracking-wide`}>
+                              {trimmed.slice(3)}
+                            </h3>
+                          </div>
                         );
                         return;
                       }
@@ -1378,8 +1392,9 @@ const GenericContentPage = ({
                         flushTable();
                         currentBodyLevel = 'subSubheading'; // everything below this, until the next heading, uses BODY_STYLES.subSubheading
                         elements.push(
-                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-4`}>
-                            {trimmed.slice(4)}
+                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-base sm:text-lg flex items-center gap-2`}>
+                            <span className="text-[#d4af37]">✦</span>
+                            <span>{trimmed.slice(4)}</span>
                           </h4>
                         );
                         return;
@@ -1423,7 +1438,6 @@ const GenericContentPage = ({
                       // | Table row |
                       if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
                         flushBullets();
-                        flushTable();
                         tableBuffer.push(trimmed);
                         return;
                       }
@@ -1447,7 +1461,7 @@ const GenericContentPage = ({
                       // heading is hit above.
                       flushBullets();
                       elements.push(
-                        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify ${BODY_STYLES[currentBodyLevel]}`}>
+                        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify mb-3 ${BODY_STYLES[currentBodyLevel]}`}>
                           {renderInlineFormatting(trimmed)}
                         </p>
                       );
@@ -1519,39 +1533,40 @@ const GenericContentPage = ({
       {hasTable && (
         <div className="space-y-3">
 
-          {/* Table heading / caption, sits above the table */}
+          {/* Table heading / caption*/}
           {(tableHeading || isAdmin) && (
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
               {isEditingHeading ? (
-                <div className="flex-1 flex gap-2 items-center">
+                <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:items-center">
                   <input
                     value={editTableHeading}
                     onChange={e => setEditTableHeading(e.target.value)}
                     placeholder="Table heading, e.g. Faculty List"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm sm:text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
                     autoFocus
                   />
-                  <button onClick={handleSaveTableHeading} disabled={savingHeading}
-                    className="px-3 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {savingHeading ? 'Saving...' : 'Save'}
-                  </button>
-                  <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
-                    className="px-3 py-2 text-gray-500 text-sm">
-                    Cancel
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveTableHeading} disabled={savingHeading}
+                      className="px-3 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                      {savingHeading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
+                      className="px-3 py-2 text-gray-500 text-sm">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
                   {tableHeading ? (
-                    <h3 className="text-3xl font-bold text-[#174873]">{tableHeading}</h3>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#174873]">{tableHeading}</h3>
                   ) : (
                     <span className="italic text-gray-400 text-sm">No table heading yet.</span>
                   )}
                   {isAdmin && (
                     <button
                       onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(true); }}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0"
-                    >
+                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"                    >
                       {tableHeading ? 'Edit Heading' : '+ Add Heading'}
                     </button>
                   )}
@@ -1560,276 +1575,269 @@ const GenericContentPage = ({
             </div>
           )}
 
-          <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-base">
-                <thead>
-                  <tr className="bg-[#174873] text-white ">
-                    {columns.map(col => (
-                    <th key={col} className="px-4 py-3 text-left font-semibold">
-                        {col}
-                      {isAdmin && (
-                        <button onClick={() => handleDeleteColumn(col)}
-                          className="ml-2 text-red-300 hover:text-white text-xs">×</button>
-                      )}
-                    </th>
-                  ))}
-                  {isAdmin && (
-                    <th className="px-4 py-3">
-                      {addingCol ? (
-                        <div className="flex gap-1">
-                          <input value={newColName} onChange={e => setNewColName(e.target.value)}
-                            placeholder="Column name"
-                            className="px-2 py-1 text-black rounded text-xs w-24" />
-                          <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
-                          <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setAddingCol(true)}
-                          className="text-blue-200 hover:text-white text-xs font-bold">
-                          + Col
-                        </button>
-                      )}
-                    </th>
-                  )}
-                  {isAdmin && <th className="px-4 py-3 w-20">Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={columns.length + (isAdmin ? 2 : 0)}
-                      className="px-4 py-8 text-center text-gray-400 italic">
-                      {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
-                    </td>
-                  </tr>
-                )}
-                {displayRows.map(({ row, origIdx }) => {
-                  const idx = origIdx; // keeps existing edit/delete logic below untouched
-                  const isEditingThisRow = isAdmin && editingRowIdx === idx;
-                  return (
-                    <tr
-                      key={idx}
-                      className={`border-t border-gray-100 transition-colors
-                        odd:bg-white even:bg-[#DFE3E6]
-                        ${isEditingThisRow ? 'bg-[#FFF8CD]' : ''}
-                      `}
-                    >
-                      {columns.map(col => (
-                        <td key={col} className="px-8 py-3 text-black">
-                          {isEditingThisRow ? (
-                            /* ── EDIT MODE: show input for each cell ── */
-                            col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
-                              <div className="space-y-1">
-                                {editingRowData[col] ? (
-                                  <div className="flex items-center gap-1">
-                                    <a href={editingRowData[col].startsWith('http') ? editingRowData[col] : `${API}${editingRowData[col]}`}
-                                      target="_blank" rel="noopener noreferrer"
-                                      className="text-sm text-[#174873] hover:underline truncate max-w-[80px]">
-                                      Current PDF
-                                    </a>
-                                    <button onClick={() => setEditingRowData(prev => ({ ...prev, [col]: '' }))}
-                                      className="text-red-400 text-xs hover:text-red-600">✕</button>
-                                  </div>
-                                ) : (
-                                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
-                                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                    </svg>
-                                    Upload PDF
-                                    <input type="file" accept=".pdf" className="hidden"
-                                      onChange={async (e) => {
-                                        const file = e.target.files[0];
-                                        if (!file) return;
-                                        try {
-                                          const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
-                                          const form = new FormData();
-                                          form.append('section', section || '');
-                                          form.append('category', subsection || '');
-                                          form.append('sub_category', '');
-                                          form.append('files', taggedFile);
-                                          const res = await axios.post(
-                                            `${API}/admin/facility-content/upload-pdf`, form,
-                                            { headers: { Authorization: `Bearer ${token}` } }
-                                          );
-                                          const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
-                                          if (pdfUrl) setEditingRowData(prev => ({ ...prev, [col]: pdfUrl }));
-                                          else alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
-                                        } catch (err) {
-                                          alert('Upload failed: ' + JSON.stringify(err.response?.data));
-                                        }
-                                      }}
-                                    />
-                                  </label>
-                                )}
-                                <input
-                                  value={editingRowData[col] || ''}
-                                  onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
-                                  placeholder="or paste URL"
-                                  className="w-full px-2 py-1 border border-blue-300 rounded text-xs outline-none focus:ring-1 focus:ring-[#174873]"
-                                />
-                              </div>
-                            ) : (
-                              <input
-                                value={editingRowData[col] || ''}
-                                onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
-                                placeholder={col}
-                                className="w-full px-2 py-1 border border-blue-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#174873]"
-                              />
-                            )
-                          ) : (
-                            /* ── VIEW MODE: show value as before ── */
-                            row[col]
-                              ? row[col].startsWith('/uploads/') || row[col].startsWith('http')
-                                ? (
-                                  <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-3sm">
-                                    <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                    </svg>
-                                    View PDF
-                                  </a>
-                                )
-                                : row[col]
-                              : '—'
-                          )}
-                        </td>
-                      ))}
+          {/* ------------------------------- */}
 
-                      {/* Action cell: Edit/Save/Cancel + Remove */}
-                      {isAdmin && (
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {isEditingThisRow ? (
-                            <div className="flex gap-2">
-                              <button onClick={handleSaveEditRow}
-                                className="text-green-600 hover:text-green-800 text-sm font-bold">
-                                Save
-                              </button>
-                              <button onClick={handleCancelEditRow}
-                                className="text-gray-400 hover:text-gray-600 text-xs">
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex gap-2 items-center">
-                              <button onClick={() => handleMoveRow(idx, 'up')}
-                                disabled={idx === 0}
-                                title="Move row up"
-                                className={`text-xs font-bold ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-[#174873] hover:text-[#406BC7]'}`}>
-                                ▲
-                              </button>
-                              <button onClick={() => handleMoveRow(idx, 'down')}
-                                disabled={idx === rows.length - 1}
-                                title="Move row down"
-                                className={`text-xs font-bold ${idx === rows.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-[#174873] hover:text-[#406BC7]'}`}>
-                                ▼
-                              </button>
-                              <button onClick={() => handleStartEditRow(idx)}
-                                className="text-[#174873] hover:text-[#406BC7] text-xs font-bold">
-                                Edit
-                              </button>
-                              <button onClick={() => handleDeleteRow(idx)}
-                                className="text-red-500 hover:text-red-700 text-xs font-bold">
-                                Remove
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      )}
-                    </tr>
+          {(() => {
+            const isPdfCol = (col) =>
+              col.toLowerCase().includes('pdf') ||
+              col.toLowerCase().includes('document') ||
+              col.toLowerCase().includes('syllabus');
+
+            const uploadPdf = async (onSet) => {
+              return async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                  const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
+                  const form = new FormData();
+                  form.append('section', section || '');
+                  form.append('category', subsection || '');
+                  form.append('sub_category', '');
+                  form.append('files', taggedFile);
+                  const res = await axios.post(
+                    `${API}/admin/facility-content/upload-pdf`, form,
+                    { headers: { Authorization: `Bearer ${token}` } }
                   );
-                })}
+                  const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
+                  if (pdfUrl) onSet(pdfUrl);
+                  else alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                } catch (err) {
+                  alert('Upload failed: ' + JSON.stringify(err.response?.data));
+                }
+              };
+            };
 
-                {/* Add row */}
-                {isAdmin && columns.length > 0 && (
-                  <tr className="border-t-2 border-gray-200 bg-gray-50">
-                    {columns.map(col => (
-                      <td key={col} className="px-4 py-2">
-                        {col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
-                          <div className="space-y-1">
-                            {/* Show upload button if no value yet */}
-                            {!newRow[col] ? (
-                              <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                </svg>
-                                Upload PDF
-                                <input
-                                  type="file"
-                                  accept=".pdf"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-                                    try {
-                                      const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
-                                      const form = new FormData();
-                                      form.append('section', section || '');
-                                      form.append('category', subsection || '');
-                                      form.append('sub_category', '');
-                                      form.append('files', taggedFile);
-
-                                      const res = await axios.post(
-                                        `${API}/admin/facility-content/upload-pdf`, form,
-                                        { headers: { Authorization: `Bearer ${token}` } }
-                                      );
-                                      const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
-                                      if (pdfUrl) {
-                                        setNewRow(prev => ({ ...prev, [col]: pdfUrl }));
-                                      } else {
-                                        alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
-                                      }
-                                    } catch (err) {
-                                      alert('Upload failed: ' + JSON.stringify(err.response?.data));
-                                    }
-                                  }}
-                                />
-                              </label>
-                            ) : (
-                              /* Show filename + remove option if uploaded */
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-green-600 truncate max-w-[80px]">✓ Uploaded</span>
-                                <button
-                                  onClick={() => setNewRow({ ...newRow, [col]: '' })}
-                                  className="text-red-400 text-xs hover:text-red-600">
-                                  ✕
-                                </button>
-                              </div>
-                            )}
-                            {/* Also allow manual URL paste */}
-                            <input
-                              value={newRow[col] || ''}
-                              onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                              placeholder="or paste URL"
-                              className="w-full px-2 py-1 border border-blue-200 rounded text-xs outline-none"
-                            />
-                          </div>
-                        ) : (
-                          /* Normal text input for non-PDF columns */
-                          <input
-                            value={newRow[col] || ''}
-                            onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                            placeholder={col}
-                            className="w-full px-2 py-1 border border-blue-200 rounded text-sm outline-none"
-                          />
-                        )}
-                      </td>
-                    ))}
-                   
-                    <td className="px-4 py-2">
-                      <button onClick={handleAddRow}
-                        className="px-3 py-1 bg-[#174873] text-white rounded text-xs font-bold">
-                        Add
-                      </button>
-                    </td>
-                  </tr>
+            const renderPdfEditor = (value, onChange) => (
+              <div className="space-y-1 min-w-[140px]">
+                {value ? (
+                  <div className="flex items-center gap-1">
+                    <a href={value.startsWith('http') ? value : `${API}${value}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-sm text-[#174873] hover:underline truncate max-w-[120px]">
+                      Current PDF
+                    </a>
+                    <button onClick={() => onChange('')}
+                      className="text-red-400 text-xs hover:text-red-600 min-w-[28px] min-h-[28px]">✕</button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 bg-[#174873] text-white rounded text-xs whitespace-nowrap min-h-[32px]">
+                    <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                    </svg>
+                    Upload PDF
+                    <input type="file" accept=".pdf" className="hidden" onChange={uploadPdf(onChange)} />
+                  </label>
                 )}
-              </tbody>
-            </table>
-          </div>
+                <input
+                  value={value || ''}
+                  onChange={e => onChange(e.target.value)}
+                  placeholder="or paste URL"
+                  className="w-full px-2 py-1.5 border border-blue-300 rounded text-xs outline-none focus:ring-1 focus:ring-[#174873]"
+                />
+              </div>
+            );
+
+            const renderViewValue = (val) =>
+              val
+                ? val.startsWith('/uploads/') || val.startsWith('http')
+                  ? (
+                    <a href={val.startsWith('http') ? val : `${API}${val}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm whitespace-nowrap">
+                      <svg className="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                      </svg>
+                      View PDF
+                    </a>
+                  )
+                  : val
+                : '—';
+
+            // Icon buttons with generous tap targets (min ~36px) — same on every breakpoint
+            const IconBtn = ({ onClick, disabled, title, colorClass, children }) => (
+              <button
+                onClick={onClick}
+                disabled={disabled}
+                title={title}
+                className={`inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-lg text-sm font-bold
+                  ${disabled ? 'text-gray-300 cursor-not-allowed' : `${colorClass} hover:bg-black/5 active:bg-black/10`}`}
+              >
+                {children}
+              </button>
+            );
+
+            const rowActions = (idx, isEditingThisRow) =>
+              isEditingThisRow ? (
+                <div className="flex gap-1">
+                  <IconBtn onClick={handleSaveEditRow} title="Save" colorClass="text-green-600">✓</IconBtn>
+                  <IconBtn onClick={handleCancelEditRow} title="Cancel" colorClass="text-gray-400">✕</IconBtn>
+                </div>
+              ) : (
+                <div className="flex gap-0.5">
+                  <IconBtn onClick={() => handleMoveRow(idx, 'up')} disabled={idx === 0} title="Move up" colorClass="text-[#174873]">▲</IconBtn>
+                  <IconBtn onClick={() => handleMoveRow(idx, 'down')} disabled={idx === rows.length - 1} title="Move down" colorClass="text-[#174873]">▼</IconBtn>
+                  <IconBtn onClick={() => handleStartEditRow(idx)} title="Edit" colorClass="text-[#174873]">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                  </IconBtn>
+                  <IconBtn onClick={() => handleDeleteRow(idx)} title="Delete" colorClass="text-red-500">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
+                    </svg>
+                  </IconBtn>
+                </div>
+              );
+
+             return (
+              <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white">
+                {/* Single horizontally-scrollable table — identical markup/appearance on phone and desktop */}
+                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+                  <table className="text-sm sm:text-base border-separate border-spacing-0" style={{ minWidth: '100%' }}>
+                    <thead>
+                      <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                        {columns.map((col, i) => (
+                          <th
+                            key={col}
+                            className={`px-3 sm:px-4 py-2 sm:py-2.5 text-left font-cinzel font-bold text-xs sm:text-sm text-[#fce8b2] tracking-wider uppercase border-r border-slate-300 last:border-r-0 whitespace-nowrap
+                              ${i === 0 ? 'sticky left-0 z-20 bg-[#0f3358]' : ''}`}
+                          >
+                            {col}
+                            {isAdmin && (
+                              <button onClick={() => handleDeleteColumn(col)}
+                                className="ml-2 text-red-300 hover:text-white text-xs">×</button>
+                            )}
+                          </th>
+                        ))}
+                        {isAdmin && (
+                          <th className="px-3 sm:px-4 py-2 sm:py-2.5 sticky right-0 z-20 bg-[#0f3358] shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.3)] text-[#fce8b2] font-bold text-xs">
+                            {addingCol ? (
+                              <div className="flex gap-1">
+                                <input value={newColName} onChange={e => setNewColName(e.target.value)}
+                                  placeholder="Column name"
+                                  className="px-2 py-1 text-black rounded text-xs w-20 sm:w-24" />
+                                <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
+                                <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => setAddingCol(true)}
+                                className="text-blue-200 hover:text-white text-xs font-bold whitespace-nowrap">
+                                + Col
+                              </button>
+                            )}
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {rows.length === 0 && (
+                        <tr>
+                          <td colSpan={columns.length + (isAdmin ? 1 : 0)}
+                            className="px-4 py-8 text-center text-gray-400 italic">
+                            {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
+                          </td>
+                        </tr>
+                      )}
+                      {displayRows.map(({ row, origIdx }) => {
+                        const idx = origIdx;
+                        const isEditingThisRow = isAdmin && editingRowIdx === idx;
+                        const rowBg = isEditingThisRow ? 'bg-[#FFF8CD]' : (idx % 2 === 0 ? 'bg-[#F8FAFC]' : 'bg-[#EEF2F6]');
+                        return (
+                          <tr key={idx} className="border-t border-slate-200">
+                            {columns.map((col, i) => (
+                              <td
+                                key={col}
+                                className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm text-slate-800 align-middle border-r border-slate-300 last:border-r-0
+                                  ${i === 0 ? `sticky left-0 z-10 ${rowBg} font-medium` : rowBg}`}
+                              >
+                                {isEditingThisRow ? (
+                                  isPdfCol(col)
+                                    ? renderPdfEditor(editingRowData[col], (v) =>
+                                        setEditingRowData(prev => ({ ...prev, [col]: v })))
+                                    : (
+                                      <input
+                                        value={editingRowData[col] || ''}
+                                        onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
+                                        placeholder={col}
+                                        className="w-full min-w-[100px] px-2 py-1.5 border border-blue-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#174873]"
+                                      />
+                                    )
+                                ) : (
+                                  <span className="whitespace-nowrap sm:whitespace-normal">{renderViewValue(row[col])}</span>
+                                )}
+                              </td>
+                            ))}
+                            {isAdmin && (
+                              <td className={`px-2 sm:px-3 py-2 sticky right-0 z-10 ${rowBg} shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`}>
+                                {rowActions(idx, isEditingThisRow)}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+
+                      {/* Add row */}
+                      {isAdmin && columns.length > 0 && (
+                        <tr className="border-t-2 border-gray-200 bg-gray-50">
+                          {columns.map((col, i) => (
+                            <td key={col} className={`px-3 sm:px-4 py-2 ${i === 0 ? 'sticky left-0 z-10 bg-gray-50' : ''}`}>
+                              {isPdfCol(col) ? (
+                                <div className="space-y-1 min-w-[140px]">
+                                  {!newRow[col] ? (
+                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 bg-[#174873] text-white rounded text-xs whitespace-nowrap min-h-[32px]">
+                                      <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                      </svg>
+                                      Upload PDF
+                                      <input type="file" accept=".pdf" className="hidden"
+                                        onChange={uploadPdf((v) => setNewRow(prev => ({ ...prev, [col]: v })))} />
+                                    </label>
+                                  ) : (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-green-600">✓ Uploaded</span>
+                                      <button onClick={() => setNewRow({ ...newRow, [col]: '' })}
+                                        className="text-red-400 text-xs hover:text-red-600 min-w-[28px] min-h-[28px]">✕</button>
+                                    </div>
+                                  )}
+                                  <input
+                                    value={newRow[col] || ''}
+                                    onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+                                    placeholder="or paste URL"
+                                    className="w-full px-2 py-1.5 border border-blue-200 rounded text-xs outline-none"
+                                  />
+                                </div>
+                              ) : (
+                                <input
+                                  value={newRow[col] || ''}
+                                  onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+                                  placeholder={col}
+                                  className="w-full min-w-[100px] px-2 py-1.5 border border-blue-200 rounded text-sm outline-none"
+                                />
+                              )}
+                            </td>
+                          ))}
+                          <td className="px-2 sm:px-3 py-2 sticky right-0 z-10 bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
+                            <button onClick={handleAddRow}
+                              className="min-w-[36px] min-h-[36px] px-3 py-1.5 bg-[#174873] text-white rounded text-xs font-bold whitespace-nowrap">
+                              Add
+                            </button>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Add column (mobile-friendly hint — actions are on the sticky right column) */}
+                {isAdmin && (
+                  <div className="md:hidden flex justify-center py-3 border-t border-gray-100 bg-gray-50">
+                    <span className="text-xs text-gray-400">Scroll → to edit/delete rows</span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
-      </div>
       )}
     </div>
   );
