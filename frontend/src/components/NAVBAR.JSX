@@ -55,7 +55,7 @@ const facilitiesItems = [
     { label: "Hostel Coordinator", path: "/facilities/hostels/coordinator" },
     { label: "Swasti Kunj Hostel", path: "/facilities/hostels/swastikunj" },
     { label: "Kirti Kunj Hostel", path: "/facilities/hostels/kirtikunj" },
-    { label: "Kundan Devi Malviya Girls Hostel", path: "/facilities/hostels/kundandevi" },
+    { label: "Kundan Devi Malviya Hostel", path: "/facilities/hostels/kundandevi" },
     { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
     { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
   ]},
@@ -123,134 +123,235 @@ const mobileNavItems = [
 // ============================================
 // DESKTOP — LEVEL 3 - Deepest submenu (hover flyout)
 // ============================================
+
+// const SubSubMenu = ({ label, children }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+//   return (
+//     <div
+//   className="relative"
+//   onMouseEnter={() => setIsOpen(true)}
+//   onMouseLeave={() => setIsOpen(false)}
+// >
+//       <div className="flex items-center justify-between px-3 py-1.5
+//                       text-xs lg:text-sm text-white hover:bg-[#2d54a8]
+//                       border-b border-blue-800 cursor-pointer whitespace-nowrap">
+//         {label}
+//         <span className="text-xs ml-4">►</span>
+//       </div>
+
+//       {isOpen && (
+//         <div className="absolute top-0 left-full bg-[#406BC7]
+//                         shadow-lg min-w-48 z-[999] border border-blue-900">
+//           {children.map((item) => (
+//             <Link
+//               key={item.path}
+//               to={item.path}
+//               className="block px-4 py-2 text-xs lg:text-sm text-white
+//                          hover:bg-[#2d54a8] border-b border-blue-800 whitespace-nowrap"
+//             >
+//               {item.label}
+//             </Link>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
 const SubSubMenu = ({ label, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
   return (
-    <div
-  className="relative"
-  onMouseEnter={() => setIsOpen(true)}
-  onMouseLeave={() => setIsOpen(false)}
->
-      <div className="flex items-center justify-between px-3 py-1.5
-                      text-xs lg:text-sm text-white hover:bg-[#2d54a8]
-                      border-b border-blue-800 cursor-pointer whitespace-nowrap">
-        {label}
-        <span className="text-xs ml-4">►</span>
+    <div className="relative group/subsub">
+      <div className="flex items-center justify-between px-3 py-1.5 text-xs lg:text-sm text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/60 cursor-pointer whitespace-nowrap font-medium transition-colors">
+        <span>{label}</span>
+        <span className="text-xs ml-3 text-white">►</span>
       </div>
 
-      {isOpen && (
-        <div className="absolute top-0 left-full bg-[#406BC7]
-                        shadow-lg min-w-48 z-[999] border border-blue-900">
-          {children.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="block px-4 py-2 text-xs lg:text-sm text-white
-                         hover:bg-[#2d54a8] border-b border-blue-800 whitespace-nowrap"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className="absolute top-0 left-full bg-[#0f3358] shadow-lg min-w-48 lg:min-w-48 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
+        {children.map((item, idx) => (
+          <Link
+            key={item.path || idx}
+            to={item.path}
+            className={`block px-4 py-2 text-xs lg:text-sm text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/60 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };
+
 
 
 // ============================================
 // DESKTOP — LEVEL 2 - Middle submenu (hover flyout)
 // ============================================
-const SubMenu = ({ label, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
 
+// const SubMenu = ({ label, children }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+
+//   return (
+//     <div
+//       className="relative"
+//       onMouseEnter={() => setIsOpen(true)}
+//       onMouseLeave={() => setIsOpen(false)}   
+//     >
+//       <div className="flex items-center justify-between px-3 py-1.5
+//                       text-xs lg:text-sm text-white hover:bg-[#2d54a8]
+//                       border-b border-blue-800 cursor-pointer whitespace-nowrap">
+//         {label}
+//         <span className="text-xs ml-4">►</span>
+//       </div>
+
+//       {isOpen && (
+//         <div className="absolute top-0 left-full bg-[#406BC7]
+//                         shadow-lg min-w-48 z-[999] border border-blue-900">
+//           {children.map((item) =>
+//             item.children ? (
+//               <SubSubMenu
+//                 key={item.label}
+//                 label={item.label}
+//                 children={item.children}
+//               />
+//             ) : (
+//               <Link
+//                 key={item.path}
+//                 to={item.path}
+//                 className="block px-4 py-2 text-xs lg:text-sm text-white
+//                            hover:bg-[#2d54a8] border-b border-blue-800 whitespace-nowrap"
+//               >
+//                 {item.label}
+//               </Link>
+//             )
+//           )}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+const SubMenu = ({ label, children }) => {
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}   
-    >
-      <div className="flex items-center justify-between px-3 py-1.5
-                      text-xs lg:text-sm text-white hover:bg-[#2d54a8]
-                      border-b border-blue-800 cursor-pointer whitespace-nowrap">
-        {label}
-        <span className="text-xs ml-4">►</span>
+    <div className="relative group/sub">
+      <div className="flex items-center justify-between px-2 py-1.5 
+                      text-xs lg:text-sm text-slate-100 hover:bg-[#174873] hover:text-white border-b
+                    border-blue-900/60 cursor-pointer whitespace-nowrap font-medium transition-colors">
+        <span>{label}</span>
+        <span className="text-xs ml-3 text-white">►</span>
       </div>
 
-      {isOpen && (
-        <div className="absolute top-0 left-full bg-[#406BC7]
-                        shadow-lg min-w-48 z-[999] border border-blue-900">
-          {children.map((item) =>
-            item.children ? (
-              <SubSubMenu
-                key={item.label}
-                label={item.label}
-                children={item.children}
-              />
-            ) : (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="block px-4 py-2 text-xs lg:text-sm text-white
-                           hover:bg-[#2d54a8] border-b border-blue-800 whitespace-nowrap"
-              >
-                {item.label}
-              </Link>
-            )
-          )}
-        </div>
-      )}
+      <div className="absolute top-0 left-full bg-[#0f3358] shadow-lg min-w-48 lg:min-w-48 
+                      z-[999] border-2 border-[#d4af37] rounded-xl hidden group-hover/sub:block">
+        {children.map((item, idx) =>
+          item.children ? (
+            <SubSubMenu
+              key={item.label || idx}
+              label={item.label}
+              children={item.children}
+            />
+          ) : (
+            <Link
+              key={item.path || idx}
+              to={item.path}
+              className={`block px-3 py-2 text-xs lg:text-sm text-slate-100 
+                        hover:bg-[#174873] hover:text-white border-b border-blue-900/60 whitespace-nowrap 
+                        transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+            >
+              {item.label}
+            </Link>
+          )
+        )}
+      </div>
     </div>
   );
 };
+
+
 
 
 // ============================================
 // DESKTOP — LEVEL 1 - Main dropdown menu (hover flyout)
 // ============================================
-const DropdownMenu = ({ title, items }) => {
-  const [isOpen, setIsOpen] = useState(false);
 
+// const DropdownMenu = ({ title, items }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+
+//   return (
+//     <div
+//       className="relative"
+//       onMouseEnter={() => setIsOpen(true)}   
+//       onMouseLeave={() => setIsOpen(false)}
+//     >
+//      <button className="flex items-center gap-1 px-2 lg:px-3 py-3 text-white
+//                    text-xs lg:text-sm font-medium hover:bg-[#406BC7] 
+//                    hover:text-white transition-colors duration-200 
+//                    h-full whitespace-nowrap">
+//         {title}
+//         <span className="text-xs">▼</span>
+//       </button>
+
+//       {isOpen && (
+//         <div className="absolute top-full left-0 bg-[#406BC7] shadow-lg
+//                         min-w-48 z-[999] border border-blue-900">
+//           {items.map((item) =>
+//             item.children ? (
+//               <SubMenu
+//                 key={item.label}
+//                 label={item.label}
+//                 children={item.children}
+//               />
+//             ) : (
+//               <Link
+//                 key={item.path}
+//                 to={item.path}
+//                 className="block px-3 py-1.5 text-xs lg:text-sm text-white
+//                            hover:bg-[#2d54a8] border-b border-blue-800 whitespace-nowrap"
+//               >
+//                 {item.label}
+//               </Link>
+//             )
+//           )}
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+const DropdownMenu = ({ title, items }) => {
   return (
-    <div
-      className="relative"
-      onMouseEnter={() => setIsOpen(true)}   
-      onMouseLeave={() => setIsOpen(false)}
-    >
-     <button className="flex items-center gap-1 px-2 lg:px-3 py-3 text-white
-                   text-xs lg:text-sm font-medium hover:bg-[#406BC7] 
-                   hover:text-white transition-colors duration-200 
-                   h-full whitespace-nowrap">
+    <div className="relative group/main">
+      <button className="flex items-center gap-1.5 px-3 lg:px-5 py-3 text-white text-sm lg:text-sm font-bold 
+                       hover:bg-[#174873] transition-all duration-200 h-full whitespace-nowrap cursor-pointer">
         {title}
-        <span className="text-xs">▼</span>
+        <span className="text-sm text-white font-bold">▼</span>
       </button>
 
-      {isOpen && (
-        <div className="absolute top-full left-0 bg-[#406BC7] shadow-lg
-                        min-w-48 z-[999] border border-blue-900">
-          {items.map((item) =>
-            item.children ? (
-              <SubMenu
-                key={item.label}
-                label={item.label}
-                children={item.children}
-              />
-            ) : (
-              <Link
-                key={item.path}
-                to={item.path}
-                className="block px-3 py-1.5 text-xs lg:text-sm text-white
-                           hover:bg-[#2d54a8] border-b border-blue-800 whitespace-nowrap"
-              >
-                {item.label}
-              </Link>
-            )
-          )}
-        </div>
-      )}
+      <div className="absolute top-full left-0 bg-[#0f3358] shadow-2xl min-w-48 lg:min-w-48 z-[999] 
+                      border-2 border-[#d4af37] rounded-b-xl hidden group-hover/main:block">
+        {items.map((item, idx) =>
+          item.children ? (
+            <SubMenu
+              key={item.label || idx}
+              label={item.label}
+              children={item.children}
+            />
+          ) : (
+            <Link
+              key={item.path || idx}
+              to={item.path}
+              className={`block px-3 py-1.5 text-xs lg:text-sm text-slate-100 hover:bg-[#174873] 
+                        hover:text-white border-b border-blue-900/60 whitespace-nowrap 
+                        transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+            >
+              {item.label}
+            </Link>
+          )
+        )}
+      </div>
     </div>
   );
 };
+
 
 // ============================================
 // MOBILE — recursive accordion item (click-based, works on touch)
@@ -267,11 +368,11 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
       <div className="border-b border-blue-800/60">
         <button
           onClick={() => setOpen((o) => !o)}
-          className="w-full flex items-center justify-between py-3 pr-4 text-sm text-white text-left"
+          className="w-full flex items-center justify-between py-2 pr-3 text-sm text-white text-left"
           style={{ paddingLeft: `${16 + depth * 14}px` }}
         >
           <span>{item.label}</span>
-          <span className={`text-xs transition-transform duration-200 flex-shrink-0 ml-2 ${open ? "rotate-180" : ""}`}>▼</span>
+          <span className={`text-sm transition-transform duration-200 flex-shrink-0 ml-2 ${open ? "rotate-90" : ""}`}>►</span>
         </button>
         {open && (
           <div className="bg-[#0c2a49]">
@@ -293,7 +394,7 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
     <Link
       to={item.path}
       onClick={onNavigate}
-      className="block py-3 pr-4 text-sm text-blue-100 border-b border-blue-800/40 hover:text-white"
+      className="block py-2 pr-3 text-sm text-blue-100 border-b border-blue-800/40 hover:text-white"
       style={{ paddingLeft: `${16 + depth * 14}px` }}
     >
       {item.label}
@@ -325,12 +426,12 @@ const MobileMenu = ({ isOpen, onClose }) => {
           overflow-y-auto transition-transform duration-300 md:hidden
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        <div className="flex items-center justify-between px-4 py-4 border-b border-blue-800 sticky top-0 bg-[#0f3358] z-10">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-blue-800 sticky top-0 bg-[#0f3358] z-10">
           <span className="text-white font-semibold text-base">Menu</span>
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="text-white text-2xl leading-none w-8 h-8 flex items-center justify-center"
+            className="text-white text-2xl leading-none w-6 h-6 flex font-bold items-center justify-center"
           >
             ✕
           </button>
@@ -354,8 +455,26 @@ const Navbar = () => {
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
   const token = localStorage.getItem('token');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notices, setNotices] = useState([]);
 
-  const [menuOpen, setMenuOpen] = useState(false);
+  // const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/notices`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setNotices(data);
+          }
+        }
+      } catch (err) {
+        // Fallback gracefully if API is un-reachable
+      }
+    };
+    fetchNotices();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -364,61 +483,79 @@ const Navbar = () => {
   };
 
   return (
-    <div className="relative z-[999]">       
+    <header className="relative z-[999] shadow-lg">         
 
       {/* ---- TOP BAR ---- */}
-      <div className="bg-[#0f3358] text-[10px] sm:text-xs text-blue-200 px-3 sm:px-6 py-1
-                      flex justify-end gap-3 sm:gap-6">
-        {token && isAdmin ? (
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link to="/admin" className="text-blue-200 hover:text-white">
-              Admin Panel
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-2 sm:px-3 py-0.5 rounded hover:bg-red-700 transition-colors"
+      <div className="bg-[#0f3358] text-xs sm:text-xs text-blue-200 px-3 sm:px-6 py-1.5
+                      flex justify-between items-center border-b border-[#d4af37]/40">
+        <div className="flex items-center gap-3">
+          <span className="text-[#d4af37] font-semibold text-[11px] uppercase tracking-wider hidden sm:inline-block">
+            Banaras Hindu University
+          </span>
+          <span className="text-slate-400 hidden sm:inline">|</span>
+          <span className="text-slate-300 text-[11px] font-semibold uppercase tracking-wider sm:inline-block">Mahila Maha Vidyalaya</span>
+        </div>
+        <div>
+          {token && isAdmin ? (
+            <div className="flex items-center gap-3">
+              <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
+                Admin Panel
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            /* CAMOUFLAGED ADMIN LOGIN - Invisible by default, turns text-white on hover */
+            <a
+              href="/login"
+              className="text-[#0f3358] hover:text-white transition-colors duration-200 text-xs font-medium cursor-default hover:cursor-pointer select-none"
+              title="Admin Login"
             >
-              Logout
-            </button>
-          </div>
-        ) : (
-          <a href="/login" className="text-[#0f3358] hover:text-white">
-            Admin Login
-          </a>
-        )}
+              Admin Login
+            </a>
+          )}
+        </div>
       </div>
 
       {/* ---- COLLEGE HEADER ---- */}
-      <div className="bg-white px-2 sm:px-4 py-1 flex items-center justify-between gap-1">
+      <div className="bg-white px-2 sm:px-3 md:px-6 sm:py-2 flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3
+                        border-b border-[#d4af37]/40 shadow-sm overflow-hidden">
        
         {/* BHU Logo */}
-       <div className="flex items-end gap-2 pl-0 flex-shrink-0">
-       <img
-       src="/bhu/logo_bhu.png"
-       alt="BHU Logo"
-       className="h-9 sm:h-12 md:h-18 rounded-full object-contain bg-white"
-  />  
-</div>
-         {/* CENTER - MMV SAARTHI LOGO — hidden below sm so the two core
-             identity logos (BHU + MMV) keep priority for space on phones */}
-         <div className="hidden sm:block flex-shrink-0">
+        <div className="flex-shrink-0">
+          <img
+            src="/bhu/logo_bhu.png"
+            alt="BHU Logo"
+            className="h-10 min-[390px]:h-11 sm:h-12 md:h-16 object-contain"
+        /> 
+        </div> 
+
+        {/* CENTER - MMV SAARTHI LOGO — hidden below sm so the two core
+            identity logos (BHU + MMV) keep priority for space on phones */}
+        <div className="flex-1 min-w-0 flex justify-center">
           <img 
             src="/mmv_saarthi_logo.png" 
             alt="mmv-saarthi-logo"
-            className="w-32 h-14 md:w-50 md:h-20 object-contain bg-white" />
-         </div>
+            className="w-24 h-10  min-[390px]:w-28 min-[390px]:h-11 sm:w-32 sm:h-12 md:w-44 md:h-16 object-contain" 
+          />
+        </div>
       
          {/* MMV Logo + Name */}
-         <div className="flex items-center gap-1 min-w-0">
-          <div className="min-w-0">
-            <h1 className="text-[#280f48] text-[11px] sm:text-sm md:text-xl font-medium truncate">
-              Mahila Maha Vidyalaya
-            </h1>
-          </div>
+         <div className="flex items-center flex-shrink-0">
+          {/* College name — desktop only */}
+          <h1 className="hidden lg:block text-[#182b4f] text-lg xl:text-2xl font-bold font-cinzel leading-tight uppercase tracking-wide whitespace-nowrap mr-2">
+            Mahila Maha Vidyalaya
+          </h1>
+          
+          {/* MMV Logo */}
           <img
             src="/mmvlogo.jpeg"
             alt="MMV Logo"
-            className="h-9 w-9 sm:h-12 sm:w-12 md:w-20 md:h-18 rounded-full object-contain bg-white flex-shrink-0"
+            className="h-9 w-9 min-[390px]:h-10 min-[390px]:w-10 sm:h-12 sm:w-12 md:w-14 md:h-14 object-contain"
           />
         </div>
 
@@ -426,28 +563,64 @@ const Navbar = () => {
         <button
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
-          className="md:hidden flex-shrink-0 ml-1 w-9 h-9 flex flex-col items-center justify-center gap-1 rounded hover:bg-gray-100"
+          className="lg:hidden flex-shrink-0 w-8 h-8 flex flex-col items-center justify-center gap-1 rounded hover:bg-gray-100 active:bg-gray-200"
         >
-          <span className="block w-6 h-0.5 bg-[#0f3358]" />
-          <span className="block w-6 h-0.5 bg-[#0f3358]" />
-          <span className="block w-6 h-0.5 bg-[#0f3358]" />
+          <span className="block w-5 h-0.5 bg-[#0f3358]" />
+          <span className="block w-5 h-0.5 bg-[#0f3358]" />
+          <span className="block w-5 h-0.5 bg-[#0f3358]" />
         </button>
-        
       </div>
 
-       {/* ---- NAVIGATION BAR (desktop / tablet-landscape) ---- */}
-      <nav className="hidden md:flex bg-[#0f3358] px-2 border-b border-gray-200 relative justify-end">
+      {/* ---- DYNAMIC MOVING NOTICE TICKER STRIP (#0f3358) ---- */}
+      <div className="bg-[#0f3358] border-t border-b border-[#d4af37]/40 text-xs sm:text-sm flex items-center shadow-inner overflow-hidden relative z-20">
+        {/* Sticky Ticker Badge */}
+        <div className="bg-[#7d311f] text-white px-3 sm:px-4 py-1.5 font-bold uppercase tracking-wider flex items-center gap-2 z-30 shadow-md flex-shrink-0 border-r border-[#d4af37]/50">
+          <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
+          <span className="text-[10px] sm:text-xs font-cinzel text-[#fce8b2]">Announcements</span>
+        </div>
 
-        <div className='flex relative justify-end'>
+        {/* Scrolling Marquee Container */}
+        <div className="overflow-hidden whitespace-nowrap py-1.5 flex-1 relative bg-[#0f3358]">
+          <div className="inline-flex animate-marquee hover:[animation-play-state:paused] items-center">
+            {notices.length > 0 ? (
+              // Duplicate array twice to create a seamless infinite marquee scroll loop
+              [...notices, ...notices].map((n, idx) => (
+                <Link
+                  key={`${n.id || idx}-${idx}`}
+                  to="/notices"
+                  className="inline-flex items-center gap-2 mx-6 text-slate-100 hover:text-[#d4af37] transition-colors font-medium cursor-pointer"
+                >
+                  <span className="bg-[#174873] text-[#d4af37] px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#d4af37]/30 shadow-xs">
+                    {n.category || 'Notice'}
+                  </span>
+                  <span className="hover:underline">{n.title}</span>
+                  <span className="text-[#d4af37]/70 ml-3">•</span>
+                </Link>
+              ))
+            ) : (
+              <div className="inline-flex items-center gap-4 px-6 text-slate-200 font-medium">
+                <span className="text-[#d4af37] font-semibold">Welcome to Mahila Maha Vidyalaya (MMV) Portal — Banaras Hindu University</span>
+                <span className="text-[#d4af37]">•</span>
+                <span>Visit the Notices section for real-time examination schedules and official notifications.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ---- NAVIGATION BAR (desktop / tablet-landscape) ---- */}
+      <nav className="hidden xl:flex bg-[#0f3358] px-2 border-b-2 border-[#d4af37] relative justify-end shadow-md">
+
+        <div className='flex relative justify-end items-center'>
           <Link to="/"
-            className="px-2 lg:px-4 py-3 text-white text-xs lg:text-sm font-medium
-                    hover:bg-[#406BC7] hover:text-white
+            className="px-3 lg:px-5 py-3.5 text-white text-xs lg:text-sm font-bold
+                    hover:bg-[#174873] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             Home
           </Link>
           <Link to="/about"
-            className="px-2 lg:px-4 py-3 text-white text-xs lg:text-sm font-medium
-                    hover:bg-[#406BC7] hover:text-white
+            className="px-3 lg:px-5 py-3.5 text-white text-xs lg:text-sm font-bold
+                    hover:bg-[#174873] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             About MMV
           </Link>
@@ -457,22 +630,22 @@ const Navbar = () => {
           <DropdownMenu title="Facilities" items={facilitiesItems} />
 
           <Link to="/notices"
-            className="px-2 lg:px-4 py-3 text-white text-xs lg:text-sm font-medium
-                    hover:bg-[#406BC7] hover:text-white
+            className="px-3 lg:px-5 py-3.5 text-white text-xs lg:text-sm font-bold
+                    hover:bg-[#174873] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             Notices
         </Link>
 
           <Link to="/ai-assistant"
-            className="px-2 lg:px-4 py-3 text-white text-xs lg:text-sm font-medium
-                    hover:bg-[#406BC7] hover:text-white
+            className="px-3 lg:px-5 py-3.5 text-white text-xs lg:text-sm font-bold
+                    hover:bg-[#174873] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             AI Assistant
           </Link>
 
           <Link to="/contact"
-            className="px-2 lg:px-4 py-3 text-white text-xs lg:text-sm font-medium
-                    hover:bg-[#406BC7] hover:text-white
+            className="px-3 lg:px-5 py-3.5 text-white text-xs lg:text-sm font-bold
+                    hover:bg-[#174873] hover:text-white
                     transition-colors duration-200 whitespace-nowrap">
             Contact
         </Link>
@@ -483,7 +656,7 @@ const Navbar = () => {
       {/* ---- MOBILE MENU PANEL ---- */}
       <MobileMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
-    </div>
+    </header>
   );
 };
 
