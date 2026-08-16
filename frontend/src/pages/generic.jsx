@@ -553,22 +553,26 @@ const GenericContentPage = ({
                     No Photo Uploaded
                   </div>
                 )}
-                <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => profileImageRef.current?.click()}
-                    className="px-3 py-1.5 bg-white text-black rounded-lg text-xs font-medium"
-                  >
-                    {profilePhoto ? 'Change Photo' : 'Upload Photo'}
-                  </button>
-                  {profilePhoto && (
+                <div className="space-y-2 text-center sm:text-left">
+                  <p className="text-xs font-semibold text-slate-600">Profile Photo</p>
+                  <p className="text-[11px] text-slate-500">Recommended high-resolution portrait format.</p>
+                  <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
                     <button
-                      onClick={handleRemoveProfilePhoto}
-                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg text-xs font-medium bg-white"
+                      onClick={() => profileImageRef.current?.click()}
+                      className="px-3.5 py-1.5 bg-[#0f3358] text-white rounded-lg text-xs font-semibold hover:bg-[#174873] transition-colors"
                     >
-                      Remove Photo
+                      {profilePhoto ? 'Change Photo' : 'Upload Photo'}
                     </button>
-                  )}
+                    {profilePhoto && (
+                      <button
+                        onClick={handleRemoveProfilePhoto}
+                        className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -602,6 +606,10 @@ const GenericContentPage = ({
                 <button onClick={() => setIsEditingProfile(false)}
                   className="px-4 py-2 text-white rounded-lg font-semibold bg-red-500 text-sm">
                   Cancel
+                </button>
+                <button onClick={handleSaveProfile} disabled={savingProfile}
+                  className="px-5 py-2 bg-[#0f3358] text-white rounded-lg text-xs font-bold hover:bg-[#174873] disabled:opacity-50 shadow-md">
+                  {savingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
                 </button>
               </div>
             </div>
@@ -663,6 +671,20 @@ const GenericContentPage = ({
                   </p>
                 )}
 
+                {profile.email && (
+                  <a
+                    href={`mailto:${profile.email}`}
+                    className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
+                  >
+                    <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div className="min-w-0 pr-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
+                      <span className="text-xs sm:text-sm font-semibold text-[#fce8b2] break-all">{profile.email}</span>
+                    </div>
+                  </a>
+                )}
               </div>
             </>
           ) : (
@@ -1003,7 +1025,7 @@ const GenericContentPage = ({
                         return <span key={i}>{renderTextWithLinks(part)}</span>;
                       });
                     };
-                    {/*bullets*/}
+                    //bullets
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
@@ -1078,7 +1100,7 @@ const GenericContentPage = ({
                         flushNoteBullets();
                         {/*notes normal text*/}
                         elements.push(
-                          <div key={`note-${elements.length}`} className="bg-[#FFFBEA] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
+                          <div key={`note-${elements.length}`} className="bg-amber-50/90 border-l-4 border-[#7d311f] border-r border-t border-b border-amber-200/80 p-4 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3">
                             {noteElements}
                           </div>
                         );
