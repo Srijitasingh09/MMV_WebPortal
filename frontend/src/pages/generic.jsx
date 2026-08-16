@@ -510,19 +510,17 @@ const GenericContentPage = ({
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
       {/* ── BHU OFFICIAL CENTERED PILL HEADING ── */}
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-left">
         <div className="inline-flex items-center justify-center gap-3 sm:gap-4 px-8 sm:px-12 py-3.5 sm:py-4.5 rounded-full bg-[#FAF7F2] border-2 border-[#d4af37] shadow-md text-center max-w-full sm:max-w-max">
-          <span className="text-[#d4af37] text-xs sm:text-4xl shrink-0">•</span>
-          <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-3xl md:text-4xl tracking-wide leading-tight text-center">
+          <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl tracking-wide leading-tight text-center">
             {title}
           </h1>
-          <span className="text-[#d4af37] text-sm sm:text-4xl shrink-0">•</span>
         </div>
       </div>
 
-      {/* ── OFFICIAL EXECUTIVE PROFILE CARD ── */}
+      {/* ── PROFILE SECTION ── */}
       {hasProfile && (
-        <div className="relative overflow-hidden rounded-3xl bg-[#0f3358] p-6 sm:p-10 shadow-2xl border-2 border-[#d4af37]">
+        <div className="relative overflow-hidden rounded-3xl text-center bg-[#0f3358] p-6 sm:p-10 shadow-2xl border-2 border-[#d4af37]">
           {/* Admin Edit Button */}
           {isAdmin && !isEditingProfile && (
             <button
@@ -535,14 +533,13 @@ const GenericContentPage = ({
           )}
 
           {isEditingProfile ? (
-            <div className="text-left max-w-2xl mx-auto space-y-4 bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-2xl text-slate-800 shadow-2xl relative z-10 border border-amber-300">
+            <div className="text-left max-w-xl mx-auto space-y-3">
               <div className="flex items-center justify-between border-b pb-3">
-                <h3 className="text-xl font-bold text-[#0f3358] font-cinzel">Edit Profile</h3>
+                <h3 className="text-xl font-bold text-[#bfccda] font-cinzel">Edit Profile</h3>
                 <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
               </div>
-
-              {/* PROFILE PHOTO EDIT */}
-              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              {/* PROFILE PHOTO */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-4">
                 {profilePhoto ? (
                   <img
                     src={`${API}${profilePhoto.photo_url}`}
@@ -580,33 +577,34 @@ const GenericContentPage = ({
               </div>
 
               {/* INPUT FIELDS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                  { key: 'name',          label: 'Full Name' },
-                  { key: 'designation',   label: 'Official Designation' },
-                  { key: 'university',    label: 'Department / Institution' },
-                  { key: 'address',       label: 'Office Location / Address' },
-                  { key: 'phone',         label: 'Direct Contact Number' },
-                  { key: 'officeContact', label: 'Office Phone / Extension' },
-                  { key: 'email',         label: 'Official Email Address' },
-                ].map(field => (
-                  <div key={field.key} className={field.key === 'address' || field.key === 'university' ? 'sm:col-span-2' : ''}>
-                    <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
-                      {field.label}
-                    </label>
-                    <input
-                      value={editProfile[field.key] || ''}
-                      onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
-                      placeholder={field.label}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"
-                    />
-                  </div>
-                ))}
-              </div>
+              {[
+                { key: 'name',          label: 'Full Name' },
+                { key: 'designation',   label: 'Designation' },
+                { key: 'university',    label: 'University / Department' },
+                { key: 'address',       label: 'Address' },
+                { key: 'phone',         label: 'Contact' },
+                { key: 'officeContact', label: 'Office Contact' },
+                { key: 'email',         label: 'Official Email' },
+              ].map(field => (
+                <div key={field.key} >
+                  <label className="block text-base font-semibold text-white mb-1">
+                    {field.label}
+                  </label>
+                  <input
+                    value={editProfile[field.key] || ''}
+                    onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
+                    placeholder={field.label}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"  />
+                </div>
+              ))}
 
-              <div className="flex gap-3 justify-end pt-3 border-t">
+              <div className="flex gap-3 justify-center pt-3 border-t">
+                <button onClick={handleSaveProfile} disabled={savingProfile}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50 ">
+                  {savingProfile ? 'Saving...' : 'Save'}
+                </button>
                 <button onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 text-xs">
+                  className="px-4 py-2 text-white rounded-lg font-semibold bg-red-500 text-sm">
                   Cancel
                 </button>
                 <button onClick={handleSaveProfile} disabled={savingProfile}
@@ -616,103 +614,79 @@ const GenericContentPage = ({
               </div>
             </div>
           ) : profile.name ? (
-            /* ── EXECUTIVE USER VIEW ── */
-            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-              {/* Executive Photo with Simple Muted Gold Frame */}
-              {profilePhoto ? (
-                <div className="relative flex-shrink-0">
-                  <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
-                    <img
-                      src={`${API}${profilePhoto.photo_url}`}
-                      alt={profilePhoto.photo_name}
-                      className="rounded-xl object-cover w-44 h-56 sm:w-52 sm:h-64"
-                      style={{ objectPosition: 'top center' }}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="relative flex-shrink-0">
-                  <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
-                    <div className="w-44 h-56 sm:w-52 sm:h-64 rounded-xl bg-[#081a2f] flex flex-col items-center justify-center text-slate-400 p-4 text-center border border-white/10">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 mb-2 text-[#d4af37]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      <span className="text-xs font-semibold text-slate-300">Administrative Office</span>
-                    </div>
-                  </div>
-                </div>
+            <> 
+            {/* ── EXECUTIVE USER VIEW ── */}
+              {profilePhoto && (
+                <img
+                  src={`${API}${profilePhoto.photo_url}`}
+                  alt={profilePhoto.photo_name}
+                  className="rounded-lg object-cover border-3 border-[#d4af37] mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                  style={{ objectPosition: 'top center' }}
+                />
               )}
 
-              {/* Profile Details & Metadata Cards */}
-              <div className="flex-1 text-center md:text-left space-y-4 w-full">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white font-cinzel tracking-wide leading-tight">
-                    {profile.name}
-                  </h2>
-                  {profile.designation && (
-                    <p className="text-base sm:text-lg md:text-xl font-semibold text-[#fce8b2] mt-1 font-sans">
-                      {profile.designation}
-                    </p>
-                  )}
-                  {profile.university && (
-                    <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
-                      {profile.university}
-                    </p>
-                  )}
-                  {profile.address && (
-                    <p className="text-xs sm:text-sm text-slate-400 mt-1 flex items-center justify-center md:justify-start gap-1.5">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#d4af37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                      {profile.address}
-                    </p>
-                  )}
-                </div>
+              {/* Profile Details & Metadata */}
 
-                {/* Contact Items — Displayed on separate lines, tight wrapping container */}
-                <div className="flex flex-col items-center md:items-start gap-2.5 pt-2 w-full">
-                  {profile.phone && (
-                    <a
-                      href={`tel:${profile.phone}`}
-                      className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
-                    >
-                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                      </div>
-                      <div className="min-w-0 pr-1">
-                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Direct Phone:</span>
-                        <span className="text-xs sm:text-sm font-semibold text-white">{profile.phone}</span>
-                      </div>
-                    </a>
-                  )}
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#E8C97A] break-words">
+                {profile.name}
+              </h2>
 
-                  {profile.officeContact && (
-                    <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-left w-fit max-w-full">
-                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                      </div>
-                      <div className="min-w-0 pr-1">
-                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Office Extension:</span>
-                        <span className="text-xs sm:text-sm font-semibold text-white">{profile.officeContact}</span>
-                      </div>
+              {profile.designation && (
+                <p className="text-base sm:text-xl md:text-2xl font-semibold text-[#E8C97A] mt-1">
+                  {profile.designation}
+                </p>
+              )}
+
+              {profile.university && (
+                <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                  {profile.university}
+                </p>
+              )}
+
+              {profile.address && (
+                <p className="text-xs sm:text-sm text-slate-400 mt-1 flex items-center justify-center gap-1.5">
+                  {profile.address}
+                </p>
+              )}
+
+              <div className="mt-4 space-y-1">
+                {profile.phone && (
+                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                    <span className="font-semibold">Contact:</span>{" "}
+                    {profile.phone}
+                  </p>
+                )}
+
+                {profile.officeContact && (
+                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                    <span className="font-semibold">Office Contact:</span>{" "}
+                    {profile.officeContact}
+                  </p>
+                )}
+
+                {profile.email && (
+                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                    <span className="font-semibold">Official Email:</span>{" "}
+                    {profile.email}
+                  </p>
+                )}
+
+                {profile.email && (
+                  <a
+                    href={`mailto:${profile.email}`}
+                    className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
+                  >
+                    <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                     </div>
-                  )}
-
-                  {profile.email && (
-                    <a
-                      href={`mailto:${profile.email}`}
-                      className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
-                    >
-                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                      </div>
-                      <div className="min-w-0 pr-1">
-                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
-                        <span className="text-xs sm:text-sm font-semibold text-[#fce8b2] break-all">{profile.email}</span>
-                      </div>
-                    </a>
-                  )}
-                </div>
+                    <div className="min-w-0 pr-1">
+                      <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
+                      <span className="text-xs sm:text-sm font-semibold text-[#fce8b2] break-all">{profile.email}</span>
+                    </div>
+                  </a>
+                )}
               </div>
-            </div>
+            </>
           ) : (
             <div className="text-center py-8 text-slate-300 italic">
               {isAdmin ? 'No profile details saved. Click Edit Profile above to configure.' : 'Official leadership profile coming soon.'}
@@ -1212,8 +1186,7 @@ const GenericContentPage = ({
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#cbe3f5] border-l-4 border-[#0f3358] border-y border-r border-blue-200/80 p-3.5 sm:p-4 rounded-r-xl text-[#081a2f] font-medium text-xs sm:text-sm space-y-1.5 shadow-xs my-2.5">
-                              {noteElements}
+                            <div key={`note-${elements.length}`} className="bg-amber-50/90 border-l-4 border-[#7d311f] border-r border-t border-b border-amber-200/80 p-4 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3">                              {noteElements}
                             </div>
                           );
                         }
@@ -1277,8 +1250,7 @@ const GenericContentPage = ({
                       //accordian topmost view
                       const isOpen = !!openSections[index];
                       elements.push(
-                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">
-                          <button
+                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">                          <button
                             type="button"
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
                             className="w-full flex items-center justify-between gap-3 px-5 py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
@@ -1286,8 +1258,8 @@ const GenericContentPage = ({
                             <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
-                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
-                              ▼
+                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}>
+                              ▶
                             </span>
                           </button>
                           {isOpen && (
@@ -1323,7 +1295,7 @@ const GenericContentPage = ({
                         const [headerRow, ...rawBodyRows] = rowsParsed;
                         const colCount = headerRow.length;
 
-                        // Normalize every body row to exactly colCount cells
+                        // Normalize every body row to exactly colCount cells —
                         const bodyRows = rawBodyRows.map(cells => {
                           const normalized = cells.slice(0, colCount);
                           while (normalized.length < colCount) normalized.push('');
@@ -1412,7 +1384,7 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <div key={idx} className="mb-3.5 sm:mb-4 text-center">
+                           <div key={idx} className="mb-3.5 sm:mb-4 text-center">
                             <h2 className={`${HEADING_STYLES.heading} font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#d4af37]`}>
                               {trimmed}
                             </h2>
@@ -1583,7 +1555,7 @@ const GenericContentPage = ({
       {hasTable && (
         <div className="space-y-3">
 
-          {/* Table heading / caption */}
+          {/* Table heading / caption*/}
           {(tableHeading || isAdmin) && (
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
               {isEditingHeading ? (
@@ -1616,8 +1588,7 @@ const GenericContentPage = ({
                   {isAdmin && (
                     <button
                       onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(true); }}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"
-                    >
+                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"                    >
                       {tableHeading ? 'Edit Heading' : '+ Add Heading'}
                     </button>
                   )}
@@ -1625,6 +1596,8 @@ const GenericContentPage = ({
               )}
             </div>
           )}
+
+          {/* ------------------------------- */}
 
           {(() => {
             const isPdfCol = (col) =>
@@ -1738,7 +1711,7 @@ const GenericContentPage = ({
                 </div>
               );
 
-            return (
+             return (
               <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white">
                 {/* Single horizontally-scrollable table — identical markup/appearance on phone and desktop */}
                 <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>

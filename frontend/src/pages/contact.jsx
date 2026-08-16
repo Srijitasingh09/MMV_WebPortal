@@ -443,11 +443,11 @@ const Contact = () => {
             Official Administrative Directory
           </div>
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel"
           >
             Contact Us
           </h1>
-          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
+           <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
             Reach out to Mahila Maha Vidyalaya — official contact channels &amp; administrative directory
           </p>
         </div>
