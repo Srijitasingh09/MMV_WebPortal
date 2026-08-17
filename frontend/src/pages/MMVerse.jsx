@@ -435,23 +435,26 @@ export default function MMVerse() {
   // const showInput = !!activeSection && !loading;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-6 sm:py-8 px-3 sm:px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#EAEFF5]">
       <BrandFonts />
 
-      <div className="max-w-5xl mx-auto space-y-6">
-        {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
-        <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-8 rounded-2xl shadow-xl border-b-4 border-[#d4af37]">
-          <div className="text-center relative z-10">
-           
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 font-cinzel tracking-wide">
-              MMVerse Assistant
-            </h1>
-             
-            <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto font-sans-official">
-              Your official AI assistant for Mahila Maha Vidyalaya, BHU. Select a topic section and ask any inquiry.
-            </p>
+      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
+      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
+            Official AI Information Portal
           </div>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide">
+            MMVerse Assistant
+          </h1>
+          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
+            Your official AI assistant for Mahila Maha Vidyalaya, BHU — select a topic or ask any query
+          </p>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
 
         {/* Chat card — identical width as header banner */}
         <div

@@ -19,17 +19,17 @@ const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
-  heading:        'text-2xl sm:text-3xl font-bold text-[#0f3358] font-cinzel tracking-wide pb-1.5',   // main page-level heading (first line of description)
-  subheading:     'text-xl sm:text-2xl font-bold text-[#0f3358] font-cinzel',       // '## ' — description body, description notes, accordion notes
-  subSubheading:  'text-base sm:text-lg font-bold text-[#174873] font-sans-official',    // '### ' — description body, description notes, accordion notes
-  accordionTitle: 'text-sm sm:text-base font-semibold text-[#0f3358]',    // accordion bar title ('+++ Title')
+  heading:        'text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#0f3358] font-cinzel tracking-wide pb-1.5',   // main page-level heading (first line of description)
+  subheading:     'text-base sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel',       // '## ' — description body, description notes, accordion notes
+  subSubheading:  'text-xs sm:text-base md:text-lg font-bold text-[#174873] font-sans-official',    // '### ' — description body, description notes, accordion notes
+  accordionTitle: 'text-xs sm:text-sm md:text-base font-semibold text-[#0f3358]',    // accordion bar title ('+++ Title')
 };
 
 // ─── Body text size per description section ────────────────────────────────
 const BODY_STYLES = {
-  default:       'text-md',   // text before any '## '/'### ' has appeared yet
-  subheading:    'text-md', // text under the most recent '## ' subheading
-  subSubheading: 'text-md',   // text under the most recent '### ' sub-subheading
+  default:       'text-xs sm:text-sm md:text-base leading-relaxed',   // text before any '## '/'### ' has appeared yet
+  subheading:    'text-xs sm:text-sm md:text-base leading-relaxed', // text under the most recent '## ' subheading
+  subSubheading: 'text-xs sm:text-sm md:text-base leading-relaxed',   // text under the most recent '### ' sub-subheading
 };
 
 // Defined outside component so it never causes stale closure issues inside useCallback/useEffect
@@ -508,19 +508,27 @@ const GenericContentPage = ({
   );
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-8">
-      {/* ── BHU OFFICIAL CENTERED PILL HEADING ── */}
-      <div className="flex justify-left">
-        <div className="inline-flex items-center justify-center gap-3 sm:gap-4 px-8 sm:px-12 py-3.5 sm:py-4.5 rounded-full bg-[#FAF7F2] border-2 border-[#d4af37] shadow-md text-center max-w-full sm:max-w-max">
-          <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl tracking-wide leading-tight text-center">
+    <div className="max-w-6xl mx-auto px-3.5 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8">
+      {/* ── BHU OFFICIAL PORTAL PAGE HEADING (WITHOUT BACKGROUND CONTAINER) ── */}
+      <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4">
+        {/* Left Side: Page Name */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+          <h1 className="text-[#0f3358] font-cinzel font-bold text-base sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
             {title}
           </h1>
         </div>
+        {/* Right Side: Section / Page Breadcrumb (Smaller) */}
+        <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+          <span className="text-slate-400">{section ? section.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : (backLabel && backLabel !== 'Home' ? backLabel : 'Home')}</span>
+          <span className="text-slate-300">/</span>
+          <span className="text-[#7d311f] font-semibold">{title}</span>
+        </div>
       </div>
 
-      {/* ── PROFILE SECTION ── */}
+      {/* ── OFFICIAL EXECUTIVE PROFILE CARD ── */}
       {hasProfile && (
-        <div className="relative overflow-hidden rounded-3xl text-center bg-[#0f3358] p-6 sm:p-10 shadow-2xl border-2 border-[#d4af37]">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#0f3358] p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
           {/* Admin Edit Button */}
           {isAdmin && !isEditingProfile && (
             <button
@@ -533,13 +541,14 @@ const GenericContentPage = ({
           )}
 
           {isEditingProfile ? (
-            <div className="text-left max-w-xl mx-auto space-y-3">
+            <div className="text-left max-w-2xl mx-auto space-y-4 bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-2xl text-slate-800 shadow-2xl relative z-10 border border-amber-300">
               <div className="flex items-center justify-between border-b pb-3">
-                <h3 className="text-xl font-bold text-[#bfccda] font-cinzel">Edit Profile</h3>
+                <h3 className="text-xl font-bold text-[#0f3358] font-cinzel">Edit Profile</h3>
                 <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
               </div>
-              {/* PROFILE PHOTO */}
-              <div className="flex flex-col sm:flex-row items-center gap-6 p-4">
+
+              {/* PROFILE PHOTO EDIT */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 {profilePhoto ? (
                   <img
                     src={`${API}${profilePhoto.photo_url}`}
@@ -577,34 +586,33 @@ const GenericContentPage = ({
               </div>
 
               {/* INPUT FIELDS */}
-              {[
-                { key: 'name',          label: 'Full Name' },
-                { key: 'designation',   label: 'Designation' },
-                { key: 'university',    label: 'University / Department' },
-                { key: 'address',       label: 'Address' },
-                { key: 'phone',         label: 'Contact' },
-                { key: 'officeContact', label: 'Office Contact' },
-                { key: 'email',         label: 'Official Email' },
-              ].map(field => (
-                <div key={field.key} >
-                  <label className="block text-base font-semibold text-white mb-1">
-                    {field.label}
-                  </label>
-                  <input
-                    value={editProfile[field.key] || ''}
-                    onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
-                    placeholder={field.label}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"  />
-                </div>
-              ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { key: 'name',          label: 'Full Name' },
+                  { key: 'designation',   label: 'Official Designation' },
+                  { key: 'university',    label: 'Department / Institution' },
+                  { key: 'address',       label: 'Office Location / Address' },
+                  { key: 'phone',         label: 'Contact Number' },
+                  { key: 'officeContact', label: 'Office Phone / Extension' },
+                  { key: 'email',         label: 'Official Email Address' },
+                ].map(field => (
+                  <div key={field.key} className={field.key === 'address' || field.key === 'university' ? 'sm:col-span-2' : ''}>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                      {field.label}
+                    </label>
+                    <input
+                      value={editProfile[field.key] || ''}
+                      onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
+                      placeholder={field.label}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"
+                    />
+                  </div>
+                ))}
+              </div>
 
-              <div className="flex gap-3 justify-center pt-3 border-t">
-                <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50 ">
-                  {savingProfile ? 'Saving...' : 'Save'}
-                </button>
+              <div className="flex gap-3 justify-end pt-3 border-t">
                 <button onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 text-white rounded-lg font-semibold bg-red-500 text-sm">
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 text-xs">
                   Cancel
                 </button>
                 <button onClick={handleSaveProfile} disabled={savingProfile}
@@ -614,79 +622,103 @@ const GenericContentPage = ({
               </div>
             </div>
           ) : profile.name ? (
-            <> 
-            {/* ── EXECUTIVE USER VIEW ── */}
-              {profilePhoto && (
-                <img
-                  src={`${API}${profilePhoto.photo_url}`}
-                  alt={profilePhoto.photo_name}
-                  className="rounded-lg object-cover border-3 border-[#d4af37] mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
-                  style={{ objectPosition: 'top center' }}
-                />
-              )}
-
-              {/* Profile Details & Metadata */}
-
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#E8C97A] break-words">
-                {profile.name}
-              </h2>
-
-              {profile.designation && (
-                <p className="text-base sm:text-xl md:text-2xl font-semibold text-[#E8C97A] mt-1">
-                  {profile.designation}
-                </p>
-              )}
-
-              {profile.university && (
-                <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
-                  {profile.university}
-                </p>
-              )}
-
-              {profile.address && (
-                <p className="text-xs sm:text-sm text-slate-400 mt-1 flex items-center justify-center gap-1.5">
-                  {profile.address}
-                </p>
-              )}
-
-              <div className="mt-4 space-y-1">
-                {profile.phone && (
-                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
-                    <span className="font-semibold">Contact:</span>{" "}
-                    {profile.phone}
-                  </p>
-                )}
-
-                {profile.officeContact && (
-                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
-                    <span className="font-semibold">Office Contact:</span>{" "}
-                    {profile.officeContact}
-                  </p>
-                )}
-
-                {profile.email && (
-                  <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
-                    <span className="font-semibold">Official Email:</span>{" "}
-                    {profile.email}
-                  </p>
-                )}
-
-                {profile.email && (
-                  <a
-                    href={`mailto:${profile.email}`}
-                    className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
-                  >
-                    <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            /* ── EXECUTIVE USER VIEW ── */
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+              {/* Executive Photo with Simple Muted Gold Frame */}
+              {profilePhoto ? (
+                <div className="relative flex-shrink-0">
+                  <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
+                    <img
+                      src={`${API}${profilePhoto.photo_url}`}
+                      alt={profilePhoto.photo_name}
+                      className="rounded-xl object-cover w-44 h-56 sm:w-52 sm:h-64"
+                      style={{ objectPosition: 'top center' }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="relative flex-shrink-0">
+                  <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
+                    <div className="w-44 h-56 sm:w-52 sm:h-64 rounded-xl bg-[#081a2f] flex flex-col items-center justify-center text-slate-400 p-4 text-center border border-white/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 mb-2 text-[#d4af37]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span className="text-xs font-semibold text-slate-300">Administrative Office</span>
                     </div>
-                    <div className="min-w-0 pr-1">
-                      <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
-                      <span className="text-xs sm:text-sm font-semibold text-[#fce8b2] break-all">{profile.email}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Profile Details & Metadata Cards */}
+              <div className="flex-1 text-center md:text-left space-y-4 w-full">
+                <div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white font-cinzel tracking-wide leading-tight">
+                    {profile.name}
+                  </h2>
+                  {profile.designation && (
+                    <p className="text-base sm:text-lg md:text-xl font-semibold text-[#fce8b2] mt-1 font-sans">
+                      {profile.designation}
+                    </p>
+                  )}
+                  {profile.university && (
+                    <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                      {profile.university}
+                    </p>
+                  )}
+                  {profile.address && (
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 flex items-center justify-center md:justify-start gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#d4af37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      {profile.address}
+                    </p>
+                  )}
+                </div>
+
+                {/* Contact Items — Displayed on separate lines, tight wrapping container */}
+                <div className="flex flex-col items-center md:items-start gap-2.5 pt-2 w-full">
+                  {profile.phone && (
+                    <a
+                      href={`tel:${profile.phone}`}
+                      className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                      </div>
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Phone No.:</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white">{profile.phone}</span>
+                      </div>
+                    </a>
+                  )}
+
+                  {profile.officeContact && (
+                    <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-left w-fit max-w-full">
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                      </div>
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Office Extension:</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white">{profile.officeContact}</span>
+                      </div>
                     </div>
-                  </a>
-                )}
+                  )}
+
+                  {profile.email && (
+                    <a
+                      href={`mailto:${profile.email}`}
+                      className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                      </div>
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white break-all">{profile.email}</span>
+                      </div>
+                    </a>
+                  )}
+                </div>
               </div>
-            </>
+            </div>
           ) : (
             <div className="text-center py-8 text-slate-300 italic">
               {isAdmin ? 'No profile details saved. Click Edit Profile above to configure.' : 'Official leadership profile coming soon.'}
@@ -916,7 +948,7 @@ const GenericContentPage = ({
             }`}>
 
               {/*---description--*/}
-              <div className="bg-white rounded-2xl border-2 border-[#0f3358]/20 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
+              <div className="bg-white rounded-2xl border-2 border-[#7d311f]/30 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -1029,7 +1061,7 @@ const GenericContentPage = ({
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#0f3358] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
+                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#7d311f] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
@@ -1058,7 +1090,7 @@ const GenericContentPage = ({
                         const flushNoteBullets = () => {
                           if (noteBulletBuffer.length > 0) {
                             noteElements.push(
-                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1">
+                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
                                 {noteBulletBuffer.map((b, i) => (
                                   <li key={i}>{renderInlineFormatting(b)}</li>
                                 ))}
@@ -1072,35 +1104,37 @@ const GenericContentPage = ({
                           if (lineText.startsWith('### ')) {
                             flushNoteBullets();
                             noteElements.push(
-                              <h4 key={`note-h4-${i}`} className={`${HEADING_STYLES.subSubheading} mt-2 not-italic`}>
-                                {renderInlineFormatting(lineText.slice(4))}
+                              <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                                <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                                <span>{renderInlineFormatting(lineText.slice(4))}</span>
                               </h4>
                             );
                           } else if (lineText.startsWith('## ')) {
                             flushNoteBullets();
                             noteElements.push(
-                              <h3 key={`note-h3-${i}`} className={`${HEADING_STYLES.subheading} mt-2 not-italic`}>
-                                {renderInlineFormatting(lineText.slice(3))}
+                              <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                                <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                                <span>{renderInlineFormatting(lineText.slice(3))}</span>
                               </h3>
                             );
                           } else if (lineText === '---') {
                             flushNoteBullets();
                             noteElements.push(
-                              <hr key={`note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                              <hr key={`note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
                             );
                           } else if (lineText.startsWith('- ')) {
                             noteBulletBuffer.push(lineText.slice(2));
                           } else {
                             flushNoteBullets();
                             noteElements.push(
-                              <div key={`note-line-${i}`}>{renderInlineFormatting(lineText)}</div>
+                              <div key={`note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
                             );
                           }
                         });
                         flushNoteBullets();
                         {/*notes normal text*/}
                         elements.push(
-                          <div key={`note-${elements.length}`} className="bg-amber-50/90 border-l-4 border-[#7d311f] border-r border-t border-b border-amber-200/80 p-4 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3">
+                          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
                             {noteElements}
                           </div>
                         );
@@ -1125,7 +1159,7 @@ const GenericContentPage = ({
                       const flushLocalBullets = () => {
                         if (localBulletBuffer.length > 0) {
                           contentElements.push(
-                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-md marker:text-[#174873] marker:font-bold">
+                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
                               {localBulletBuffer.map((b, bi) => (
                                 <li key={bi}>{renderInlineFormatting(b)}</li>
                               ))}
@@ -1144,7 +1178,7 @@ const GenericContentPage = ({
                           const flushLocalNoteBullets = () => {
                             if (localNoteBulletBuffer.length > 0) {
                               noteElements.push(
-                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1">
+                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
                                   {localNoteBulletBuffer.map((b, i) => (
                                     <li key={i}>{renderInlineFormatting(b)}</li>
                                   ))}
@@ -1158,35 +1192,38 @@ const GenericContentPage = ({
                             if (lineText.startsWith('### ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h4 key={`acc-note-h4-${i}`} className={`${HEADING_STYLES.subSubheading} mt-2 not-italic`}>
-                                  {renderInlineFormatting(lineText.slice(4))}
+                                <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                                  <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                                  <span>{renderInlineFormatting(lineText.slice(4))}</span>
                                 </h4>
                               );
                             } else if (lineText.startsWith('## ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h3 key={`acc-note-h3-${i}`} className={`${HEADING_STYLES.subheading} mt-2 not-italic`}>
-                                  {renderInlineFormatting(lineText.slice(3))}
+                                <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                                  <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                                  <span>{renderInlineFormatting(lineText.slice(3))}</span>
                                 </h3>
                               );
                             } else if (lineText === '---') {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <hr key={`acc-note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                                <hr key={`acc-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
                               );
                             } else if (lineText.startsWith('- ')) {
                               localNoteBulletBuffer.push(lineText.slice(2));
                             } else {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <div key={`acc-note-line-${i}`}>{renderInlineFormatting(lineText)}</div>
+                                <div key={`acc-note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
                               );
                             }
                           });
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`note-${elements.length}`} className="bg-amber-50/90 border-l-4 border-[#7d311f] border-r border-t border-b border-amber-200/80 p-4 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3">                              {noteElements}
+                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
+                              {noteElements}
                             </div>
                           );
                         }
@@ -1240,7 +1277,7 @@ const GenericContentPage = ({
 
                         //normal text in accordian
                         contentElements.push(
-                          <p key={`acc-line-${li}`} className="text-black text-md leading-relaxed">
+                          <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm leading-relaxed">
                             {renderInlineFormatting(t)}
                           </p>
                         );
@@ -1250,20 +1287,21 @@ const GenericContentPage = ({
                       //accordian topmost view
                       const isOpen = !!openSections[index];
                       elements.push(
-                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">                          <button
+                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">
+                          <button
                             type="button"
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
-                            className="w-full flex items-center justify-between gap-3 px-5 py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
+                            className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
                           >
-                            <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel">
+                            <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel tracking-wide">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
-                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`}>
-                              ▶
+                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
+                              ▼
                             </span>
                           </button>
                           {isOpen && (
-                            <div className="px-5 py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
+                            <div className="px-4 sm:px-5 py-3.5 sm:py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
                               {contentElements}
                             </div>
                           )}
@@ -1295,7 +1333,7 @@ const GenericContentPage = ({
                         const [headerRow, ...rawBodyRows] = rowsParsed;
                         const colCount = headerRow.length;
 
-                        // Normalize every body row to exactly colCount cells —
+                        // Normalize every body row to exactly colCount cells
                         const bodyRows = rawBodyRows.map(cells => {
                           const normalized = cells.slice(0, colCount);
                           while (normalized.length < colCount) normalized.push('');
@@ -1305,15 +1343,15 @@ const GenericContentPage = ({
                         const colWidthPct = `${(100 / colCount).toFixed(2)}%`;
 
                         elements.push(
-                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white">
-                            <table className="w-full text-left border-collapse table-fixed min-w-[500px]">
+                          <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white overflow-hidden">
+                            <table className="w-full text-left border-collapse table-fixed">
                               <thead>
                                 <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
                                   {headerRow.map((cell, ci) => (
                                     <th
                                       key={ci}
                                       style={{ width: colWidthPct }}
-                                      className="px-3 sm:px-4 py-2 sm:py-2.5 text-left font-cinzel font-bold text-xs sm:text-sm text-[#fce8b2] tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle"
+                                      className="px-1.5 sm:px-4 py-2 sm:py-3 text-left font-cinzel font-bold text-[11px] sm:text-base md:text-lg text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                                     >
                                       {renderInlineFormatting(cell)}
                                     </th>
@@ -1327,7 +1365,7 @@ const GenericContentPage = ({
                                       <td
                                         key={ci}
                                         style={{ width: colWidthPct }}
-                                        className="px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle"
+                                        className="px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[11px] sm:text-base text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                                       >
                                         {renderInlineFormatting(cell)}
                                       </td>
@@ -1384,8 +1422,8 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                           <div key={idx} className="mb-3.5 sm:mb-4 text-center">
-                            <h2 className={`${HEADING_STYLES.heading} font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#d4af37]`}>
+                          <div key={idx} className="mb-3.5 sm:mb-4 text-center">
+                            <h2 className={`${HEADING_STYLES.heading} font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f]`}>
                               {trimmed}
                             </h2>
                           </div>
@@ -1400,8 +1438,9 @@ const GenericContentPage = ({
                         currentBodyLevel = 'subheading'; // everything below this, until the next heading, uses BODY_STYLES.subheading
                         elements.push(
                           <div key={idx} className="mt-5 mb-2.5">
-                            <h3 className={`${HEADING_STYLES.subheading} inline-block pb-1.5 border-b-2 border-[#d4af37] text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl tracking-wide`}>
-                              {trimmed.slice(3)}
+                            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl tracking-wide`}>
+                              <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
+                              <span>{trimmed.slice(3)}</span>
                             </h3>
                           </div>
                         );
@@ -1414,8 +1453,8 @@ const GenericContentPage = ({
                         flushTable();
                         currentBodyLevel = 'subSubheading'; // everything below this, until the next heading, uses BODY_STYLES.subSubheading
                         elements.push(
-                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-base sm:text-lg flex items-center gap-2`}>
-                            <span className="text-[#d4af37]">✦</span>
+                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-base sm:text-lg flex items-center gap-2.5`}>
+                            <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
                             <span>{trimmed.slice(4)}</span>
                           </h4>
                         );
@@ -1555,7 +1594,7 @@ const GenericContentPage = ({
       {hasTable && (
         <div className="space-y-3">
 
-          {/* Table heading / caption*/}
+          {/* Table heading / caption */}
           {(tableHeading || isAdmin) && (
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
               {isEditingHeading ? (
@@ -1588,7 +1627,8 @@ const GenericContentPage = ({
                   {isAdmin && (
                     <button
                       onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(true); }}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"                    >
+                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"
+                    >
                       {tableHeading ? 'Edit Heading' : '+ Add Heading'}
                     </button>
                   )}
@@ -1596,8 +1636,6 @@ const GenericContentPage = ({
               )}
             </div>
           )}
-
-          {/* ------------------------------- */}
 
           {(() => {
             const isPdfCol = (col) =>
@@ -1665,7 +1703,7 @@ const GenericContentPage = ({
                   ? (
                     <a href={val.startsWith('http') ? val : `${API}${val}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm whitespace-nowrap">
+                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm sm:text-base whitespace-nowrap">
                       <svg className="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                       </svg>
@@ -1711,39 +1749,38 @@ const GenericContentPage = ({
                 </div>
               );
 
-             return (
-              <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white">
-                {/* Single horizontally-scrollable table — identical markup/appearance on phone and desktop */}
-                <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-                  <table className="text-sm sm:text-base border-separate border-spacing-0" style={{ minWidth: '100%' }}>
+            return (
+              <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white w-full">
+                {/* Responsive table fitting screen without horizontal scrolling */}
+                <div className="w-full">
+                  <table className="w-full text-left border-collapse table-fixed text-sm sm:text-base md:text-lg">
                     <thead>
                       <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
                         {columns.map((col, i) => (
                           <th
                             key={col}
-                            className={`px-3 sm:px-4 py-2 sm:py-2.5 text-left font-cinzel font-bold text-xs sm:text-sm text-[#fce8b2] tracking-wider uppercase border-r border-slate-300 last:border-r-0 whitespace-nowrap
-                              ${i === 0 ? 'sticky left-0 z-20 bg-[#0f3358]' : ''}`}
+                            className="px-1.5 sm:px-4 py-2 sm:py-3 text-left font-cinzel font-bold text-[11px] sm:text-base md:text-lg text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                           >
                             {col}
                             {isAdmin && (
                               <button onClick={() => handleDeleteColumn(col)}
-                                className="ml-2 text-red-300 hover:text-white text-xs">×</button>
+                                className="ml-1.5 text-red-300 hover:text-white text-xs">×</button>
                             )}
                           </th>
                         ))}
                         {isAdmin && (
-                          <th className="px-3 sm:px-4 py-2 sm:py-2.5 sticky right-0 z-20 bg-[#0f3358] shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.3)] text-[#fce8b2] font-bold text-xs">
+                          <th className="px-2 sm:px-4 py-2 sm:py-3 bg-[#0f3358] text-[#fce8b2] font-bold text-[11px] sm:text-sm">
                             {addingCol ? (
                               <div className="flex gap-1">
                                 <input value={newColName} onChange={e => setNewColName(e.target.value)}
                                   placeholder="Column name"
-                                  className="px-2 py-1 text-black rounded text-xs w-20 sm:w-24" />
+                                  className="px-2 py-1 text-black rounded text-xs w-16 sm:w-24" />
                                 <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
                                 <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
                               </div>
                             ) : (
                               <button onClick={() => setAddingCol(true)}
-                                className="text-blue-200 hover:text-white text-xs font-bold whitespace-nowrap">
+                                className="text-blue-200 hover:text-white text-xs sm:text-sm font-bold whitespace-nowrap">
                                 + Col
                               </button>
                             )}
@@ -1755,7 +1792,7 @@ const GenericContentPage = ({
                       {rows.length === 0 && (
                         <tr>
                           <td colSpan={columns.length + (isAdmin ? 1 : 0)}
-                            className="px-4 py-8 text-center text-gray-400 italic">
+                            className="px-4 py-8 text-center text-gray-400 italic text-sm sm:text-base">
                             {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
                           </td>
                         </tr>
@@ -1763,14 +1800,14 @@ const GenericContentPage = ({
                       {displayRows.map(({ row, origIdx }) => {
                         const idx = origIdx;
                         const isEditingThisRow = isAdmin && editingRowIdx === idx;
-                        const rowBg = isEditingThisRow ? 'bg-[#FFF8CD]' : (idx % 2 === 0 ? 'bg-[#F8FAFC]' : 'bg-[#EEF2F6]');
+                        const baseBg = isEditingThisRow ? 'bg-[#FFF8CD]' : (idx % 2 === 0 ? 'bg-[#F8FAFC]' : 'bg-[#EEF2F6]');
+                        const cellBg = isEditingThisRow ? 'bg-[#FFF8CD]' : `${baseBg} group-hover:bg-[#E2E8F0] transition-colors`;
                         return (
-                          <tr key={idx} className="border-t border-slate-200">
+                          <tr key={idx} className="group border-t border-slate-200">
                             {columns.map((col, i) => (
                               <td
                                 key={col}
-                                className={`px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm text-slate-800 align-middle border-r border-slate-300 last:border-r-0
-                                  ${i === 0 ? `sticky left-0 z-10 ${rowBg} font-medium` : rowBg}`}
+                                className={`px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[11px] sm:text-base text-slate-800 font-medium align-middle border-r border-slate-300 last:border-r-0 break-words leading-tight ${cellBg}`}
                               >
                                 {isEditingThisRow ? (
                                   isPdfCol(col)
@@ -1781,16 +1818,16 @@ const GenericContentPage = ({
                                         value={editingRowData[col] || ''}
                                         onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
                                         placeholder={col}
-                                        className="w-full min-w-[100px] px-2 py-1.5 border border-blue-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#174873]"
+                                        className="w-full min-w-[80px] px-2 py-1 border border-blue-300 rounded text-xs sm:text-base outline-none focus:ring-1 focus:ring-[#174873]"
                                       />
                                     )
                                 ) : (
-                                  <span className="whitespace-nowrap sm:whitespace-normal">{renderViewValue(row[col])}</span>
+                                  <span className="break-words leading-tight">{renderViewValue(row[col])}</span>
                                 )}
                               </td>
                             ))}
                             {isAdmin && (
-                              <td className={`px-2 sm:px-3 py-2 sticky right-0 z-10 ${rowBg} shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`}>
+                              <td className={`px-2 sm:px-3 py-2 sticky right-0 z-10 ${cellBg} shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`}>
                                 {rowActions(idx, isEditingThisRow)}
                               </td>
                             )}

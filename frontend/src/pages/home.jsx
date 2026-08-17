@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -9,94 +9,172 @@ import { Link } from 'react-router-dom';
 // White  #FFFFFF   — cards, clean surfaces
 // Body   #1A1A1A   — near-black readable text
 
+// ─── ANIMATED STAT COUNTER ───────────────────────────────────────────────────
+const CountUpStat = ({ targetStr, label, startFrom = 0 }) => {
+  const [count, setCount] = useState(startFrom);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const ref = useRef(null);
+
+  const rawNumber = parseInt(targetStr.replace(/[^0-9]/g, ''), 10) || 0;
+  const hasComma = targetStr.includes(',');
+  const suffix = targetStr.includes('+') ? '+' : (targetStr.replace(/[0-9,]/g, '').trim());
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          const duration = 1800; // 1.8 seconds
+          let animationFrameId;
+          const startTime = performance.now();
+
+          const animate = (now) => {
+            const elapsedTime = now - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+            // Ease-out cubic calculation for smooth slowing down at the end
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            const currentVal = Math.floor(startFrom + easeProgress * (rawNumber - startFrom));
+            setCount(currentVal);
+
+            if (progress < 1) {
+              animationFrameId = requestAnimationFrame(animate);
+            } else {
+              setCount(rawNumber);
+            }
+          };
+
+          animationFrameId = requestAnimationFrame(animate);
+          return () => cancelAnimationFrame(animationFrameId);
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [rawNumber, startFrom, hasAnimated]);
+
+  const formattedValue = hasComma ? count.toLocaleString('en-IN') : count.toString();
+
+  return (
+    <div
+      ref={ref}
+      className="group bg-white rounded-xl py-4 sm:py-7 px-3 sm:px-5 text-center border-2 border-[#0f3358]/20 hover:border-[#d4af37] shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.04] cursor-pointer"
+    >
+      <div className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#7d311f] group-hover:scale-105 transition-transform mb-1">
+        {formattedValue}{suffix}
+      </div>
+      <div className="font-lato text-[10px] sm:text-xs text-[#0f3358] font-bold uppercase tracking-wider group-hover:text-[#7d311f] transition-colors">
+        {label}
+      </div>
+    </div>
+  );
+};
+
 // ─── HERO ─────────────────────────────────────────────────────────────────────
 const Hero = () => (
-  <section className="relative w-full overflow-hidden h-[92vh] sm:h-[95vh] md:h-[105vh]">
+  <section className="relative w-full overflow-hidden bg-[#1f1510]">
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Lato:wght@300;400;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;600;700&display=swap');
       .font-cormorant { font-family: 'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', 'Manrope', 'Montserrat', sans-serif; }
       .font-lato { font-family: 'Lato', sans-serif; }
-      @keyframes fade-up {
-        from { opacity: 0; transform: translateY(24px); }
-        to   { opacity: 1; transform: translateY(0); }
-      }
-      .anim-fade-up { animation: fade-up 0.9s ease forwards; }
-      .anim-fade-up-2 { animation: fade-up 0.9s 0.2s ease forwards; opacity: 0; }
-      .anim-fade-up-3 { animation: fade-up 0.9s 0.4s ease forwards; opacity: 0; }
+      .font-hero-cormorant { font-family: 'Cormorant Garamond', 'Georgia', serif; }
     `}</style>
+    
+    {/* Main Hero Banner with Warm Transparent Backdrop */}
+    <div className="relative min-h-[95vh] sm:min-h-[115vh] md:min-h-[130vh] lg:min-h-[140vh] flex flex-col justify-center items-center p-6 sm:p-16 md:p-24 lg:p-32">
+      {/* Background Campus Photo (Full Page Coverage) */}
+      <div className="absolute inset-0 w-full h-full">
+        <img
+          src="/bhu/web (1).png"
+          alt="Mahila Maha Vidyalaya BHU Campus"
+          className="w-full h-full object-cover object-center"
+        />
+        {/* Warm transparent heritage overlay */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(35, 18, 14, 0.65) 0%, rgba(25, 12, 16, 0.45) 50%, rgba(35, 15, 14, 0.75) 100%)'
+          }}
+        />
+      </div>
 
-    {/* Background image — right 60% */}
-    <div className="absolute inset-0 right-0 w-full h-full">
-      <img
-        src="/bhu/web (3).png"
-        alt="MMV Campus"
-        className="w-full h-full object-cover object-center"
-      />
-      {/* Gradient overlay so left panel bleeds naturally */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(90deg, #0D1F3C 38%, #0D1F3C99 58%, transparent 80%)'
-        }}
-      />
-    </div>
-
-    {/* Left text panel */}
-    <div className="relative z-10 h-full flex items-center">
-      <div className="px-6 sm:px-10 md:px-20 max-w-xl">
-        <div className="h-20 w-20 sm:h-28 sm:w-28 md:h-40 md:w-40 rounded-full overflow-hidden flex items-center justify-left">
-          <img
-            src="/bhu/mmv logo.png"
-            alt="MMV Logo"
-            className="h-20 w-20 sm:h-28 sm:w-28 md:h-40 md:w-40 rounded-full object-contain m-2 sm:m-3 md:m-4"
-          />
+      {/* Main Content */}
+      <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col items-center text-center">
+        {/* Emblem Logo */}
+        <div className="mb-4 sm:mb-6">
+          <div className="w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-48 lg:h-48 rounded-full p-2 bg-white ring-4 ring-[#D4AF37] shadow-2xl flex items-center justify-center mx-auto overflow-hidden">
+            <img
+              src="/mmvlogo.jpeg"
+              alt="MMV BHU Crest"
+              className="w-full h-full object-contain rounded-full bg-white"
+            />
+          </div>
         </div>
 
-        {/* Eyebrow */}
-        <p className="font-lato text-xl sm:text-3xl md:text-5xl tracking-[0.1em] sm:tracking-[0.18em] md:tracking-[0.25em] uppercase text-[#E8C97A] mb-3 sm:mb-4 md:mb-5 anim-fade-up">
-          Mahila Maha Vidyalaya
-        </p>
-        <p className="font-lato text-sm sm:text-lg md:text-2xl tracking-[0.1em] sm:tracking-[0.18em] md:tracking-[0.25em] uppercase text-[#E8C97A] mb-3 sm:mb-4 md:mb-5 anim-fade-up">
-         BHU · Est. 1929
+        {/* Devanagari & Hindi Title */}
+        <p className="font-serif text-[#D4AF37] text-base sm:text-lg md:text-xl font-semibold tracking-normal mb-1.5 drop-shadow-sm">
+          महिला महाविद्यालय • काशी हिन्दू विश्वविद्यालय
         </p>
 
-        {/* Gold rule */}
-        <div className="w-12 h-px bg-[#E8C97A] mb-4 sm:mb-5 md:mb-6 anim-fade-up" />
-
-        {/* Main heading */}
-        <h1
-          className="font-cormorant text-xl sm:text-2xl md:text-3xl font-medium text-white leading-tight mb-4 sm:mb-5 anim-fade-up-2"
-          style={{ letterSpacing: '-0.01em' }}
-        >
-          Your Complete<br />
-          <em className="not-italic text-[#E8C97A]">MMV Portal</em>
+        {/* English Title */}
+        <h1 className="font-hero-cormorant text-3xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-2 sm:mb-3 drop-shadow-md">
+          Mahila Mahavidyalaya
         </h1>
 
-        {/* Subtext */}
-        <p className="font-lato text-sm sm:text-[15px] text-blue-100 leading-relaxed mb-6 sm:mb-8 max-w-sm anim-fade-up-3">
-          Syllabus, notices, administration, hostel, library —
-          everything you need, in one place.
+        {/* Subtitle */}
+        <p className="font-lato text-amber-100/95 text-sm sm:text-lg md:text-xl font-medium tracking-wide max-w-2xl mb-4 drop-shadow-xs">
+          Banaras Hindu University • Premier Institution for Women's Education (Est. 1929)
         </p>
 
-        {/* CTA */}
-        <div className="flex flex-wrap gap-3 anim-fade-up-3">
+        {/* Decorative Gold Rule */}
+        <div className="flex items-center gap-3 w-48 mx-auto my-3">
+          <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent flex-1" />
+          <span className="text-[#D4AF37] text-xs font-serif">✦</span>
+          <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent flex-1" />
+        </div>
+
+        {/* Inspirational Motto */}
+        <p className="font-hero-cormorant italic text-sm sm:text-base text-slate-200 max-w-xl mb-8 leading-relaxed drop-shadow-xs">
+          "Vidya Dadati Vinayam" — Empowering women through holistic education, leadership, and moral values.
+        </p>
+
+        {/* Primary Action Buttons — Row 1: Ask MMVerse AI & Samarth Portal */}
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-4">
           <Link
             to="/ai-assistant"
-            className="font-lato text-xs sm:text-sm font-semibold bg-[#C4561A] text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-full hover:bg-[#a34315] transition-colors"
+            className="font-lato text-xs sm:text-sm font-bold bg-[#7D311F] text-white px-6 py-3 rounded-full hover:bg-[#963b25] border border-[#D4AF37]/50 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
           >
-            Ask MMVerse AI →
+            <span>🤖</span> Ask MMVerse AI Assistant
           </Link>
           <a
-            href="#about"
-            className="font-lato text-xs sm:text-sm font-semibold border border-white/40 text-white px-5 py-2.5 sm:px-6 sm:py-3 rounded-full hover:bg-white/10 transition-colors"
+            href="https://bhu.samarth.edu.in/index.php/site/login"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-lato text-xs sm:text-sm font-bold bg-[#7D311F] text-white px-6 py-3 rounded-full hover:bg-[#963b25] border border-[#D4AF37]/50 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
           >
-            Explore Portal
+            <span>🎓</span> Samarth Portal
+          </a>
+        </div>
+
+        {/* Row 2: Explore Portal Services below both options */}
+        <div className="mt-2">
+          <a
+            href="#about"
+            className="inline-block font-lato text-xs sm:text-sm font-semibold bg-black/30 hover:bg-black/50 text-amber-100 hover:text-white border border-amber-200/30 px-6 py-2.5 rounded-full backdrop-blur-xs transition-all transform hover:-translate-y-0.5"
+          >
+            Explore Portal Services ↓
           </a>
         </div>
       </div>
     </div>
   </section>
 );
+
 
 
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
@@ -121,20 +199,14 @@ const About = () => (
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+      <div className=" grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
         {[
-          ['1929', 'Year Established'],
-          ['30+',  'Departments'],
-          ['2,500+', 'Students Enrolled'],
-          ['75+', 'Faculty Members'],
-        ].map(([n, l]) => (
-          <div
-            key={l}
-            className="bg-white rounded-xl py-4 sm:py-7 px-3 sm:px-5 text-center border-2 border-[#0f3358]/20 shadow-xs"
-          >
-            <div className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#7d311f] mb-1">{n}</div>
-            <div className="font-lato text-[10px] sm:text-xs text-[#0f3358] font-bold uppercase tracking-wider">{l}</div>
-          </div>
+          ['1929', 'Year Established', 1900],
+          ['30+',  'Departments', 0],
+          ['2,500+', 'Students Enrolled', 1000],
+          ['75+', 'Faculty Members', 0],
+        ].map(([n, l, s]) => (
+          <CountUpStat key={l} targetStr={n} label={l} startFrom={s} />
         ))}
       </div>
     </div>
@@ -176,9 +248,9 @@ const Facilities = () => (
         {facilities.map((f) => (
           <div
             key={f.label}
-            className="bg-white border border-slate-200/90 rounded-xl p-3.5 sm:p-5 shadow-xs hover:border-[#d4af37] hover:shadow-md transition-all"
+            className="group bg-white border-2 border-[#0f3358]/20 hover:border-[#d4af37] rounded-xl p-3.5 sm:p-5 shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.03] cursor-pointer"
           >
-            <div className="font-cormorant text-sm sm:text-lg font-bold text-[#0f3358] mb-1 sm:mb-2">
+            <div className="font-cormorant text-sm sm:text-lg font-bold text-[#0f3358] group-hover:text-[#7d311f] transition-colors mb-1 sm:mb-2">
               {f.label}
             </div>
             <div className="font-lato text-[11px] sm:text-sm text-slate-600 leading-relaxed">{f.detail}</div>
@@ -197,7 +269,7 @@ const Academics = () => (
 
       {/* Photo left side on mobile & desktop */}
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/academics.png" alt="Academics" className="w-full h-28 sm:h-72 md:h-80 object-cover" />
+        <img src="/bhu/academics.png" alt="Academics" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       {/* Text right side on mobile & desktop */}
@@ -242,7 +314,7 @@ const Administration = () => (
 
       {/* Photo right side on mobile & desktop */}
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/admin.png" alt="Administration" className="w-full h-28 sm:h-72 md:h-80 object-cover" />
+        <img src="/bhu/admin.png" alt="Administration" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       {/* Text left side on mobile & desktop */}
@@ -287,7 +359,7 @@ const Notices = () => (
 
       {/* Photo left side on mobile & desktop */}
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/notice.png" alt="Notices" className="w-full h-28 sm:h-72 md:h-80 object-cover" />
+        <img src="/bhu/notice.png" alt="Notices" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       {/* Text right side on mobile & desktop */}
@@ -385,7 +457,7 @@ const AIAssistant = () => (
             </div>
           </div>
 
-          {/* Messages — exact real MMVerse bubble colors (#E5C29C & #0D1F3C) */}
+          {/* Messages */}
           <div className="p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 bg-[#FAF7F2]">
             {[
               { from: 'user', text: 'What are the Cyber Library timings?' },
@@ -425,11 +497,9 @@ const Home = () => (
     <Hero />
     <About />
     <Facilities />
-    {/* <PortalSections /> */}
     <Academics />
     <Administration />
     <Notices />
-    {/* <Facilities /> */}
     <AIAssistant />
   </div>
 );
