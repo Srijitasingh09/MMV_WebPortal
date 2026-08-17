@@ -1,30 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
- @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Lato:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1E3A8A;
-  --color-secondary: #2563EB;
-  --color-accent: #3B82F6;
-  --color-muted: #64748B;
+  --color-primary: #0f3358;
+  --color-secondary: #174873;
+  --color-accent: #d4af37;
+  --color-gold: #d4af37;
+  --color-crimson: #7d311f;
+  --color-muted: #64748b;
 }
 
 :root {
-  --primary: #1E3A8A;
-  --secondary: #2563EB;
-  --accent: #3B82F6;
-  --bg-main: #FFFFFF;
-  --bg-sidebar: #1E3A8A;
-  --text-primary: #1E3A8A;
-  --text-muted: #64748B;
-  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  --border-blue: #2563EB;
+  --primary: #0f3358;
+  --secondary: #174873;
+  --accent: #d4af37;
+  --gold: #d4af37;
+  --crimson: #7d311f;
+  --bg-main: #EAEFF5;
+  --bg-sidebar: #0f3358;
+  --text-primary: #0f3358;
+  --text-muted: #64748b;
+  --card-shadow: 0 10px 25px -5px rgba(15, 51, 88, 0.08), 0 8px 10px -6px rgba(15, 51, 88, 0.04);
+  --gold-glow: 0 0 15px rgba(212, 175, 55, 0.25);
+  --border-gold: #d4af37;
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-main);
-  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  background-color: #EAEFF5;
+  color: #1e293b;
 }
 
 html,
@@ -35,15 +39,68 @@ body,
   overflow-x: hidden;
 }
 
+/* Ticker Marquee Keyframe */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Official Typography Helpers — Mirava Sans Typography */
+.font-cinzel,
+.font-playfair,
+.font-garamond,
+.font-cormorant,
+.font-mirava,
+.font-official-heading {
+  font-family: 'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', 'Manrope', 'Montserrat', sans-serif;
+}
+
+.font-sans-official {
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+}
+
+/* Official Gradient Styles */
 .bhu-gradient {
-  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+  background: linear-gradient(135deg, #0f3358 0%, #174873 50%, #1b5385 100%);
+}
+
+.official-header-gradient {
+  background: linear-gradient(135deg, #091f38 0%, #0f3358 60%, #174873 100%);
+}
+
+.executive-card-gradient {
+  background: linear-gradient(145deg, #0d2847 0%, #133a63 70%, #174873 100%);
+}
+
+.gold-border-gradient {
+  border-image: linear-gradient(to right, #d4af37, #f3e5ab, #d4af37) 1;
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: 2px solid var(--border-blue);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   box-shadow: var(--card-shadow);
+}
+
+.official-pill-header {
+  background: linear-gradient(135deg, #0f3358 0%, #174873 100%);
+  border-left: 4px solid #d4af37;
+  box-shadow: 0 4px 15px rgba(15, 51, 88, 0.15);
 }
 
 .sidebar-link {
@@ -57,14 +114,15 @@ body,
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1E3A8A;
+  background: #0f3358;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #1e40af;
+  background: #174873;
 }

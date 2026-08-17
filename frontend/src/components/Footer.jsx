@@ -21,7 +21,7 @@ const Footer = () => {
   }, []);
 
   return (
-   <footer className="bg-[#0f3358] text-slate-200 border-t-2 border-[#d4af37]">
+    <footer className="bg-[#0f3358] text-slate-200 border-t-2 border-[#d4af37]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
 
         {/* Col 1 — College blurb */}
@@ -73,7 +73,7 @@ const Footer = () => {
                   <span className="text-[#d4af37]">✉️</span>
                   <a
                     href={`mailto:${contactInfo.email}`}
-                   className="hover:text-[#d4af37] transition-colors"
+                    className="hover:text-[#d4af37] transition-colors"
                   >
                     {contactInfo.email}
                   </a>
@@ -84,7 +84,7 @@ const Footer = () => {
               )}
             </ul>
           ) : (
-            <ul className="space-y-2 text-blue-200 text-sm opacity-50 font-sans-official">
+            <ul className="space-y-2 text-slate-400 text-sm opacity-50 font-sans-official">
               <li>📍 —</li>
               <li>📞 —</li>
               <li>✉️ —</li>

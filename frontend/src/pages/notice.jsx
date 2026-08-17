@@ -326,7 +326,7 @@ const Notices = () => {
             Official Circulars &amp; Notifications
           </div>
           <h1
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide"
+            className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide"
           >
             Notices &amp; Announcements
           </h1>
