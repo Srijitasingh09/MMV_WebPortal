@@ -536,7 +536,7 @@ const GenericContentPage = ({
             <div className="text-left max-w-xl mx-auto space-y-3">
               <div className="flex items-center justify-between border-b pb-3">
                 <h3 className="text-xl font-bold text-[#bfccda] font-cinzel">Edit Profile</h3>
-                <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
+                <span className="text-sm bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
               </div>
               {/* PROFILE PHOTO */}
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4">
@@ -553,21 +553,19 @@ const GenericContentPage = ({
                     No Photo Uploaded
                   </div>
                 )}
-                <div className="space-y-2 text-center sm:text-left">
-                  <p className="text-xs font-semibold text-slate-600">Profile Photo</p>
-                  <p className="text-[11px] text-slate-500">Recommended high-resolution portrait format.</p>
+                <div classname="flex flex-row items-center justify-center gap-3">
                   <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
-                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
+                  <div className="flex flex-wrap gap-2 justify-center">
                     <button
                       onClick={() => profileImageRef.current?.click()}
-                      className="px-3.5 py-1.5 bg-[#0f3358] text-white rounded-lg text-xs font-semibold hover:bg-[#174873] transition-colors"
+                      className="px-3.5 py-1.5 bg-[#ddecc8] text-[#248a39] rounded-lg text-sm font-semibold hover:bg-[#248a39] hover:text-white transition-colors"
                     >
                       {profilePhoto ? 'Change Photo' : 'Upload Photo'}
                     </button>
                     {profilePhoto && (
                       <button
                         onClick={handleRemoveProfilePhoto}
-                        className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                        className="px-3 py-1.5 bg-[#f2baba] text-[#b61717] rounded-lg text-sm font-semibold hover:bg-[#b61717] hover:text-white transition-colors"
                       >
                         Remove Photo
                       </button>
@@ -600,16 +598,12 @@ const GenericContentPage = ({
 
               <div className="flex gap-3 justify-center pt-3 border-t">
                 <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-semibold disabled:opacity-50 ">
+                  className="px-4 py-2 bg-[#ddecc8] text-[#248a39] rounded-lg text-sm font-semibold disabled:opacity-50 hover:bg-[#248a39] hover:text-white transition-colors">
                   {savingProfile ? 'Saving...' : 'Save'}
                 </button>
                 <button onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 text-white rounded-lg font-semibold bg-red-500 text-sm">
+                  className="px-4 py-2 bg-[#f2baba] text-[#b61717] rounded-lg font-semibold text-sm hover:bg-[#b61717] hover:text-white transition-colors">
                   Cancel
-                </button>
-                <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-5 py-2 bg-[#0f3358] text-white rounded-lg text-xs font-bold hover:bg-[#174873] disabled:opacity-50 shadow-md">
-                  {savingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
                 </button>
               </div>
             </div>
@@ -669,21 +663,6 @@ const GenericContentPage = ({
                     <span className="font-semibold">Official Email:</span>{" "}
                     {profile.email}
                   </p>
-                )}
-
-                {profile.email && (
-                  <a
-                    href={`mailto:${profile.email}`}
-                    className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
-                  >
-                    <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                    </div>
-                    <div className="min-w-0 pr-1">
-                      <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
-                      <span className="text-xs sm:text-sm font-semibold text-[#fce8b2] break-all">{profile.email}</span>
-                    </div>
-                  </a>
                 )}
               </div>
             </>
