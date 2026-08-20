@@ -3,7 +3,7 @@ import os
 import time
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -48,6 +48,9 @@ from chat_index import (
     voyage_client,
     EMBED_MODEL,
 )
+from mmv_language import detect_language, reply_style_instruction
+from mmv_cleaner import clean_for_widget
+from mmv_rate_limit import check_rate_limit, RateLimitExceeded
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -199,6 +202,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.query(models.User).filter(models.User.email == form_data.username).first()
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+    #upgrade old sha256_crypt hashes to bcrypt on successful login
+    if auth.pwd_context.needs_update(user.hashed_password):
+        user.hashed_password = auth.get_password_hash(form_data.password)
+        db.commit()
 
     access_token = auth.create_access_token(data={"sub": user.email})
     return {
@@ -1220,7 +1228,7 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
     section_clause = ""
     if section_filter:
         # Match source_table containing section name, or section_url starting with /section
-        section_clause = f"AND (c.section_url LIKE '/{section_filter}%' OR c.source_table LIKE '%{section_filter}%')"
+       section_clause = f"WHERE (c.section_url LIKE '/{section_filter}%' OR c.source_table LIKE '%{section_filter}%')"
 
     for q_text, emb in zip(queries, embeddings):
         emb_str = str(emb)
@@ -1465,4 +1473,81 @@ def chat(payload: dict, db: Session = Depends(get_db)):
         "section_title": row.section_title,
         "section_url": row.section_url,
         "asset": asset,
+    }
+
+
+# Stricter than the main /chat threshold (0.35) -- a wrong-but-plausible
+# answer scoped to "this page" is worse than an honest "no info here, try X".
+WIDGET_SIMILARITY_THRESHOLD = 0.42
+
+
+@app.post("/widget/page-query")
+def widget_page_query(payload: dict, request: Request, db: Session = Depends(get_db)):
+    """Page-scoped floating widget endpoint. Reuses the same classify/expand/
+    search/generate pipeline as /chat, just filtered to one page's content
+    and with a stricter no-hallucination threshold.
+
+    Request body: { "query": "...", "page_id": "hostel-jyoti-kunj", "page_title": "Jyoti Kunj" }
+    """
+    query = (payload.get("query") or "").strip()
+    page_id = (payload.get("page_id") or "").strip()
+    page_title = (payload.get("page_title") or page_id or "this page").strip()
+    panel_heading = f"Ask questions related to {page_title}"
+
+    if not query or not page_id:
+        raise HTTPException(status_code=400, detail="query and page_id are required")
+
+    user_key = request.client.host if request.client else "anonymous"
+    try:
+        check_rate_limit(user_key)
+    except RateLimitExceeded:
+        raise HTTPException(status_code=429, detail="Too many requests -- please wait a moment.")
+
+    lang = detect_language(query)
+
+    intent = classify_question(query)
+    if intent == "offtopic":
+        return {
+            "status": "no_info_on_page",
+            "answer": "That doesn't look related to this page. Try the main chatbot for a broader search.",
+            "panel_heading": panel_heading,
+            "related_pages": [],
+        }
+
+    queries = expand_query(query)
+    # Hinglish: also try the transliterated variant, keep whichever query set scores higher
+    if lang.language == "hinglish" and lang.retrieval_variant != lang.original:
+        queries = list(queries) + [lang.retrieval_variant]
+
+    row, similarity = search_best_chunk(queries, db, section_filter=page_id)
+
+    if not row or similarity < WIDGET_SIMILARITY_THRESHOLD:
+        return {
+            "status": "no_info_on_page",
+            "answer": (
+                "No information available on this page for that question. "
+                "Try the main chatbot for a broader search, or check a related page."
+            ),
+            "panel_heading": panel_heading,
+            "related_pages": [],  # populate once page_relations exists (see Step 3)
+            "main_bot_link": "/mmverse",
+        }
+
+    try:
+        raw_answer = generate_answer(query, row.chunk_text, row.section_title, row.content_type or "text")
+    except Exception:
+        raw_answer = row.chunk_text
+
+    answer = clean_for_widget(raw_answer)
+
+    source = None
+    if row.file_url:
+        file_url = row.file_url if row.file_url.startswith("/") else "/" + row.file_url
+        source = {"file_url": file_url, "file_name": row.file_name, "section_title": row.section_title}
+
+    return {
+        "status": "answered",
+        "answer": answer,
+        "source": source,
+        "panel_heading": panel_heading,
     }

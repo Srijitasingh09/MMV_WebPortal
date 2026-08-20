@@ -8,7 +8,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const BrandFonts = () => (
   <style>{`
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
-    .mmv-font-display { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .mmv-font-display { font-family: 'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', 'Manrope', 'Montserrat', sans-serif; }
     .mmv-font-body { font-family: 'Inter', system-ui, sans-serif; }
   `}</style>
 );
@@ -59,15 +59,44 @@ const SECTIONS = [
 // raw markdown (**bold**, # headers, | pipe-separated lists) instead of
 // plain text. Rather than showing those symbols literally to the user, this
 // strips/converts them before rendering. ───────────────────────────────────
+// Renders **bold** spans and turns markdown links / bare URLs into real,
+// clickable links — internal paths (starting with "/") use react-router's
+// <Link> so navigation stays client-side, everything else opens in a new
+// tab. This is what "links are inactive" was missing: the text was shown
+// as plain characters with no <a>/<Link> around it at all.
 const renderInlineBold = (str, keyPrefix) => {
-  // Splits on **bold** spans and renders them as <strong>, everything else
-  // stays plain text.
-  const parts = str.split(/(\*\*[^*]+\*\*)/g).filter((p) => p !== "");
-  return parts.map((part, idx) =>
-    part.startsWith("**") && part.endsWith("**") && part.length > 4
-      ? <strong key={`${keyPrefix}-${idx}`}>{part.slice(2, -2)}</strong>
-      : <span key={`${keyPrefix}-${idx}`}>{part}</span>
-  );
+  const linkOrBoldRe = /(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)]+\))|(https?:\/\/[^\s)]+)/g;
+  const parts = str.split(linkOrBoldRe).filter((p) => p !== undefined && p !== "");
+  return parts.map((part, idx) => {
+    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+      return <strong key={`${keyPrefix}-${idx}`}>{part.slice(2, -2)}</strong>;
+    }
+    const mdLink = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (mdLink) {
+      const [, label, url] = mdLink;
+      return isInternalUrl(url)
+        ? <Link key={`${keyPrefix}-${idx}`} to={url} className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{label}</Link>
+        : <a key={`${keyPrefix}-${idx}`} href={url} target="_blank" rel="noopener noreferrer" className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{label}</a>;
+    }
+    if (/^https?:\/\//.test(part)) {
+      return isInternalUrl(part)
+        ? <Link key={`${keyPrefix}-${idx}`} to={new URL(part).pathname} className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{part}</Link>
+        : <a key={`${keyPrefix}-${idx}`} href={part} target="_blank" rel="noopener noreferrer" className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{part}</a>;
+    }
+    return <span key={`${keyPrefix}-${idx}`}>{part}</span>;
+  });
+};
+
+// A link is "internal" if it points at this same site (bare "/path", or an
+// absolute URL whose host matches window.location) — those use client-side
+// routing instead of a full page reload.
+const isInternalUrl = (url) => {
+  if (url.startsWith("/")) return true;
+  try {
+    return new URL(url).host === window.location.host;
+  } catch {
+    return false;
+  }
 };
 
 // A line of just dashes/pipes/colons (e.g. "|---|---|") is a markdown table
@@ -88,6 +117,10 @@ const AnswerText = ({ text }) => {
         const headerMatch = trimmed.match(/^#{1,6}\s+(.*)/);
         const isHeader = !!headerMatch;
         if (isHeader) trimmed = headerMatch[1];
+
+        // Strip blockquote markers (">", ">>", ...) — the quoted text still
+        // reads fine without the literal angle brackets in a chat bubble.
+        trimmed = trimmed.replace(/^>+\s?/, "");
 
         if (trimmed.startsWith("•") || trimmed.startsWith("-")) {
           const bulletText = trimmed.replace(/^[•\-]\s*/, "");
@@ -343,11 +376,15 @@ export default function MMVerse() {
   const [activeSection, setActiveSection] = useState(null); // currently selected section
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    // Scroll only the messages panel itself, never the page. scrollIntoView()
+    // can bubble up and nudge the whole window even with block:"nearest", so
+    // we set scrollTop directly on the panel's own ref instead.
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [items, loading]);
 
   const handleSectionSelect = (section) => {
@@ -435,38 +472,31 @@ export default function MMVerse() {
   // const showInput = !!activeSection && !loading;
 
   return (
-    <div className="min-h-screen bg-[#FAF6EE] py-6 sm:py-10 px-3 sm:px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#EAEFF5]">
       <BrandFonts />
 
-      {/* Faint ambient temple-spire watermark on the page itself */}
-      <TempleMotif
-        className="hidden lg:block absolute -right-10 top-10 w-72 h-72 text-[#C4561A] pointer-events-none"
-        opacity={0.05}
-      />
-      <TempleMotif
-        className="hidden lg:block absolute -left-16 bottom-10 w-64 h-64 text-[#0D1F3C] pointer-events-none scale-x-[-1]"
-        opacity={0.04}
-      />
-
-      <div className="max-w-4xl mx-auto relative">
-
-        {/* Page header */}
-        <div className="mb-5 sm:mb-8 text-center">
-          <span
-            className="mmv-font-display inline-block bg-[#0D1F3C] text-[#FBF1DA] text-2xl sm:text-4xl font-semibold uppercase tracking-[0.1em] sm:tracking-[0.15em] px-5 sm:px-7 py-2 sm:py-2.5 rounded-full mb-3 sm:mb-4 leading-snug shadow-sm"
-          >
-            MMVerse
-          </span>
-          <div className="w-16 h-0.5 bg-[#E3B94F] mx-auto mb-3 sm:mb-4" />
-          <p className="mmv-font-body text-black text-base sm:text-lg leading-relaxed max-w-lg mx-auto px-2">
-            Your AI assistant for Mahila Maha Vidyalaya, BHU. Select a section below and ask your question.
+      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
+      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
+            Official AI Information Portal
+          </div>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide">
+            MMVerse Assistant
+          </h1>
+          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
+            Your official AI assistant for Mahila Maha Vidyalaya, BHU — select a topic or ask any query
           </p>
         </div>
+      </div>
 
-        {/* Chat card */}
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+        {/* Chat card — identical width as header banner */}
         <div
-          className="mmv-font-body bg-white rounded-2xl shadow-xl border-2 border-[#0D1F3C]/50 flex flex-col overflow-hidden"
-          style={{ height: "clamp(480px, 88vh, 800px)" }}
+          className="mmv-font-body bg-[#FAF7F2] rounded-2xl shadow-xl border-2 border-[#0f3358]/30 flex flex-col overflow-hidden w-full"
+          style={{ height: "clamp(600px, 88vh, 920px)" }}
         >
           {/* Header */}
           <div className="relative flex items-center gap-2.5 sm:gap-3 bg-[#0D1F3C] px-3.5 sm:px-5 py-3 sm:py-4 flex-shrink-0 overflow-hidden">
@@ -487,7 +517,7 @@ export default function MMVerse() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
 
             {items.map((item, i) => {
               if (item.type === "intro") return (
@@ -533,7 +563,7 @@ export default function MMVerse() {
             })}
 
             {loading && <TypingIndicator />}
-            <div ref={bottomRef} />
+            <div />
           </div>
 
           {/* Input — select a section */}

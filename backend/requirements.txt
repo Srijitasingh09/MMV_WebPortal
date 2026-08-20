@@ -14,3 +14,6 @@ python-dotenv
 cors
 voyageai
 groq
+
+PyMuPDF      # real PDF text extraction (fitz)
+indic-transliteration   # Hinglish -> Devanagari variant for retrieval

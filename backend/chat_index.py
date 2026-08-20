@@ -28,6 +28,11 @@ import re
 import time
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
+
+# Same uploads folder main.py serves at /uploads -- needed here to read the
+# actual PDF bytes off disk (pdf_url is a web path like "/uploads/x.pdf",
+# not a filesystem path).
+UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 import voyageai
 
 import models
@@ -156,6 +161,33 @@ def save_chunk(
         fresh_db.close()
 
 
+def _index_pdf_real_content(pdf_url: str, pdf_name: str, source_table: str, source_id: int,
+                             section_url: str, section_title: str):
+    """
+    Reads the ACTUAL text of an uploaded PDF and indexes it as page-level
+    chunks (requirements #5, #6), on top of the existing filename-only chunk.
+    Skips silently (logs and returns) for scanned/image-only PDFs or any
+    file-access error -- indexing must never crash the admin save/sync flow
+    over one bad PDF.
+    """
+    if not pdf_url:
+        return
+    try:
+        from mmv_pdf_ingest import index_pdf_content
+        pdf_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf_url))
+        if not os.path.isfile(pdf_path):
+            print(f"  _index_pdf_real_content: file not found on disk: {pdf_path}")
+            return
+        result = index_pdf_content(
+            source_table=source_table, source_id=source_id,
+            pdf_path=pdf_path, pdf_url=pdf_url,
+            section_url=section_url, section_title=section_title,
+        )
+        print(f"  _index_pdf_real_content: {pdf_name} -> {result}")
+    except Exception as e:
+        print(f"  _index_pdf_real_content: skipped {pdf_name} due to error: {e}")
+
+
 # ============================================================
 # PER-TABLE INDEXERS
 # Each one: (1) deletes old chunks for this row, (2) builds new ones.
@@ -268,7 +300,7 @@ def index_facility_content_row(row: "models.FacilityContent"):
     Powers facilities/* and any other GenericContentPage-routed section."""
 
     pdf_list = [(pdf.pdf_url, pdf.pdf_name) for pdf in row.pdfs]
-    photo_list = [(photo.photo_url, photo.photo_name) for photo in row.photos]
+    # photo_list intentionally not used -- image indexing disabled, see below
 
     delete_chunks_for("facility_content", row.id)
 
@@ -441,16 +473,29 @@ def index_facility_content_row(row: "models.FacilityContent"):
             section_url=url, section_title=title,
             asset={"asset_type": "pdf", "file_url": pdf_url, "file_name": pdf_name},
         )
+        # Real PDF text content, in addition to the filename-only chunk above
+        # (that one stays -- it's what lets broad "show me the PDF" queries
+        # surface the file even for chunks below). This adds page-level
+        # chunks with the PDF's ACTUAL text, so specific questions can be
+        # answered from the real content instead of just "a PDF exists here".
+        _index_pdf_real_content(pdf_url, pdf_name, "facility_content", row.id, url, title)
 
-    # 4. Image chunks
-    for photo_url, photo_name in photo_list:
-        readable = _readable_name_from_filename(photo_name)
-        save_chunk(
-            "facility_content", row.id, "image",
-            chunk_text_value=f"Photo of {title}. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": photo_url, "file_name": photo_name},
-        )
+    # 4. Image chunks -- DISABLED (2026-08-20): image captions ("Photo of X.
+    # filename.") were consistently outranking real text/table/PDF content
+    # for factual queries (confirmed via test_no_images.py), since a short
+    # generic caption embeds deceptively close to almost any query. Images
+    # carry no answerable information anyway. Kept here, commented out,
+    # rather than deleted, in case you want them back for browse-style
+    # "show me photos of X" queries later.
+    #
+    # for photo_url, photo_name in photo_list:
+    #     readable = _readable_name_from_filename(photo_name)
+    #     save_chunk(
+    #         "facility_content", row.id, "image",
+    #         chunk_text_value=f"Photo of {title}. {readable}.",
+    #         section_url=url, section_title=title,
+    #         asset={"asset_type": "image", "file_url": photo_url, "file_name": photo_name},
+    #     )
 
     # Legacy single pdf/photo columns
     if row.pdf_url:
@@ -461,14 +506,15 @@ def index_facility_content_row(row: "models.FacilityContent"):
             section_url=url, section_title=title,
             asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
         )
-    if row.photo_url:
-        readable = _readable_name_from_filename(row.photo_name or 'photo')
-        save_chunk(
-            "facility_content", row.id, "image",
-            chunk_text_value=f"Photo of {title}. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": row.photo_url, "file_name": row.photo_name},
-        )
+        _index_pdf_real_content(row.pdf_url, row.pdf_name or "attachment", "facility_content", row.id, url, title)
+    # if row.photo_url:
+    #     readable = _readable_name_from_filename(row.photo_name or 'photo')
+    #     save_chunk(
+    #         "facility_content", row.id, "image",
+    #         chunk_text_value=f"Photo of {title}. {readable}.",
+    #         section_url=url, section_title=title,
+    #         asset={"asset_type": "image", "file_url": row.photo_url, "file_name": row.photo_name},
+    #     )
 
 
 def sync_notice_by_id(notice_id: int):
@@ -519,14 +565,14 @@ def index_college_info_item_row(row: "models.CollegeInfoItem"):
         section_url=url, section_title=title,
     )
 
-    if row.image_url:
-        readable = _readable_name_from_filename(row.image_name or 'photo')
-        save_chunk(
-            "college_info_items", row.id, "image",
-            chunk_text_value=f"Photo related to {title}. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
-        )
+    # if row.image_url:
+    #     readable = _readable_name_from_filename(row.image_name or 'photo')
+    #     save_chunk(
+    #         "college_info_items", row.id, "image",
+    #         chunk_text_value=f"Photo related to {title}. {readable}.",
+    #         section_url=url, section_title=title,
+    #         asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
+    #     )
 
 
 def index_administration_section_row(row: "models.AdministrationSection"):
@@ -543,14 +589,14 @@ def index_administration_section_row(row: "models.AdministrationSection"):
             section_url=url, section_title=title,
         )
 
-    if row.image_url:
-        readable = _readable_name_from_filename(row.image_name or 'photo')
-        save_chunk(
-            "administration_sections", row.id, "image",
-            chunk_text_value=f"Photo related to {title} in administration. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
-        )
+    # if row.image_url:
+    #     readable = _readable_name_from_filename(row.image_name or 'photo')
+    #     save_chunk(
+    #         "administration_sections", row.id, "image",
+    #         chunk_text_value=f"Photo related to {title} in administration. {readable}.",
+    #         section_url=url, section_title=title,
+    #         asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
+    #     )
 
 
 def index_academic_nep_row(row: "models.AcademicNEP"):
