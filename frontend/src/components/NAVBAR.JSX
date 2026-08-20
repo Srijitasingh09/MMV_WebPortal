@@ -360,7 +360,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
           overflow-y-auto transition-transform duration-300 md:hidden border-l-2 border-[#d4af37]
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#d4af37] sticky top-0 bg-[#0f3358] z-10 shadow-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#d4af37]  bg-[#0f3358] z-10 shadow-md">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#d4af37]" />
             <span className="text-white font-bold font-cinzel text-base tracking-wide">MMV Menu</span>
@@ -368,7 +368,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
           <button
             onClick={onClose}
             aria-label="Close menu"
-            className="text-slate-300 hover:text-white text-xl leading-none w-8 h-8 flex items-center justify-center rounded-lg border border-slate-700 bg-white/5"
+            className="text-slate-300 hover:text-white text-xl leading-none w-8 h-8 flex items-center justify-enditems-center rounded-lg border border-slate-700 bg-white/5"
           >
             ✕
           </button>
@@ -530,7 +530,7 @@ const Navbar = () => {
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="min-w-0 text-right">
               <h1 className="text-[#353375] text-xs sm:text-lg md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
-                Mahila Maha Vidyalaya
+                Mahila Mahavidyalaya
               </h1>
               <p className="text-[9px] sm:text-xs text-[#353375] font-semibold tracking-wider uppercase whitespace-normal">
                 Varanasi
@@ -595,10 +595,10 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* ---- NAVIGATION BAR (MAIN BLUE BACKGROUND #0f3358) — STICKY AT TOP ON SCROLL ---- */}
-      <nav className="hidden md:block sticky top-0 z-[999] bg-[#0f3358] px-4 border-b-2 border-[#d4af37] shadow-lg">
+      {/* ---- NAVIGATION BAR (MAIN BLUE BACKGROUND #0f3358) ---- */}
+      <nav className="hidden md:block bg-[#0f3358] px-4 border-b-2 border-[#d4af37] shadow-lg">
         {/* Desktop Nav Links */}
-        <div className="flex relative justify-center items-center">
+        <div className="flex relative justify-end items-center">
           <Link to="/"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
                     hover:bg-[#174873] hover:text-[#d4af37]

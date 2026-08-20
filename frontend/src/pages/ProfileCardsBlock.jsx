@@ -1,12 +1,13 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// Tag prefix so a card's photo can be found among all photos on this page,
-// the same trick GenericContentPage already uses for PROFILE_PHOTO_TAG /
-// TABLE_PDF_TAG — no backend changes needed, it's just the filename.
 const CARD_PHOTO_TAG = '__profile_card_';
+
+const CARDS_VISIBLE = 3;
+const CARD_WIDTH = 350;   // matches ProfileCard's sm:w-[350px]
+const CARD_GAP = 28;      // matches gap-7 (1.75rem)
 
 const blankCard = () => ({
   id: crypto.randomUUID(),
@@ -41,8 +42,22 @@ const IconPerson = () => (
   </svg>
 );
 
+const ScrollArrow = ({ direction, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={direction === 'left' ? 'Show previous' : 'Show more'}
+    className={`absolute top-1/2 -translate-y-1/2 z-20 w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white border-2 border-[#0f3358]/20 shadow-lg flex items-center justify-center text-[#0f3358] hover:bg-[#0f3358] hover:text-white hover:border-[#0f3358] transition-colors cursor-pointer
+      ${direction === 'left' ? 'left-0 sm:-left-2' : 'right-0 sm:-right-2'}`}
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 sm:w-6 sm:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      {direction === 'left' ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+    </svg>
+  </button>
+);
+
 const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
-  <div className="relative w-full max-w-[380px] sm:w-[350px] bg-white border-2 border-slate-300 rounded-3xl shadow-md overflow-hidden flex flex-col items-center pt-8 pb-7 px-7 text-center">
+  <div className="relative w-full max-w-[350px] bg-white border-2 border-slate-300 rounded-3xl shadow-md overflow-hidden flex flex-col items-center pt-8 pb-7 px-6 sm:px-7 text-center mx-auto">
     {isAdmin && (
       <div className="absolute top-3 right-3 flex gap-2 z-10">
         <button
@@ -82,7 +97,7 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
       </div>
     </div>
 
-    <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold font-cinzel text-[#0f3358] text-center leading-tight tracking-wide">
+    <h3 className="text-xl sm:text-xl md:text-2xl font-extrabold font-cinzel text-[#0f3358] text-center leading-tight tracking-wide">
       {card.name || 'Unnamed'}
     </h3>
     <div className="w-12 h-[3px] bg-[#d4af37] my-2.5 rounded-full" />
@@ -99,20 +114,23 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
       <p className="text-slate-600 text-sm sm:text-base font-semibold text-center mb-4">{card.university}</p>
     )}
 
+    {/* Contact details section: phone & email start at the same indent */}
     {(card.phone || card.email) && (
-      <div className="w-full border-t border-slate-200 pt-4 space-y-3">
-        {card.phone && (
-          <div className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-slate-800">
-            <span className="w-8 h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconPhone /></span>
-            <span>{card.phone}</span>
-          </div>
-        )}
-        {card.email && (
-          <div className="flex items-center justify-center gap-3 text-sm sm:text-base font-semibold text-slate-800 break-all">
-            <span className="w-8 h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconMail /></span>
-            <span>{card.email}</span>
-          </div>
-        )}
+      <div className="w-full border-t border-slate-200 pt-4">
+        <div className="w-fit max-w-full mx-auto space-y-3 text-left">
+          {card.phone && (
+            <div className="flex items-center gap-3 text-sm sm:text-base font-semibold text-slate-800">
+              <span className="w-8 h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconPhone /></span>
+              <span className="break-all">{card.phone}</span>
+            </div>
+          )}
+          {card.email && (
+            <div className="flex items-center gap-3 text-sm sm:text-base font-semibold text-slate-800">
+              <span className="w-8 h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconMail /></span>
+              <span className="break-all">{card.email}</span>
+            </div>
+          )}
+        </div>
       </div>
     )}
 
@@ -120,28 +138,19 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
   </div>
 );
 
-/**
- * Renders a row of profile cards (warden/staff-style) that admins can add to
- * ANY page, independent of pageType. Data lives in the same `details` JSON
- * blob GenericContentPage already reads/writes (key: profileCards), and
- * photos reuse the existing facility-content photo-upload endpoint, tagged
- * per-card so they don't collide with gallery/profile photos on the page.
- *
- * Props:
- *   section, subsection  — same values passed into GenericContentPage
- *   content               — the fetched facility-content row (data state from parent); {} if none yet
- *   isAdmin, token
- *   onChanged(newRow)      — called with the refreshed row after any save/delete
- */
 const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, token, onChanged }, ref) => {
   const fileRef = useRef(null);
+  const scrollRef = useRef(null);
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(blankCard());
   const [isNew, setIsNew] = useState(true);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState('');
+  const [removePhoto, setRemovePhoto] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
   let details = {};
   try { details = content?.details ? JSON.parse(content.details) : {}; } catch { details = {}; }
@@ -150,16 +159,38 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
   const photoFor = (cardId) =>
     photos.find(p => p.photo_name?.startsWith(`${CARD_PHOTO_TAG}${cardId}__`))?.photo_url;
 
+  const updateScrollButtons = () => {
+    const el = scrollRef.current;
+    if (!el) { setCanScrollLeft(false); setCanScrollRight(false); return; }
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  };
+
+  useEffect(() => {
+    updateScrollButtons();
+    const onResize = () => updateScrollButtons();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cards.length]);
+
+  const scrollByCard = (direction) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const firstCard = el.querySelector('.snap-center, .snap-start');
+    const step = firstCard ? firstCard.clientWidth + 20 : CARD_WIDTH + CARD_GAP;
+    el.scrollBy({ left: direction * step, behavior: 'smooth' });
+  };
+
   const openAdd = () => {
     setForm(blankCard());
     setIsNew(true);
     setPhotoFile(null);
     setPhotoPreview('');
+    setRemovePhoto(false);
     setShowForm(true);
   };
 
-  // Lets the parent's "ADMIN CONTROLS" bar trigger this with a normal button,
-  // same as Upload Photo / Edit Description — no extra tile rendered here.
   useImperativeHandle(ref, () => ({ openAddForm: openAdd }));
 
   const openEdit = (card) => {
@@ -167,6 +198,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
     setIsNew(false);
     setPhotoFile(null);
     setPhotoPreview(photoFor(card.id) ? `${API}${photoFor(card.id)}` : '');
+    setRemovePhoto(false);
     setShowForm(true);
   };
 
@@ -175,6 +207,14 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
     if (!file) return;
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+    setRemovePhoto(false);
+  };
+
+  const handleRemovePhotoClick = () => {
+    setPhotoFile(null);
+    setPhotoPreview('');
+    setRemovePhoto(true);
+    if (fileRef.current) fileRef.current.value = '';
   };
 
   const persistDetails = async (newCards) => {
@@ -219,9 +259,11 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
       if (photoFile) {
         if (!isNew) await removePhotoFor(form.id); // replace: drop old tagged photo first
         await uploadPhotoFor(form.id, photoFile);
+      } else if (removePhoto && !isNew) {
+        await removePhotoFor(form.id);
       }
 
-      // re-fetch the row so photos[] reflects the upload
+      // re-fetch the row so photos[] reflects the upload/deletion
       const res = await axios.get(`${API}/facility-content`, { params: { section, category: subsection } });
       const fresh = (res.data || [])[0] || {};
       onChanged?.(fresh);
@@ -248,17 +290,41 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
   if (!isAdmin && cards.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap justify-center gap-5 sm:gap-7 my-2">
-      {cards.map(card => (
-        <ProfileCard
-          key={card.id}
-          card={card}
-          photoUrl={photoFor(card.id) ? `${API}${photoFor(card.id)}` : null}
-          isAdmin={isAdmin}
-          onEdit={openEdit}
-          onDelete={handleDelete}
-        />
-      ))}
+    <>
+      <div className="relative my-2 mx-auto px-4 sm:px-0" style={{ maxWidth: CARDS_VISIBLE * CARD_WIDTH + (CARDS_VISIBLE - 1) * CARD_GAP }}>
+        {canScrollLeft && (
+          <ScrollArrow direction="left" onClick={() => scrollByCard(-1)} />
+        )}
+        {canScrollRight && (
+          <ScrollArrow direction="right" onClick={() => scrollByCard(1)} />
+        )}
+
+        {/* Mobile: 1 card shown at a time with snap-center. Desktop: up to 3 cards visible. */}
+        <div
+          ref={scrollRef}
+          onScroll={updateScrollButtons}
+          className={`flex gap-5 sm:gap-7 py-1 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar ${
+            cards.length < CARDS_VISIBLE ? 'justify-start sm:justify-center' : ''
+          }`}
+        >
+          {cards.map(card => (
+            <div key={card.id} className="w-[calc(100vw-2.5rem)] max-w-[350px] sm:w-[350px] shrink-0 snap-center sm:snap-start">
+              <ProfileCard
+                card={card}
+                photoUrl={photoFor(card.id) ? `${API}${photoFor(card.id)}` : null}
+                isAdmin={isAdmin}
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            </div>
+          ))}
+        </div>
+
+        <style>{`
+          .no-scrollbar::-webkit-scrollbar { display: none; }
+          .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        `}</style>
+      </div>
 
       {showForm && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -271,13 +337,23 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
               <div className="w-16 h-16 rounded-full bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center shrink-0">
                 {photoPreview ? <img src={photoPreview} className="w-full h-full object-cover" alt="" /> : <IconPerson />}
               </div>
-              <div>
+              <div className="flex flex-wrap gap-2 items-center">
                 <button
+                  type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 hover:bg-slate-50"
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 hover:bg-slate-50 cursor-pointer"
                 >
                   {photoPreview ? 'Change Photo' : 'Upload Photo'}
                 </button>
+                {photoPreview && (
+                  <button
+                    type="button"
+                    onClick={handleRemovePhotoClick}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer"
+                  >
+                    Remove Photo
+                  </button>
+                )}
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoPick} />
               </div>
             </div>
@@ -315,7 +391,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 });
 

@@ -11,7 +11,7 @@ const API =import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // standalone "photo" block). This needs no backend changes since photo_name
 // is just whatever filename the browser sends.
 const PROFILE_PHOTO_TAG = '__profile_photo__';
-
+const CARD_PHOTO_TAG = '__profile_card_';
 // Same idea, but for PDFs uploaded into a table cell (e.g. a "syllabus PDF"
 // column). They're stored in the same backend `pdfs` table as the standalone
 // pdf-list block, so they need a tag to be told apart — otherwise they'd also
@@ -37,6 +37,97 @@ const BODY_STYLES = {
 const blankProfile = {
   name: '', designation: '', university: '', address: '',
   phone: '', officeContact: '', email: ''
+};
+
+// ─── Shared link / inline-formatting helpers ────────────────────────────────
+// Defined at module scope (not inside the component) so both the description
+// parser AND the admin data table's cell viewer can use the exact same logic
+// for turning "[label](url)" / bare "https://…" text into clickable links.
+//
+// Links are resolved BEFORE bold/italic splitting — a lot of real URLs
+// contain underscores (Wikipedia, Google Docs, etc.), and running the old
+// italics regex over the whole string first would grab text between two
+// unrelated underscores inside a URL and slice the href apart, silently
+// breaking the link. Resolving links first means their underscores/asterisks
+// are never touched by the formatting pass.
+const splitLinks = (text) => {
+  if (typeof text !== 'string') return [{ type: 'text', content: text }];
+  // Matches [label](url) OR bare http(s):// or /relative URLs
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)/g;
+  const segments = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    const label = match[1] || match[3];
+    // Strip trailing sentence punctuation (e.g. "...(url).") that isn't
+    // actually part of a bare URL.
+    const href = (match[2] || match[3]).replace(/[),.;:!?]+$/, '');
+    segments.push({ type: 'link', label, href });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+  return segments.length > 0 ? segments : [{ type: 'text', content: text }];
+};
+
+const renderLink = (seg, key) => {
+  const isInternal = seg.href.startsWith('/');
+  return (
+    <a
+      key={key}
+      href={seg.href}
+      target={isInternal ? "_self" : "_blank"}
+      rel={isInternal ? "" : "noopener noreferrer"}
+      className="text-blue-600 hover:text-blue-800 hover:underline break-all font-medium"
+    >
+      {seg.label}
+    </a>
+  );
+};
+
+const renderTextWithLinks = (text) =>
+  splitLinks(text).map((seg, i) =>
+    seg.type === 'link'
+      ? renderLink(seg, `link-${i}`)
+      : <React.Fragment key={`txt-${i}`}>{seg.content}</React.Fragment>
+  );
+
+// Renders inline bold (**text**), italics (*text* or _text_) + links together.
+// Links are resolved first via splitLinks, then bold/italic markers are
+// applied only inside the plain-text segments around them.
+const renderInlineFormatting = (text) => {
+  if (!text || typeof text !== 'string') return text || '';
+  return splitLinks(text).map((seg, i) => {
+    if (seg.type === 'link') {
+      return renderLink(seg, `fmt-link-${i}`);
+    }
+    const parts = seg.content.split(/(\*\*.*?\*\*|\*.*?\*|_.*?_)/g).filter(Boolean);
+    return (
+      <React.Fragment key={`fmt-txt-${i}`}>
+        {parts.map((part, j) => {
+          if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+            return (
+              <strong key={j} className="font-bold">
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          if (((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) && part.length >= 2) {
+            return (
+              <em key={j} className="italic">
+                {part.slice(1, -1)}
+              </em>
+            );
+          }
+          return part;
+        })}
+      </React.Fragment>
+    );
+  });
 };
 
 const GenericContentPage = ({
@@ -125,7 +216,7 @@ const GenericContentPage = ({
   // block — the two never overlap, so a page can have both independently.
   const allPhotos    = data.photos || [];
   const profilePhoto  = allPhotos.find(p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)) || null;
-  const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG));
+ const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG) && !p.photo_name?.startsWith(CARD_PHOTO_TAG));
 
   // Same split for PDFs: a PDF uploaded into a table cell is tagged so it
   // only shows up inside that table cell, never in the standalone "Documents"
@@ -531,21 +622,6 @@ const GenericContentPage = ({
         </div>
       </div>
 
-      {/* ── STAFF / WARDEN PROFILE CARDS ── standalone, shows on every page
-          regardless of pageType. Admin can add up to as many as needed;
-          layout auto-wraps: 1 centered, 2-3 side by side, 4+ wrap into rows
-          of 3 with any leftover row centered. Data is separate from the
-          page description/content below. ── */}
-      <ProfileCardsBlock
-        ref={profileCardsRef}
-        section={section}
-        subsection={subsection}
-        content={data}
-        isAdmin={isAdmin}
-        token={token}
-        onChanged={(fresh) => setData(fresh)}
-      />
-
       {/* ── OFFICIAL EXECUTIVE PROFILE CARD (legacy single-profile block, kept for existing pages using pageType 'profile') ── */}
       {hasProfile && (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#0f3358] p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
@@ -782,18 +858,11 @@ const GenericContentPage = ({
         </div>
       )}
 
-      {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
-      {(hasPhoto || hasDesc || hasSlideshow) && (
-        <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${
-          hasPhoto && !hasSlideshow && galleryPhotos.length && hasDesc 
-           ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
-           : 'md:grid-cols-3' // Default fallback grid structure
-        }`}>
-
-          {/* SLIDESHOW */}
-          {hasSlideshow && (
-             <div className="md:col-span-3 w-full">
-              {isAdmin && (
+      {/* ── SLIDESHOW ── rendered as its own full-width block, ahead of the
+          profile cards below, so slideshow always sits above them. ── */}
+      {hasSlideshow && (
+        <div className="w-full">
+          {isAdmin && (
                 <div className="flex justify-end mb-2 relative">
                   <button
                     onClick={() => { setEditSlideSettings(photoSettings); setIsEditingSlideSize(v => !v); }}
@@ -850,6 +919,30 @@ const GenericContentPage = ({
             </div>
             </div>
           )}
+
+      {/* ── STAFF / WARDEN PROFILE CARDS ── standalone, shows on every page
+          regardless of pageType. Positioned after the slideshow/photos and
+          before the description. Admin can add up to as many as needed;
+          layout auto-wraps: 1 centered, 2-3 side by side, 4+ wrap into rows
+          of 3 with any leftover row centered. Data is separate from the
+          page description/content below. ── */}
+      <ProfileCardsBlock
+        ref={profileCardsRef}
+        section={section}
+        subsection={subsection}
+        content={data}
+        isAdmin={isAdmin}
+        token={token}
+        onChanged={(fresh) => setData(fresh)}
+      />
+
+      {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
+      {(hasPhoto || hasDesc) && (
+        <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${
+          hasPhoto && galleryPhotos.length && hasDesc 
+           ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
+           : 'md:grid-cols-3' // Default fallback grid structure
+        }`}>
 
           {/*---photo grid options---*/}
           {hasPhoto && galleryPhotos.length > 0 && (
@@ -1119,62 +1212,9 @@ const GenericContentPage = ({
                     };
 
                     {/*--links---*/}
-                    const renderTextWithLinks = (text) => {      
-                      if (typeof text !== 'string') return text;
-                      // Matches [label](url) OR bare http(s):// or /relative URLs
-                      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)/g;
-                      const parts = [];
-                      let lastIndex = 0;
-                      let match;
-                      let keyCounter = 0;
-                      while ((match = linkRegex.exec(text)) !== null) {
-                        if (match.index > lastIndex) {
-                          parts.push(text.slice(lastIndex, match.index));
-                        }
-                        const label = match[1] || match[3];
-                        const href  = match[2] || match[3];
-                        const isInternal = href.startsWith('/');
-                        parts.push(
-                          <a
-                            key={`link-${keyCounter++}`}
-                            href={href}
-                            target={isInternal ? "_self" : "_blank"}
-                            rel={isInternal ? "" : "noopener noreferrer"}
-                            className="text-blue-600 hover:text-blue-800 hover:underline break-all font-medium"
-                          >
-                            {label}
-                          </a>
-                        );
-                        lastIndex = match.index + match[0].length;
-                      }
-                      if (lastIndex < text.length) {
-                        parts.push(text.slice(lastIndex));
-                      }
-                      return parts.length > 0 ? parts : [text];
-                    };
-
-                    // Renders inline bold (**text**), italics (*text* or _text_) + links together
-                    const renderInlineFormatting = (text) => {
-                      if (!text || typeof text !== 'string') return text || '';
-                      const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|_.*?_)/g).filter(Boolean);
-                      return parts.map((part, i) => {
-                        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
-                          return (
-                            <strong key={i} className="font-bold">
-                              {renderInlineFormatting(part.slice(2, -2))}
-                            </strong>
-                          );
-                        }
-                        if (((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) && part.length >= 2) {
-                          return (
-                            <em key={i} className="italic">
-                              {renderInlineFormatting(part.slice(1, -1))}
-                            </em>
-                          );
-                        }
-                        return <React.Fragment key={i}>{renderTextWithLinks(part)}</React.Fragment>;
-                      });
-                    };
+                    {/*--links--- resolved via the module-level splitLinks/renderInlineFormatting
+                        helpers defined near the top of the file, shared with the
+                        admin data table's cell viewer below. ---*/}
 
                     //bullets
                     const flushBullets = () => {
@@ -1930,7 +1970,10 @@ const GenericContentPage = ({
                       View PDF
                     </a>
                   )
-                  : val
+                  // Plain cell text: run through the same [label](url) / bare-URL
+                  // link parser used in the description, notes, accordion, and grid,
+                  // so links typed inside a normal table cell become clickable too.
+                  : renderInlineFormatting(val)
                 : '—';
 
             // Icon buttons with generous tap targets (min ~36px) — same on every breakpoint
