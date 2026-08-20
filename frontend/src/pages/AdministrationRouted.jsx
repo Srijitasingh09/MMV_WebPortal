@@ -24,7 +24,7 @@ const pages = {
 
   'advisor': { 
     title: 'Student Advisor',                               
-    pageType: 'profile' 
+    pageType: 'profile-description' 
   },
 
   'staff': { 
@@ -50,8 +50,8 @@ const pages = {
 
   'examination/universityexam': {  
     title: 'Controller of Examination — University', 
-    pageType: 'table-description', 
-    tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
+    pageType: 'description' 
+    
   },
   
   'examination/mmvexam': { 

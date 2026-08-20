@@ -4,7 +4,7 @@ import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
 import ProfileCardsBlock from './ProfileCardsBlock';
 
-const API =import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Profile photos are tagged via a filename prefix so they can be told apart
 // from any other photos uploaded on the same page (e.g. via the old
@@ -20,10 +20,10 @@ const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
-  heading:        'text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#0f3358] font-cinzel tracking-wide pb-1.5',   // main page-level heading (first line of description)
-  subheading:     'text-base sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel',       // '## ' — description body, description notes, accordion notes
-  subSubheading:  'text-xs sm:text-base md:text-lg font-bold text-[#174873] font-sans-official',    // '### ' — description body, description notes, accordion notes
-  accordionTitle: 'text-xs sm:text-sm md:text-base font-semibold text-[#0f3358]',    // accordion bar title ('+++ Title')
+  heading:        'text-[#0f3358] font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
+  subheading:     'text-lg sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel leading-snug',       // '## ' — description body, description notes, accordion notes
+  subSubheading:  'text-sm sm:text-base md:text-lg font-bold text-[#174873] font-sans-official leading-snug',    // '### ' — description body, description notes, accordion notes
+  accordionTitle: 'text-sm sm:text-base md:text-lg font-bold text-[#0f3358]',    // accordion bar title ('+++ Title')
 };
 
 // ─── Body text size per description section ────────────────────────────────
@@ -40,19 +40,11 @@ const blankProfile = {
 };
 
 // ─── Shared link / inline-formatting helpers ────────────────────────────────
-// Defined at module scope (not inside the component) so both the description
-// parser AND the admin data table's cell viewer can use the exact same logic
-// for turning "[label](url)" / bare "https://…" text into clickable links.
-//
-// Links are resolved BEFORE bold/italic splitting — a lot of real URLs
-// contain underscores (Wikipedia, Google Docs, etc.), and running the old
-// italics regex over the whole string first would grab text between two
-// unrelated underscores inside a URL and slice the href apart, silently
-// breaking the link. Resolving links first means their underscores/asterisks
-// are never touched by the formatting pass.
+// Defined at module scope so both the description parser AND the admin data table's
+// cell viewer can use the exact same logic for turning "[label](url)" / bare "https://…"
+// text into clickable links.
 const splitLinks = (text) => {
   if (typeof text !== 'string') return [{ type: 'text', content: text }];
-  // Matches [label](url) OR bare http(s):// or /relative URLs
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)/g;
   const segments = [];
   let lastIndex = 0;
@@ -62,8 +54,6 @@ const splitLinks = (text) => {
       segments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
     }
     const label = match[1] || match[3];
-    // Strip trailing sentence punctuation (e.g. "...(url).") that isn't
-    // actually part of a bare URL.
     const href = (match[2] || match[3]).replace(/[),.;:!?]+$/, '');
     segments.push({ type: 'link', label, href });
     lastIndex = match.index + match[0].length;
@@ -97,8 +87,6 @@ const renderTextWithLinks = (text) =>
   );
 
 // Renders inline bold (**text**), italics (*text* or _text_) + links together.
-// Links are resolved first via splitLinks, then bold/italic markers are
-// applied only inside the plain-text segments around them.
 const renderInlineFormatting = (text) => {
   if (!text || typeof text !== 'string') return text || '';
   return splitLinks(text).map((seg, i) => {
@@ -159,9 +147,6 @@ const GenericContentPage = ({
   const [editDesc,   setEditDesc]   = useState('');
   const [saving,     setSaving]     = useState(false);
 
-  // description: '+++ Title ... +++' collapsible blocks (see flushAccordion
-  // in the render below). openSections tracks which block indices are open;
-  // every block starts closed until clicked.
   const [openSections, setOpenSections] = useState({});
   const [openGridCards, setOpenGridCards] = useState({});
 
@@ -177,8 +162,8 @@ const GenericContentPage = ({
   const [savingHeading,    setSavingHeading]    = useState(false);
 
   // inline row edit state
-  const [editingRowIdx,  setEditingRowIdx]  = useState(null); // which row is being edited
-  const [editingRowData, setEditingRowData] = useState({});   // copy of that row's data
+  const [editingRowIdx,  setEditingRowIdx]  = useState(null);
+  const [editingRowData, setEditingRowData] = useState({});
 
   // profile state
   const [profile,          setProfile]          = useState(blankProfile);
@@ -186,9 +171,6 @@ const GenericContentPage = ({
   const [editProfile,      setEditProfile]      = useState(blankProfile);
   const [savingProfile,    setSavingProfile]    = useState(false);
 
-  // Photo size settings — admin-editable, saved per-page in `details` JSON.
-  // Falls back to the router-config props above until/unless a page has its
-  // own saved override (see fetchData -> parsed.photoSettings below).
   const blankPhotoSettings = {
     cols: photoCols,
     height: photoHeight,
@@ -211,20 +193,13 @@ const GenericContentPage = ({
   const hasTable     = pageType.includes('table');
   const hasProfile   = pageType.includes('profile');
 
-  // The profile photo is whichever uploaded photo is tagged as such.
-  // Everything else is a regular "gallery" photo for the old photo/slideshow
-  // block — the two never overlap, so a page can have both independently.
   const allPhotos    = data.photos || [];
   const profilePhoto  = allPhotos.find(p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)) || null;
- const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG) && !p.photo_name?.startsWith(CARD_PHOTO_TAG));
+  const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG) && !p.photo_name?.startsWith(CARD_PHOTO_TAG));
 
-  // Same split for PDFs: a PDF uploaded into a table cell is tagged so it
-  // only shows up inside that table cell, never in the standalone "Documents"
-  // viewer used by the pdf-list block.
   const allPdfs    = data.pdfs || [];
   const galleryPdfs = allPdfs.filter(p => !p.pdf_name?.startsWith(TABLE_PDF_TAG));
 
-  // FIX 6: Wrapped in useCallback so it can be safely listed as a useEffect dependency
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -236,13 +211,12 @@ const GenericContentPage = ({
       setData(match);
       setEditDesc(match.description || '');
 
-      // parse table / profile / photoSettings from details field (shared JSON blob)
       let parsed = {};
       if (match.details) {
         try { parsed = JSON.parse(match.details); } catch { parsed = {}; }
       }
 
-      setOpenSections({}); // reset accordion open/closed state when navigating to a different page
+      setOpenSections({});
       setOpenGridCards({});
 
       if (hasTable) {
@@ -254,16 +228,11 @@ const GenericContentPage = ({
       }
 
       if (hasProfile) {
-        // Always reset — if this page (e.g. "dean") has no saved profile,
-        // don't keep showing whatever the previously viewed page had.
         const merged = { ...blankProfile, ...(parsed.profile || {}) };
         setProfile(merged);
         setEditProfile(merged);
       }
 
-      // Photo size settings: start from router-config defaults, then layer
-      // any saved per-page override on top. Always reset on page change so
-      // switching pages doesn't carry over a previous page's saved sizes.
       const mergedPhotoSettings = { ...blankPhotoSettings, ...(parsed.photoSettings || {}) };
       setPhotoSettings(mergedPhotoSettings);
       setEditPhotoSettings(mergedPhotoSettings);
@@ -285,7 +254,6 @@ const GenericContentPage = ({
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // ── DESCRIPTION SAVE ──
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -299,14 +267,10 @@ const GenericContentPage = ({
     finally { setSaving(false); }
   };
 
-  // ── TABLE ROW ORDER ── rows are displayed in the exact order they're
-  // stored in; admins reorder them manually with the ▲/▼ buttons below
-  // (see handleMoveRow), which swaps rows and persists the new order.
   const displayRows = rows.map((row, origIdx) => ({ row, origIdx }));
 
-  // ── ROW REORDER (admin only) ── swap a row with its neighbor and persist
   const handleMoveRow = (idx, direction) => {
-    if (editingRowIdx !== null) return; // avoid index confusion mid-edit
+    if (editingRowIdx !== null) return;
     const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
     if (targetIdx < 0 || targetIdx >= rows.length) return;
     const updated = [...rows];
@@ -315,10 +279,8 @@ const GenericContentPage = ({
     saveTable(columns, updated);
   };
 
-  // ── TABLE SAVE ──
   const saveTable = async (cols, tableRows) => {
     try {
-      // merge with any existing details (e.g. profile) so we don't clobber it
       let existing = {};
       try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
       const merged = { ...existing, columns: cols, rows: tableRows };
@@ -335,7 +297,6 @@ const GenericContentPage = ({
     } catch { alert('Table save failed'); }
   };
 
-  // ── TABLE HEADING SAVE ──
   const handleSaveTableHeading = async () => {
     setSavingHeading(true);
     try {
@@ -358,11 +319,9 @@ const GenericContentPage = ({
     finally { setSavingHeading(false); }
   };
 
-  // ── PROFILE SAVE ──
   const handleSaveProfile = async () => {
     setSavingProfile(true);
     try {
-      // merge with any existing details (e.g. table) so we don't clobber it
       let existing = {};
       try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
       const merged = { ...existing, profile: editProfile };
@@ -382,9 +341,6 @@ const GenericContentPage = ({
     finally { setSavingProfile(false); }
   };
 
-  // ── PHOTO SETTINGS SAVE ──
-  // Same merge-into-`details` pattern as saveTable/handleSaveProfile so this
-  // never clobbers table/profile data already saved on this page.
   const savePhotoSettings = async (newSettings) => {
     setSavingPhotoSettings(true);
     try {
@@ -427,8 +383,6 @@ const GenericContentPage = ({
     setIsEditingSlideSize(false);
   };
 
-  // FIX 2: Updated validation to also allow rows where any column has a non-empty value,
-  // including PDF URLs that were set programmatically (not typed by the user)
   const handleAddRow = () => {
     const hasAnyValue = columns.some(col => {
       const val = newRow[col] || '';
@@ -442,8 +396,6 @@ const GenericContentPage = ({
   };
 
   const handleDeleteRow = (idx) => {
-    // Cancel any active row edit to prevent index-shift bug
-    // (if a row above or equal to the edited row is deleted, editingRowIdx would point to the wrong row)
     if (editingRowIdx !== null) {
       setEditingRowIdx(null);
       setEditingRowData({});
@@ -453,7 +405,6 @@ const GenericContentPage = ({
     saveTable(columns, updated);
   };
 
-  // ── ROW EDIT ──
   const handleStartEditRow = (idx) => {
     setEditingRowIdx(idx);
     setEditingRowData({ ...rows[idx] });
@@ -484,7 +435,6 @@ const GenericContentPage = ({
   };
 
   const handleDeleteColumn = (col) => {
-    // Cancel any active row edit — the column being edited may no longer exist
     if (editingRowIdx !== null) {
       setEditingRowIdx(null);
       setEditingRowData({});
@@ -496,7 +446,6 @@ const GenericContentPage = ({
     saveTable(updatedCols, updatedRows);
   };
 
-  // ── UPLOADS ──
   const handleImageUpload = async (e) => {
     const files = e.target.files; 
     if (!files || files.length === 0) return;
@@ -515,16 +464,10 @@ const GenericContentPage = ({
     }
   };
 
-  // ── PROFILE PHOTO UPLOAD ──
-  // Tags the uploaded file so it can be reliably identified as THE profile
-  // photo later, independent of any other photos on this page. If a profile
-  // photo already exists, it's replaced (old one deleted first) so there's
-  // always exactly one.
   const handleProfilePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      // remove any existing profile photo first so re-uploading replaces it
       const existingProfilePhoto = (data.photos || []).find(
         p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)
       );
@@ -549,7 +492,6 @@ const GenericContentPage = ({
     }
   };
 
-  // ── PROFILE PHOTO REMOVE ──
   const handleRemoveProfilePhoto = async () => {
     if (!profilePhoto) return;
     if (!window.confirm('Remove this profile photo?')) return;
@@ -591,7 +533,6 @@ const GenericContentPage = ({
     await axios.post(`${API}/admin/facility-content/upload-pdf`, form,
       { headers: { Authorization: `Bearer ${token}` } });
     await fetchData();
-    // FIX 1: Added null check before accessing pdfRef.current to prevent crash
     if (pdfRef.current) {
       pdfRef.current.value = '';
     }
@@ -605,16 +546,16 @@ const GenericContentPage = ({
 
   return (
     <div className="max-w-6xl mx-auto px-3.5 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8">
-      {/* ── BHU OFFICIAL PORTAL PAGE HEADING (WITHOUT BACKGROUND CONTAINER) ── */}
+      {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
       <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4">
         {/* Left Side: Page Name */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
-          <h1 className="text-[#0f3358] font-cinzel font-bold text-base sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+          <h1 className="text-[#0f3358] font-cinzel font-bold text-lg sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-normal sm:leading-tight py-0.5 truncate sm:whitespace-normal">
             {title}
           </h1>
         </div>
-        {/* Right Side: Section / Page Breadcrumb (Smaller) */}
+        {/* Right Side: Section / Page Breadcrumb */}
         <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
           <span className="text-slate-400">{section ? section.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : (backLabel && backLabel !== 'Home' ? backLabel : 'Home')}</span>
           <span className="text-slate-300">/</span>
@@ -622,10 +563,9 @@ const GenericContentPage = ({
         </div>
       </div>
 
-      {/* ── OFFICIAL EXECUTIVE PROFILE CARD (legacy single-profile block, kept for existing pages using pageType 'profile') ── */}
+      {/* ── OFFICIAL EXECUTIVE PROFILE CARD ── */}
       {hasProfile && (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#0f3358] p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
-          {/* Admin Edit Button */}
           {isAdmin && !isEditingProfile && (
             <button
               onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }}
@@ -643,7 +583,6 @@ const GenericContentPage = ({
                 <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
               </div>
 
-              {/* PROFILE PHOTO EDIT */}
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 {profilePhoto ? (
                   <img
@@ -681,7 +620,6 @@ const GenericContentPage = ({
                 </div>
               </div>
 
-              {/* INPUT FIELDS */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { key: 'name',          label: 'Full Name' },
@@ -718,9 +656,7 @@ const GenericContentPage = ({
               </div>
             </div>
           ) : profile.name ? (
-            /* ── EXECUTIVE USER VIEW ── */
             <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
-              {/* Executive Photo with Simple Muted Gold Frame */}
               {profilePhoto ? (
                 <div className="relative flex-shrink-0">
                   <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
@@ -745,7 +681,6 @@ const GenericContentPage = ({
                 </div>
               )}
 
-              {/* Profile Details & Metadata Cards */}
               <div className="flex-1 text-center md:text-left space-y-4 w-full">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white font-cinzel tracking-wide leading-tight">
@@ -769,7 +704,6 @@ const GenericContentPage = ({
                   )}
                 </div>
 
-                {/* Contact Items — Displayed on separate lines, tight wrapping container */}
                 <div className="flex flex-col items-center md:items-start gap-2.5 pt-2 w-full">
                   {profile.phone && (
                     <a
@@ -858,74 +792,68 @@ const GenericContentPage = ({
         </div>
       )}
 
-      {/* ── SLIDESHOW ── rendered as its own full-width block, ahead of the
-          profile cards below, so slideshow always sits above them. ── */}
+      {/* ── SLIDESHOW ── */}
       {hasSlideshow && (
         <div className="w-full">
           {isAdmin && (
-                <div className="flex justify-end mb-2 relative">
-                  <button
-                    onClick={() => { setEditSlideSettings(photoSettings); setIsEditingSlideSize(v => !v); }}
-                    title="Adjust slideshow size"
-                    className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 text-sm"
-                  >
-                    ⚙
-                  </button>
-                  {isEditingSlideSize && (
-                    <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 max-w-[90vw] space-y-3">
-                      <p className="text-xs font-bold text-gray-500">Slideshow Size</p>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Height (px)</label>
-                        <input
-                          type="number"
-                          min={100}
-                          value={editSlideSettings.slideshowHeight}
-                          onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowHeight: e.target.value }))}
-                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">Max width (e.g. 100%, 600px)</label>
-                        <input
-                          type="text"
-                          value={editSlideSettings.slideshowMaxWidth}
-                          onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowMaxWidth: e.target.value }))}
-                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
-                        />
-                      </div>
-                      <div className="flex gap-2 justify-end pt-1">
-                        <button onClick={handleSaveSlideshowSettings} disabled={savingPhotoSettings}
-                          className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium disabled:opacity-50">
-                          {savingPhotoSettings ? 'Saving...' : 'Save'}
-                        </button>
-                        <button onClick={() => setIsEditingSlideSize(false)}
-                          className="px-3 py-1.5 text-gray-500 text-xs">
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
+            <div className="flex justify-end mb-2 relative">
+              <button
+                onClick={() => { setEditSlideSettings(photoSettings); setIsEditingSlideSize(v => !v); }}
+                title="Adjust slideshow size"
+                className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-300 bg-white hover:bg-gray-50 text-gray-600 text-sm"
+              >
+                ⚙
+              </button>
+              {isEditingSlideSize && (
+                <div className="absolute top-10 right-0 z-10 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64 max-w-[90vw] space-y-3">
+                  <p className="text-xs font-bold text-gray-500">Slideshow Size</p>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Height (px)</label>
+                    <input
+                      type="number"
+                      min={100}
+                      value={editSlideSettings.slideshowHeight}
+                      onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowHeight: e.target.value }))}
+                      className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Max width (e.g. 100%, 600px)</label>
+                    <input
+                      type="text"
+                      value={editSlideSettings.slideshowMaxWidth}
+                      onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowMaxWidth: e.target.value }))}
+                      className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    />
+                  </div>
+                  <div className="flex gap-2 justify-end pt-1">
+                    <button onClick={handleSaveSlideshowSettings} disabled={savingPhotoSettings}
+                      className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium disabled:opacity-50">
+                      {savingPhotoSettings ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => setIsEditingSlideSize(false)}
+                      className="px-3 py-1.5 text-gray-500 text-xs">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               )}
-              
-                <div className="w-full max-w-full overflow-hidden mx-auto">
-                <SlideshowBlock
-                  photos={galleryPhotos}
-                  isAdmin={isAdmin}
-                  onDelete={handleDeletePhoto}
-                  height={photoSettings.slideshowHeight}
-                  maxWidth={photoSettings.slideshowMaxWidth || "100%"}
-                />      
-            </div>
             </div>
           )}
+          
+          <div className="w-full max-w-full overflow-hidden mx-auto">
+            <SlideshowBlock
+              photos={galleryPhotos}
+              isAdmin={isAdmin}
+              onDelete={handleDeletePhoto}
+              height={photoSettings.slideshowHeight}
+              maxWidth={photoSettings.slideshowMaxWidth || "100%"}
+            />      
+          </div>
+        </div>
+      )}
 
-      {/* ── STAFF / WARDEN PROFILE CARDS ── standalone, shows on every page
-          regardless of pageType. Positioned after the slideshow/photos and
-          before the description. Admin can add up to as many as needed;
-          layout auto-wraps: 1 centered, 2-3 side by side, 4+ wrap into rows
-          of 3 with any leftover row centered. Data is separate from the
-          page description/content below. ── */}
+      {/* ── STAFF / WARDEN PROFILE CARDS ── */}
       <ProfileCardsBlock
         ref={profileCardsRef}
         section={section}
@@ -941,10 +869,10 @@ const GenericContentPage = ({
         <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${
           hasPhoto && galleryPhotos.length && hasDesc 
            ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
-           : 'md:grid-cols-3' // Default fallback grid structure
+           : 'md:grid-cols-3'
         }`}>
 
-          {/*---photo grid options---*/}
+          {/* Photo Grid Options */}
           {hasPhoto && galleryPhotos.length > 0 && (
             <div className={`min-w-0 ${
               !hasDesc ? 'md:col-span-3' :
@@ -1064,7 +992,7 @@ const GenericContentPage = ({
                   : 'md:col-span-3'
             }`}>
 
-              {/*---description--*/}
+              {/* Description Container */}
               <div className="bg-white rounded-2xl border-2 border-[#7d311f]/30 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
@@ -1072,7 +1000,6 @@ const GenericContentPage = ({
                       value={editDesc}
                       onChange={e => {
                         setEditDesc(e.target.value);
-                        // Auto-grow: reset height then expand to scrollHeight
                         e.target.style.height = 'auto';
                         e.target.style.height = e.target.scrollHeight + 'px';
                       }}
@@ -1111,20 +1038,16 @@ const GenericContentPage = ({
                     const elements = [];
                     let bulletBuffer = [];
                     let firstLine = true;
-                    let noteBuffer = [];   // lines collected between '>' open and '<' close
-                    let inNote = false;    // whether we're currently inside an open note block
+                    let noteBuffer = [];   
+                    let inNote = false;    
 
-                    // Which BODY_STYLES entry paragraphs/bullets should use right
-                    // now. Starts at 'default' and switches to 'subheading' /
-                    // 'subSubheading' the moment a '## ' / '### ' line is hit —
-                    // then stays that way until the next heading changes it again.
                     let currentBodyLevel = 'default';
-                     let tableBuffer = [];  // consecutive '| a | b | c |' lines collected into one table
+                    let tableBuffer = [];  
                     
-                    let accordionBuffer = [];   // lines collected between the opening '+++ Title' and the closing '+++'
+                    let accordionBuffer = [];   
                     let accordionTitle = '';
                     let inAccordion = false;
-                    let accordionCount = 0;     // gives each rendered block a stable index for open/closed state
+                    let accordionCount = 0;     
 
                     let gridBuffer = [];
                     let inGrid = false;
@@ -1211,12 +1134,6 @@ const GenericContentPage = ({
                       },
                     };
 
-                    {/*--links---*/}
-                    {/*--links--- resolved via the module-level splitLinks/renderInlineFormatting
-                        helpers defined near the top of the file, shared with the
-                        admin data table's cell viewer below. ---*/}
-
-                    //bullets
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
@@ -1229,10 +1146,7 @@ const GenericContentPage = ({
                         bulletBuffer = [];
                       }
                     };
-                    
 
-
-                    {/*notes*/}
                     const flushNote = () => {
                       if (noteBuffer.length > 0) {
                         const noteElements = [];
@@ -1241,7 +1155,7 @@ const GenericContentPage = ({
                         const flushNoteBullets = () => {
                           if (noteBulletBuffer.length > 0) {
                             noteElements.push(
-                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
+                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
                                 {noteBulletBuffer.map((b, i) => (
                                   <li key={i}>{renderInlineFormatting(b)}</li>
                                 ))}
@@ -1278,13 +1192,13 @@ const GenericContentPage = ({
                           } else {
                             flushNoteBullets();
                             noteElements.push(
-                              <div key={`note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
+                              <div key={`note-line-${i}`} className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
                             );
                           }
                         });
                         flushNoteBullets();
                         elements.push(
-                          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
+                          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
                             {noteElements}
                           </div>
                         );
@@ -1293,7 +1207,6 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
-                    //dynamic grid accordion cards - Hubspot style clean cards with hover color transitions & zero hollow spaces
                     const flushGrid = () => {
                       if (gridBuffer.length === 0) {
                         inGrid = false;
@@ -1347,7 +1260,7 @@ const GenericContentPage = ({
                                   const flushCardBullets = () => {
                                     if (cardBullets.length > 0) {
                                       cardContentElements.push(
-                                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm text-slate-700 my-2">
+                                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm md:text-base text-slate-700 my-2">
                                           {cardBullets.map((b, bi) => (
                                             <li key={bi} className="flex items-start gap-2.5">
                                               <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
@@ -1373,7 +1286,7 @@ const GenericContentPage = ({
                                     }
                                     flushCardBullets();
                                     cardContentElements.push(
-                                      <p key={`card-p-${li}`} className="text-xs sm:text-sm text-slate-800 leading-relaxed my-1">
+                                      <p key={`card-p-${li}`} className="text-xs sm:text-sm md:text-base text-slate-800 leading-relaxed my-1">
                                         {renderInlineFormatting(trimmedLine)}
                                       </p>
                                     );
@@ -1396,12 +1309,11 @@ const GenericContentPage = ({
                                             {renderInlineFormatting(card.title)}
                                           </h3>
                                         </div>
-                                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 shrink-0 ${theme.arrowBg} ${theme.arrowText} ${isExpanded ? 'rotate-180' : ''}`}>
-                                          ▼
+                                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 shrink-0 ${theme.arrowBg} ${theme.arrowText} ${isExpanded ? 'rotate-90' : ''}`}>
+                                          ►
                                         </span>
                                       </button>
 
-                                      {/* ONLY visible when expanded */}
                                       {isExpanded && (
                                         <div className={`px-6 py-5 border-t border-dashed ${theme.dividerBorder} ${theme.bodyBg} text-slate-800 animate-in fade-in duration-200`}>
                                           {cardContentElements.length > 0 ? cardContentElements : (
@@ -1423,18 +1335,17 @@ const GenericContentPage = ({
                       gridTheme = 'default';
                     };
 
-                    //---accordion or collapsible headings
                     const flushAccordion = () => {
                       const index = accordionCount++;
                       const contentElements = [];
                       let localBulletBuffer = [];
-                      let localNoteBuffer = [];   // lines collected between '>' open and '<' close, inside this accordion
+                      let localNoteBuffer = [];   
                       let inLocalNote = false;
 
                       const flushLocalBullets = () => {
                         if (localBulletBuffer.length > 0) {
                           contentElements.push(
-                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
+                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1.5 text-slate-900 text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
                               {localBulletBuffer.map((b, bi) => (
                                 <li key={bi}>{renderInlineFormatting(b)}</li>
                               ))}
@@ -1444,7 +1355,6 @@ const GenericContentPage = ({
                         }
                       };
 
-                      
                       const flushLocalNote = () => {
                         if (localNoteBuffer.length > 0) {
                           const noteElements = [];
@@ -1453,7 +1363,7 @@ const GenericContentPage = ({
                           const flushLocalNoteBullets = () => {
                             if (localNoteBulletBuffer.length > 0) {
                               noteElements.push(
-                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
+                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
                                   {localNoteBulletBuffer.map((b, i) => (
                                     <li key={i}>{renderInlineFormatting(b)}</li>
                                   ))}
@@ -1490,14 +1400,14 @@ const GenericContentPage = ({
                             } else {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <div key={`acc-note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
+                                <div key={`acc-note-line-${i}`} className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
                               );
                             }
                           });
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
+                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
                               {noteElements}
                             </div>
                           );
@@ -1546,7 +1456,7 @@ const GenericContentPage = ({
                         flushLocalBullets();
 
                         contentElements.push(
-                          <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                          <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm md:text-base leading-relaxed">
                             {renderInlineFormatting(t)}
                           </p>
                         );
@@ -1561,7 +1471,7 @@ const GenericContentPage = ({
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
                             className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
                           >
-                            <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel tracking-wide">
+                            <span className="text-sm sm:text-base md:text-lg font-bold text-[#0f3358] font-cinzel tracking-wide">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
                             <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
@@ -1581,7 +1491,6 @@ const GenericContentPage = ({
                       inAccordion = false;
                     };
 
-                    //flush table inside description
                     const flushTable = () => {
                       if (tableBuffer.length === 0) return;
 
@@ -1611,14 +1520,14 @@ const GenericContentPage = ({
 
                         elements.push(
                           <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white overflow-hidden">
-                            <table className="w-full text-left border-collapse table-fixed">
+                            <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
                               <thead>
                                 <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
                                   {headerRow.map((cell, ci) => (
                                     <th
                                       key={ci}
                                       style={{ width: colWidthPct }}
-                                      className="px-1.5 sm:px-4 py-2 sm:py-3 text-left font-cinzel font-bold text-[11px] sm:text-base md:text-lg text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                                      className="px-1 sm:px-3 py-1.5 sm:py-2.5 text-left font-cinzel font-bold text-[10px] sm:text-xs md:text-sm text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                                     >
                                       {renderInlineFormatting(cell)}
                                     </th>
@@ -1632,7 +1541,7 @@ const GenericContentPage = ({
                                       <td
                                         key={ci}
                                         style={{ width: colWidthPct }}
-                                        className="px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[11px] sm:text-base text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                                        className="px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs md:text-sm text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                                       >
                                         {renderInlineFormatting(cell)}
                                       </td>
@@ -1646,8 +1555,7 @@ const GenericContentPage = ({
                       }
                       tableBuffer = [];
                     };
-                    
-                    //description normal
+
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
 
@@ -1701,8 +1609,8 @@ const GenericContentPage = ({
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <div key={idx} className="mb-3.5 sm:mb-4 text-center">
-                            <h2 className={`${HEADING_STYLES.heading} font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f]`}>
+                          <div key={idx} className="mb-4 sm:mb-6 text-center">
+                            <h2 className="font-cinzel text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
                               {trimmed}
                             </h2>
                           </div>
@@ -1716,7 +1624,7 @@ const GenericContentPage = ({
                         currentBodyLevel = 'subheading';
                         elements.push(
                           <div key={idx} className="mt-5 mb-2.5">
-                            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl tracking-wide`}>
+                            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-lg sm:text-xl md:text-2xl tracking-wide leading-snug py-0.5`}>
                               <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
                               <span>{trimmed.slice(3)}</span>
                             </h3>
@@ -1730,7 +1638,7 @@ const GenericContentPage = ({
                         flushTable();
                         currentBodyLevel = 'subSubheading';
                         elements.push(
-                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-base sm:text-lg flex items-center gap-2.5`}>
+                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg flex items-center gap-2.5 leading-snug py-0.5`}>
                             <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
                             <span>{trimmed.slice(4)}</span>
                           </h4>
@@ -1850,11 +1758,9 @@ const GenericContentPage = ({
         </div>
       )}
 
-      {/* ── TABLE ── */}
+      {/* ── TABLE AT THE BOTTOM OF THE BOARD ── */}
       {hasTable && (
         <div className="space-y-3">
-
-          {/* Table heading / caption */}
           {(tableHeading || isAdmin) && (
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
               {isEditingHeading ? (
@@ -1863,16 +1769,16 @@ const GenericContentPage = ({
                     value={editTableHeading}
                     onChange={e => setEditTableHeading(e.target.value)}
                     placeholder="Table heading, e.g. Faculty List"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm sm:text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
                     autoFocus
                   />
                   <div className="flex gap-2">
                     <button onClick={handleSaveTableHeading} disabled={savingHeading}
-                      className="px-3 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                      className="px-3 py-2 bg-[#174873] text-white rounded-lg text-xs sm:text-sm font-medium disabled:opacity-50">
                       {savingHeading ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
-                      className="px-3 py-2 text-gray-500 text-sm">
+                      className="px-3 py-2 text-gray-500 text-xs sm:text-sm">
                       Cancel
                     </button>
                   </div>
@@ -1880,9 +1786,9 @@ const GenericContentPage = ({
               ) : (
                 <>
                   {tableHeading ? (
-                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#174873]">{tableHeading}</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#174873]">{tableHeading}</h3>
                   ) : (
-                    <span className="italic text-gray-400 text-sm">No table heading yet.</span>
+                    <span className="italic text-gray-400 text-xs sm:text-sm">No table heading yet.</span>
                   )}
                   {isAdmin && (
                     <button
@@ -1928,19 +1834,19 @@ const GenericContentPage = ({
             };
 
             const renderPdfEditor = (value, onChange) => (
-              <div className="space-y-1 min-w-[140px]">
+              <div className="space-y-1 min-w-[120px]">
                 {value ? (
                   <div className="flex items-center gap-1">
                     <a href={value.startsWith('http') ? value : `${API}${value}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="text-sm text-[#174873] hover:underline truncate max-w-[120px]">
+                      className="text-xs text-[#174873] hover:underline truncate max-w-[100px]">
                       Current PDF
                     </a>
                     <button onClick={() => onChange('')}
-                      className="text-red-400 text-xs hover:text-red-600 min-w-[28px] min-h-[28px]">✕</button>
+                      className="text-red-400 text-xs hover:text-red-600 min-w-[24px] min-h-[24px]">✕</button>
                   </div>
                 ) : (
-                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 bg-[#174873] text-white rounded text-xs whitespace-nowrap min-h-[32px]">
+                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
                     <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                     </svg>
@@ -1952,7 +1858,7 @@ const GenericContentPage = ({
                   value={value || ''}
                   onChange={e => onChange(e.target.value)}
                   placeholder="or paste URL"
-                  className="w-full px-2 py-1.5 border border-blue-300 rounded text-xs outline-none focus:ring-1 focus:ring-[#174873]"
+                  className="w-full px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-[#174873]"
                 />
               </div>
             );
@@ -1963,26 +1869,22 @@ const GenericContentPage = ({
                   ? (
                     <a href={val.startsWith('http') ? val : `${API}${val}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm sm:text-base whitespace-nowrap">
-                      <svg className="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                       </svg>
                       View PDF
                     </a>
                   )
-                  // Plain cell text: run through the same [label](url) / bare-URL
-                  // link parser used in the description, notes, accordion, and grid,
-                  // so links typed inside a normal table cell become clickable too.
                   : renderInlineFormatting(val)
                 : '—';
 
-            // Icon buttons with generous tap targets (min ~36px) — same on every breakpoint
             const IconBtn = ({ onClick, disabled, title, colorClass, children }) => (
               <button
                 onClick={onClick}
                 disabled={disabled}
                 title={title}
-                className={`inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-lg text-sm font-bold
+                className={`inline-flex items-center justify-center min-w-[32px] min-h-[32px] rounded-lg text-xs font-bold
                   ${disabled ? 'text-gray-300 cursor-not-allowed' : `${colorClass} hover:bg-black/5 active:bg-black/10`}`}
               >
                 {children}
@@ -2000,12 +1902,12 @@ const GenericContentPage = ({
                   <IconBtn onClick={() => handleMoveRow(idx, 'up')} disabled={idx === 0} title="Move up" colorClass="text-[#174873]">▲</IconBtn>
                   <IconBtn onClick={() => handleMoveRow(idx, 'down')} disabled={idx === rows.length - 1} title="Move down" colorClass="text-[#174873]">▼</IconBtn>
                   <IconBtn onClick={() => handleStartEditRow(idx)} title="Edit" colorClass="text-[#174873]">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
                     </svg>
                   </IconBtn>
                   <IconBtn onClick={() => handleDeleteRow(idx)} title="Delete" colorClass="text-red-500">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
                     </svg>
                   </IconBtn>
@@ -2014,36 +1916,35 @@ const GenericContentPage = ({
 
             return (
               <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white w-full">
-                {/* Responsive table fitting screen without horizontal scrolling */}
-                <div className="w-full">
-                  <table className="w-full text-left border-collapse table-fixed text-sm sm:text-base md:text-lg">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
                     <thead>
                       <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
-                        {columns.map((col, i) => (
+                        {columns.map((col) => (
                           <th
                             key={col}
-                            className="px-1.5 sm:px-4 py-2 sm:py-3 text-left font-cinzel font-bold text-[11px] sm:text-base md:text-lg text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                            className="px-1 sm:px-3 py-1.5 sm:py-2.5 text-left font-cinzel font-bold text-[10px] sm:text-xs md:text-sm text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                           >
                             {col}
                             {isAdmin && (
                               <button onClick={() => handleDeleteColumn(col)}
-                                className="ml-1.5 text-red-300 hover:text-white text-xs">×</button>
+                                className="ml-1 text-red-300 hover:text-white text-xs">×</button>
                             )}
                           </th>
                         ))}
                         {isAdmin && (
-                          <th className="px-2 sm:px-4 py-2 sm:py-3 bg-[#0f3358] text-[#fce8b2] font-bold text-[11px] sm:text-sm">
+                          <th className="px-1.5 sm:px-3 py-1.5 sm:py-2.5 bg-[#0f3358] text-[#fce8b2] font-bold text-[10px] sm:text-xs">
                             {addingCol ? (
                               <div className="flex gap-1">
                                 <input value={newColName} onChange={e => setNewColName(e.target.value)}
                                   placeholder="Column name"
-                                  className="px-2 py-1 text-black rounded text-xs w-16 sm:w-24" />
+                                  className="px-1.5 py-0.5 text-black rounded text-[10px] sm:text-xs w-16 sm:w-24" />
                                 <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
                                 <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
                               </div>
                             ) : (
                               <button onClick={() => setAddingCol(true)}
-                                className="text-blue-200 hover:text-white text-xs sm:text-sm font-bold whitespace-nowrap">
+                                className="text-blue-200 hover:text-white text-[10px] sm:text-xs font-bold whitespace-nowrap">
                                 + Col
                               </button>
                             )}
@@ -2055,7 +1956,7 @@ const GenericContentPage = ({
                       {rows.length === 0 && (
                         <tr>
                           <td colSpan={columns.length + (isAdmin ? 1 : 0)}
-                            className="px-4 py-8 text-center text-gray-400 italic text-sm sm:text-base">
+                            className="px-4 py-6 text-center text-gray-400 italic text-xs sm:text-sm">
                             {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
                           </td>
                         </tr>
@@ -2067,10 +1968,10 @@ const GenericContentPage = ({
                         const cellBg = isEditingThisRow ? 'bg-[#FFF8CD]' : `${baseBg} group-hover:bg-[#E2E8F0] transition-colors`;
                         return (
                           <tr key={idx} className="group border-t border-slate-200">
-                            {columns.map((col, i) => (
+                            {columns.map((col) => (
                               <td
                                 key={col}
-                                className={`px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[11px] sm:text-base text-slate-800 font-medium align-middle border-r border-slate-300 last:border-r-0 break-words leading-tight ${cellBg}`}
+                                className={`px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs md:text-sm text-slate-800 font-medium align-middle border-r border-slate-300 last:border-r-0 break-words leading-tight ${cellBg}`}
                               >
                                 {isEditingThisRow ? (
                                   isPdfCol(col)
@@ -2081,7 +1982,7 @@ const GenericContentPage = ({
                                         value={editingRowData[col] || ''}
                                         onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
                                         placeholder={col}
-                                        className="w-full min-w-[80px] px-2 py-1 border border-blue-300 rounded text-xs sm:text-base outline-none focus:ring-1 focus:ring-[#174873]"
+                                        className="w-full min-w-[70px] px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-[#174873]"
                                       />
                                     )
                                 ) : (
@@ -2090,7 +1991,7 @@ const GenericContentPage = ({
                               </td>
                             ))}
                             {isAdmin && (
-                              <td className={`px-2 sm:px-3 py-2 sticky right-0 z-10 ${cellBg} shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`}>
+                              <td className={`px-1.5 sm:px-2.5 py-1.5 sticky right-0 z-10 ${cellBg} shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`}>
                                 {rowActions(idx, isEditingThisRow)}
                               </td>
                             )}
@@ -2098,15 +1999,14 @@ const GenericContentPage = ({
                         );
                       })}
 
-                      {/* Add row */}
                       {isAdmin && columns.length > 0 && (
                         <tr className="border-t-2 border-gray-200 bg-gray-50">
                           {columns.map((col, i) => (
-                            <td key={col} className={`px-3 sm:px-4 py-2 ${i === 0 ? 'sticky left-0 z-10 bg-gray-50' : ''}`}>
+                            <td key={col} className={`px-1.5 sm:px-3 py-1.5 ${i === 0 ? 'sticky left-0 z-10 bg-gray-50' : ''}`}>
                               {isPdfCol(col) ? (
-                                <div className="space-y-1 min-w-[140px]">
+                                <div className="space-y-1 min-w-[120px]">
                                   {!newRow[col] ? (
-                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 bg-[#174873] text-white rounded text-xs whitespace-nowrap min-h-[32px]">
+                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
                                       <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                                       </svg>
@@ -2116,16 +2016,16 @@ const GenericContentPage = ({
                                     </label>
                                   ) : (
                                     <div className="flex items-center gap-1">
-                                      <span className="text-xs text-green-600">✓ Uploaded</span>
+                                      <span className="text-[10px] sm:text-xs text-green-600">✓ Uploaded</span>
                                       <button onClick={() => setNewRow({ ...newRow, [col]: '' })}
-                                        className="text-red-400 text-xs hover:text-red-600 min-w-[28px] min-h-[28px]">✕</button>
+                                        className="text-red-400 text-xs hover:text-red-600 min-w-[24px] min-h-[24px]">✕</button>
                                     </div>
                                   )}
                                   <input
                                     value={newRow[col] || ''}
                                     onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
                                     placeholder="or paste URL"
-                                    className="w-full px-2 py-1.5 border border-blue-200 rounded text-xs outline-none"
+                                    className="w-full px-1.5 py-1 border border-blue-200 rounded text-[10px] sm:text-xs outline-none"
                                   />
                                 </div>
                               ) : (
@@ -2133,14 +2033,14 @@ const GenericContentPage = ({
                                   value={newRow[col] || ''}
                                   onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
                                   placeholder={col}
-                                  className="w-full min-w-[100px] px-2 py-1.5 border border-blue-200 rounded text-sm outline-none"
+                                  className="w-full min-w-[80px] px-1.5 py-1 border border-blue-200 rounded text-[10px] sm:text-xs outline-none"
                                 />
                               )}
                             </td>
                           ))}
-                          <td className="px-2 sm:px-3 py-2 sticky right-0 z-10 bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
+                          <td className="px-1.5 sm:px-2.5 py-1.5 sticky right-0 z-10 bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
                             <button onClick={handleAddRow}
-                              className="min-w-[36px] min-h-[36px] px-3 py-1.5 bg-[#174873] text-white rounded text-xs font-bold whitespace-nowrap">
+                              className="min-w-[32px] min-h-[32px] px-2.5 py-1 bg-[#174873] text-white rounded text-[10px] sm:text-xs font-bold whitespace-nowrap">
                               Add
                             </button>
                           </td>
@@ -2150,10 +2050,9 @@ const GenericContentPage = ({
                   </table>
                 </div>
 
-                {/* Add column (mobile-friendly hint — actions are on the sticky right column) */}
                 {isAdmin && (
-                  <div className="md:hidden flex justify-center py-3 border-t border-gray-100 bg-gray-50">
-                    <span className="text-xs text-gray-400">Scroll → to edit/delete rows</span>
+                  <div className="md:hidden flex justify-center py-2 border-t border-gray-100 bg-gray-50">
+                    <span className="text-[10px] text-gray-400">Scroll → to edit/delete rows</span>
                   </div>
                 )}
               </div>
