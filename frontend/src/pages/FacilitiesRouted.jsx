@@ -3,7 +3,16 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
+  'overview': {
+    title: 'Facilities',
+    pageType: 'description'
+  },
   // ── Hostels ──────────────────────────────────────────────────────────────
+  'hostels': {
+    title: 'Hostels',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
   'hostels/chiefwarden': {
     title: 'Chief Warden',
     pageType: 'profile'          // data stored as profile object in details JSON
@@ -44,6 +53,11 @@ const pages = {
   },
 
   // ── Library ───────────────────────────────────────────────────────────────
+  'library': {
+    title: 'Library Facilities',
+    pageType: 'slideshow-pdf-list-description',
+    photoAlign: 'center'
+  },
   'library/central': {
     title: 'Central Library',
     pageType: 'slideshow-pdf-list-description',
@@ -61,6 +75,11 @@ const pages = {
   },
 
   // ── Sports ────────────────────────────────────────────────────────────────
+  'sports': {
+    title: 'Sports Facilities',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
   'sports/universitysports': {
     title: 'University Sports Board',
     pageType: 'slideshow-description',
@@ -78,6 +97,11 @@ const pages = {
   },
 
   // ── Well-being ────────────────────────────────────────────────────────────
+  'wellbeing': {
+    title: 'Well-Being Center',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
   'wellbeing/wbsc': {              // key matches navbar: /facilities/wellbeing/wbsc
     title: 'Well Being Service Cell, BHU',
     pageType: 'slideshow-description',
@@ -90,6 +114,10 @@ const pages = {
   },
 
   // ── Training & Placement ──────────────────────────────────────────────────
+  'trainingplacement': {
+    title: 'Training & Placement Cell',
+    pageType: 'description-pdf-list'
+  },
   'trainingplacement/universitytraining': {
     title: 'University Training & Placement Cell',
     pageType: 'description-pdf-list'
@@ -119,6 +147,11 @@ const pages = {
   },
 
   // ── Medical ───────────────────────────────────────────────────────────────
+  'medical': {
+    title: 'Medical & Healthcare Facilities',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
   'medical/ssh': {                 // key must be 'ssh' not 'ssr' — matches navbar
     title: 'Sir Sundarlal Hospital',
     pageType: 'slideshow-description',
@@ -136,6 +169,10 @@ const pages = {
   },
 
   // ── Extracurricular ───────────────────────────────────────────────────────
+  'extracurricular': {
+    title: 'Extra Curricular Activities',
+    pageType: 'description'
+  },
   'extracurricular/ncc': {
     title: 'National Cadet Corps (NCC)',
     pageType: 'description'
@@ -159,6 +196,11 @@ const pages = {
   },
 
   // ── Canteen ───────────────────────────────────────────────────────────────
+  'canteen': {
+    title: 'Canteen Facilities',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
   'canteen/universitycanteen': {
     title: 'University Canteen',
     pageType: 'slideshow-description',
@@ -173,6 +215,11 @@ const pages = {
   // ── City & Other ──────────────────────────────────────────────────────────
   'citydelegacy': {
     title: 'City Delegacy',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
+  'other': {
+    title: 'Other Campus Amenities',
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
@@ -210,7 +257,8 @@ const pages = {
 
 const FacilitiesRouted = () => {
   const { sub, subsub } = useParams();
-  const key = [sub, subsub].filter(Boolean).join('/');
+  const rawKey = [sub, subsub].filter(Boolean).join('/');
+  const key = rawKey || 'overview';
   const page = pages[key];
 
   if (!page) return <Navigate to="/" replace />;

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
+import ProfileCardsBlock from './ProfileCardsBlock';
 
 const API =import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -59,6 +60,7 @@ const GenericContentPage = ({
   const imageRef  = useRef(null);
   const pdfRef    = useRef(null);
   const profileImageRef = useRef(null);
+  const profileCardsRef = useRef(null);
 
   const [data,       setData]       = useState({});
   const [loading,    setLoading]    = useState(true);
@@ -70,6 +72,7 @@ const GenericContentPage = ({
   // in the render below). openSections tracks which block indices are open;
   // every block starts closed until clicked.
   const [openSections, setOpenSections] = useState({});
+  const [openGridCards, setOpenGridCards] = useState({});
 
   // table state
   const [columns,      setColumns]      = useState(tableColumns);
@@ -149,6 +152,7 @@ const GenericContentPage = ({
       }
 
       setOpenSections({}); // reset accordion open/closed state when navigating to a different page
+      setOpenGridCards({});
 
       if (hasTable) {
         setColumns(parsed.columns || tableColumns);
@@ -178,6 +182,7 @@ const GenericContentPage = ({
       if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); }
       if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
       setOpenSections({});
+      setOpenGridCards({});
       setPhotoSettings(blankPhotoSettings);
       setEditPhotoSettings(blankPhotoSettings);
       setEditSlideSettings(blankPhotoSettings);
@@ -526,7 +531,22 @@ const GenericContentPage = ({
         </div>
       </div>
 
-      {/* ── OFFICIAL EXECUTIVE PROFILE CARD ── */}
+      {/* ── STAFF / WARDEN PROFILE CARDS ── standalone, shows on every page
+          regardless of pageType. Admin can add up to as many as needed;
+          layout auto-wraps: 1 centered, 2-3 side by side, 4+ wrap into rows
+          of 3 with any leftover row centered. Data is separate from the
+          page description/content below. ── */}
+      <ProfileCardsBlock
+        ref={profileCardsRef}
+        section={section}
+        subsection={subsection}
+        content={data}
+        isAdmin={isAdmin}
+        token={token}
+        onChanged={(fresh) => setData(fresh)}
+      />
+
+      {/* ── OFFICIAL EXECUTIVE PROFILE CARD (legacy single-profile block, kept for existing pages using pageType 'profile') ── */}
       {hasProfile && (
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#0f3358] p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
           {/* Admin Edit Button */}
@@ -755,6 +775,10 @@ const GenericContentPage = ({
               Edit Description
             </button>
           )}
+          <button onClick={() => profileCardsRef.current?.openAddForm()}
+            className="px-4 py-2 border-2 border-[#174873] text-[#174873] rounded-lg text-sm font-medium">
+            Add Profile Card
+          </button>
         </div>
       )}
 
@@ -1008,55 +1032,150 @@ const GenericContentPage = ({
                     let accordionTitle = '';
                     let inAccordion = false;
                     let accordionCount = 0;     // gives each rendered block a stable index for open/closed state
+
+                    let gridBuffer = [];
+                    let inGrid = false;
+                    let gridTheme = 'default';
+                    let gridCount = 0;
+
+                    const GRID_THEMES = {
+                      default: {
+                        cardBorder: 'border-slate-200/90 hover:border-[#d4af37]',
+                        cardBg: 'bg-white hover:bg-[#FAF7F2]/80',
+                        headerHoverBg: 'group-hover:bg-[#FAF7F2]',
+                        headerText: 'text-[#0f3358] group-hover:text-[#7d311f]',
+                        badge: 'bg-[#d4af37] group-hover:bg-[#7d311f]',
+                        arrowBg: 'bg-slate-100 group-hover:bg-[#0f3358]',
+                        arrowText: 'text-slate-500 group-hover:text-white',
+                        dividerBorder: 'border-[#d4af37]/40',
+                        bodyBg: 'bg-white',
+                      },
+                      blue: {
+                        cardBorder: 'border-blue-100 hover:border-blue-400',
+                        cardBg: 'bg-white hover:bg-blue-50/60',
+                        headerHoverBg: 'group-hover:bg-blue-50/50',
+                        headerText: 'text-[#174873] group-hover:text-blue-900',
+                        badge: 'bg-blue-500 group-hover:bg-[#174873]',
+                        arrowBg: 'bg-blue-50 group-hover:bg-[#174873]',
+                        arrowText: 'text-blue-500 group-hover:text-white',
+                        dividerBorder: 'border-blue-200',
+                        bodyBg: 'bg-white',
+                      },
+                      green: {
+                        cardBorder: 'border-emerald-100 hover:border-emerald-500',
+                        cardBg: 'bg-white hover:bg-emerald-50/60',
+                        headerHoverBg: 'group-hover:bg-emerald-50/50',
+                        headerText: 'text-emerald-900 group-hover:text-emerald-950',
+                        badge: 'bg-emerald-500 group-hover:bg-emerald-700',
+                        arrowBg: 'bg-emerald-50 group-hover:bg-emerald-700',
+                        arrowText: 'text-emerald-600 group-hover:text-white',
+                        dividerBorder: 'border-emerald-200',
+                        bodyBg: 'bg-white',
+                      },
+                      slate: {
+                        cardBorder: 'border-slate-200 hover:border-slate-500',
+                        cardBg: 'bg-white hover:bg-slate-100/70',
+                        headerHoverBg: 'group-hover:bg-slate-100/50',
+                        headerText: 'text-slate-800 group-hover:text-black',
+                        badge: 'bg-slate-400 group-hover:bg-slate-700',
+                        arrowBg: 'bg-slate-100 group-hover:bg-slate-800',
+                        arrowText: 'text-slate-500 group-hover:text-white',
+                        dividerBorder: 'border-slate-200',
+                        bodyBg: 'bg-white',
+                      },
+                      crimson: {
+                        cardBorder: 'border-rose-100 hover:border-[#7d311f]',
+                        cardBg: 'bg-white hover:bg-rose-50/60',
+                        headerHoverBg: 'group-hover:bg-rose-50/40',
+                        headerText: 'text-[#7d311f] group-hover:text-rose-900',
+                        badge: 'bg-[#7d311f] group-hover:bg-rose-700',
+                        arrowBg: 'bg-rose-50 group-hover:bg-[#7d311f]',
+                        arrowText: 'text-[#7d311f] group-hover:text-white',
+                        dividerBorder: 'border-rose-200',
+                        bodyBg: 'bg-white',
+                      },
+                      purple: {
+                        cardBorder: 'border-purple-100 hover:border-purple-500',
+                        cardBg: 'bg-white hover:bg-purple-50/60',
+                        headerHoverBg: 'group-hover:bg-purple-50/40',
+                        headerText: 'text-purple-900 group-hover:text-purple-950',
+                        badge: 'bg-purple-500 group-hover:bg-purple-700',
+                        arrowBg: 'bg-purple-50 group-hover:bg-purple-700',
+                        arrowText: 'text-purple-600 group-hover:text-white',
+                        dividerBorder: 'border-purple-200',
+                        bodyBg: 'bg-white',
+                      },
+                      amber: {
+                        cardBorder: 'border-amber-100 hover:border-amber-500',
+                        cardBg: 'bg-white hover:bg-amber-50/60',
+                        headerHoverBg: 'group-hover:bg-amber-50/40',
+                        headerText: 'text-amber-900 group-hover:text-amber-950',
+                        badge: 'bg-amber-500 group-hover:bg-amber-700',
+                        arrowBg: 'bg-amber-50 group-hover:bg-amber-700',
+                        arrowText: 'text-amber-600 group-hover:text-white',
+                        dividerBorder: 'border-amber-200',
+                        bodyBg: 'bg-white',
+                      },
+                    };
+
                     {/*--links---*/}
                     const renderTextWithLinks = (text) => {      
-                      // Regex: matches [label](url) OR bare http(s):// URLs
-                      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
+                      if (typeof text !== 'string') return text;
+                      // Matches [label](url) OR bare http(s):// or /relative URLs
+                      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)/g;
                       const parts = [];
                       let lastIndex = 0;
                       let match;
                       let keyCounter = 0;
                       while ((match = linkRegex.exec(text)) !== null) {
-                        // Push any plain text before this match
                         if (match.index > lastIndex) {
                           parts.push(text.slice(lastIndex, match.index));
                         }
-                        const label = match[1] || match[3]; // markdown label or raw URL
-                        const href  = match[2] || match[3]; // markdown url or raw URL
+                        const label = match[1] || match[3];
+                        const href  = match[2] || match[3];
+                        const isInternal = href.startsWith('/');
                         parts.push(
                           <a
                             key={`link-${keyCounter++}`}
                             href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 break-all "
+                            target={isInternal ? "_self" : "_blank"}
+                            rel={isInternal ? "" : "noopener noreferrer"}
+                            className="text-blue-600 hover:text-blue-800 hover:underline break-all font-medium"
                           >
                             {label}
                           </a>
                         );
                         lastIndex = match.index + match[0].length;
                       }
-                      // Remaining plain text
                       if (lastIndex < text.length) {
                         parts.push(text.slice(lastIndex));
                       }
                       return parts.length > 0 ? parts : [text];
                     };
 
-                    // Renders inline bold (**text**) + links together, usable anywhere
+                    // Renders inline bold (**text**), italics (*text* or _text_) + links together
                     const renderInlineFormatting = (text) => {
-                      const parts = text.split(/(\*\*.*?\*\*)/g).filter(Boolean);
+                      if (!text || typeof text !== 'string') return text || '';
+                      const parts = text.split(/(\*\*.*?\*\*|\*.*?\*|_.*?_)/g).filter(Boolean);
                       return parts.map((part, i) => {
-                        if (part.startsWith('**') && part.endsWith('**')) {
+                        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
                           return (
                             <strong key={i} className="font-bold">
-                              {renderTextWithLinks(part.slice(2, -2))}
+                              {renderInlineFormatting(part.slice(2, -2))}
                             </strong>
                           );
                         }
-                        return <span key={i}>{renderTextWithLinks(part)}</span>;
+                        if (((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) && part.length >= 2) {
+                          return (
+                            <em key={i} className="italic">
+                              {renderInlineFormatting(part.slice(1, -1))}
+                            </em>
+                          );
+                        }
+                        return <React.Fragment key={i}>{renderTextWithLinks(part)}</React.Fragment>;
                       });
                     };
+
                     //bullets
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
@@ -1071,17 +1190,9 @@ const GenericContentPage = ({
                       }
                     };
                     
+
+
                     {/*notes*/}
-                    // Renders the whole accumulated note block as ONE callout box.
-                    // Supports the same formatting as the main description:
-                    // - '## ' / '### ' become headings (smaller, since they're
-                    //   inside a callout — text-sm/text-xs instead of text-lg/base)
-                    // - '- ' lines become real bullet points
-                    // - '---' becomes a divider line
-                    // - '**bold**' and links work on every line, including
-                    //   inside headings and bullets
-                    // Consecutive non-bullet lines stay as separate lines (breaks
-                    // preserved); consecutive bullet lines group into one <ul>.
                     const flushNote = () => {
                       if (noteBuffer.length > 0) {
                         const noteElements = [];
@@ -1132,7 +1243,6 @@ const GenericContentPage = ({
                           }
                         });
                         flushNoteBullets();
-                        {/*notes normal text*/}
                         elements.push(
                           <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
                             {noteElements}
@@ -1143,12 +1253,137 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
+                    //dynamic grid accordion cards - Hubspot style clean cards with hover color transitions & zero hollow spaces
+                    const flushGrid = () => {
+                      if (gridBuffer.length === 0) {
+                        inGrid = false;
+                        return;
+                      }
+
+                      const gridId = gridCount++;
+                      const themeKey = gridTheme.toLowerCase();
+                      const theme = GRID_THEMES[themeKey] || GRID_THEMES.default;
+                      const cards = [];
+                      let currentCard = null;
+
+                      gridBuffer.forEach((line) => {
+                        const t = line.trim();
+                        if (t.startsWith('=== ')) {
+                          if (currentCard) cards.push(currentCard);
+                          currentCard = { title: t.slice(4), lines: [] };
+                        } else if (currentCard) {
+                          currentCard.lines.push(line);
+                        }
+                      });
+                      if (currentCard) cards.push(currentCard);
+
+                      if (cards.length > 0) {
+                        const numCols = Math.min(cards.length, 3);
+                        const columns = Array.from({ length: numCols }, () => []);
+
+                        cards.forEach((card, cardIdx) => {
+                          const colIdx = cardIdx % numCols;
+                          columns[colIdx].push({ card, cardIdx });
+                        });
+
+                        const gridColClass =
+                          numCols === 1
+                            ? 'grid-cols-1'
+                            : numCols === 2
+                            ? 'grid-cols-1 md:grid-cols-2'
+                            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+
+                        elements.push(
+                          <div key={`grid-${gridId}`} className={`grid items-start ${gridColClass} gap-6 my-6`}>
+                            {columns.map((colCards, colIdx) => (
+                              <div key={`grid-${gridId}-col-${colIdx}`} className="flex flex-col space-y-6">
+                                {colCards.map(({ card, cardIdx }) => {
+                                  const cardKey = `grid-${gridId}-card-${cardIdx}`;
+                                  const isExpanded = !!openGridCards[cardKey];
+
+                                  const cardContentElements = [];
+                                  let cardBullets = [];
+
+                                  const flushCardBullets = () => {
+                                    if (cardBullets.length > 0) {
+                                      cardContentElements.push(
+                                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm text-slate-700 my-2">
+                                          {cardBullets.map((b, bi) => (
+                                            <li key={bi} className="flex items-start gap-2.5">
+                                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
+                                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      );
+                                      cardBullets = [];
+                                    }
+                                  };
+
+                                  card.lines.forEach((lineText, li) => {
+                                    const trimmedLine = lineText.trim();
+                                    if (trimmedLine === '') {
+                                      flushCardBullets();
+                                      cardContentElements.push(<div key={`card-sp-${li}`} className="h-1" />);
+                                      return;
+                                    }
+                                    if (trimmedLine.startsWith('- ')) {
+                                      cardBullets.push(trimmedLine.slice(2));
+                                      return;
+                                    }
+                                    flushCardBullets();
+                                    cardContentElements.push(
+                                      <p key={`card-p-${li}`} className="text-xs sm:text-sm text-slate-800 leading-relaxed my-1">
+                                        {renderInlineFormatting(trimmedLine)}
+                                      </p>
+                                    );
+                                  });
+                                  flushCardBullets();
+
+                                  return (
+                                    <div
+                                      key={cardKey}
+                                      className={`group rounded-2xl border-2 transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 overflow-hidden ${theme.cardBorder} ${theme.cardBg}`}
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() => setOpenGridCards(prev => ({ ...prev, [cardKey]: !prev[cardKey] }))}
+                                        className={`w-full flex items-center justify-between gap-4 px-6 py-5 text-left transition-colors cursor-pointer ${theme.headerHoverBg}`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <span className={`w-3 h-3 rounded-full shrink-0 transition-colors ${theme.badge}`} />
+                                          <h3 className={`text-base sm:text-lg font-bold font-serif tracking-wide ${theme.headerText} transition-colors`}>
+                                            {renderInlineFormatting(card.title)}
+                                          </h3>
+                                        </div>
+                                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 shrink-0 ${theme.arrowBg} ${theme.arrowText} ${isExpanded ? 'rotate-180' : ''}`}>
+                                          ▼
+                                        </span>
+                                      </button>
+
+                                      {/* ONLY visible when expanded */}
+                                      {isExpanded && (
+                                        <div className={`px-6 py-5 border-t border-dashed ${theme.dividerBorder} ${theme.bodyBg} text-slate-800 animate-in fade-in duration-200`}>
+                                          {cardContentElements.length > 0 ? cardContentElements : (
+                                            <p className="text-xs text-slate-500 italic">No details specified.</p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      gridBuffer = [];
+                      inGrid = false;
+                      gridTheme = 'default';
+                    };
+
                     //---accordion or collapsible headings
-                    // Renders one '+++ Title ... +++' block as a self-contained
-                    // click-to-expand widget. Unlike the note/table/bullet
-                    // helpers above, this doesn't touch `elements` incrementally
-                    // — it builds its own little content list, then pushes ONE
-                    // finished accordion component.
                     const flushAccordion = () => {
                       const index = accordionCount++;
                       const contentElements = [];
@@ -1234,8 +1469,6 @@ const GenericContentPage = ({
                       accordionBuffer.forEach((lineText, li) => {
                         const t = lineText.trim();
 
-                        // Currently inside an open note block within this
-                        // accordion — swallow lines until the closing '<'.
                         if (inLocalNote) {
                           let lineContent = t.startsWith('> ') ? t.slice(2) : t;
                           if (lineContent.endsWith('<')) {
@@ -1253,9 +1486,6 @@ const GenericContentPage = ({
                           return;
                         }
 
-                        // '> ... <' opens/closes a note block, same syntax as
-                        // the top-level description. Checked before the bullet
-                        // check below for the same reason as the top level.
                         if (t.startsWith('> ') || t === '>') {
                           flushLocalBullets();
                           let content = t.startsWith('> ') ? t.slice(2) : '';
@@ -1275,7 +1505,6 @@ const GenericContentPage = ({
                         }
                         flushLocalBullets();
 
-                        //normal text in accordian
                         contentElements.push(
                           <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm leading-relaxed">
                             {renderInlineFormatting(t)}
@@ -1283,8 +1512,7 @@ const GenericContentPage = ({
                         );
                       });
                       flushLocalBullets();
-                      flushLocalNote(); // in case a note was left open at the end of this accordion's content
-                      //accordian topmost view
+                      flushLocalNote();
                       const isOpen = !!openSections[index];
                       elements.push(
                         <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">
@@ -1296,8 +1524,8 @@ const GenericContentPage = ({
                             <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel tracking-wide">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
-                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
-                              ▼
+                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
+                              ►
                             </span>
                           </button>
                           {isOpen && (
@@ -1333,7 +1561,6 @@ const GenericContentPage = ({
                         const [headerRow, ...rawBodyRows] = rowsParsed;
                         const colCount = headerRow.length;
 
-                        // Normalize every body row to exactly colCount cells
                         const bodyRows = rawBodyRows.map(cells => {
                           const normalized = cells.slice(0, colCount);
                           while (normalized.length < colCount) normalized.push('');
@@ -1384,7 +1611,15 @@ const GenericContentPage = ({
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
 
-                    //if note in description
+                      if (inGrid) {
+                        if (trimmed === ':::') {
+                          flushGrid();
+                        } else {
+                          gridBuffer.push(line);
+                        }
+                        return;
+                      }
+
                       if (inNote) {
                         let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
                         if (lineContent.endsWith('<')) {
@@ -1396,9 +1631,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Currently inside an open '+++ Title ... +++' accordion
-                      // block — every line is swallowed until a line that is
-                      // exactly '+++' on its own closes it.
                       if (inAccordion) {
                         if (trimmed === '+++') {
                           flushAccordion();
@@ -1408,7 +1640,15 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // blank line → spacer
+                      if (trimmed.startsWith(':::grid')) {
+                        flushBullets();
+                        flushTable();
+                        gridTheme = trimmed.slice(7).trim() || 'default';
+                        gridBuffer = [];
+                        inGrid = true;
+                        return;
+                      }
+
                       if (trimmed === '') {
                         flushBullets();
                         flushTable();
@@ -1416,7 +1656,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // very first non-blank line → big centered main heading with simple elegant single underline
                       if (firstLine) {
                         firstLine = false;
                         flushBullets();
@@ -1431,11 +1670,10 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // ## Subheading
                       if (trimmed.startsWith('## ')) {
                         flushBullets();
                         flushTable();
-                        currentBodyLevel = 'subheading'; // everything below this, until the next heading, uses BODY_STYLES.subheading
+                        currentBodyLevel = 'subheading';
                         elements.push(
                           <div key={idx} className="mt-5 mb-2.5">
                             <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl tracking-wide`}>
@@ -1447,11 +1685,10 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // ### Smaller subheading
                       if (trimmed.startsWith('### ')) {
                         flushBullets();
                         flushTable();
-                        currentBodyLevel = 'subSubheading'; // everything below this, until the next heading, uses BODY_STYLES.subSubheading
+                        currentBodyLevel = 'subSubheading';
                         elements.push(
                           <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-base sm:text-lg flex items-center gap-2.5`}>
                             <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
@@ -1461,12 +1698,10 @@ const GenericContentPage = ({
                         return;
                       }
 
-                     //notes in description
                       if (trimmed.startsWith('> ') || trimmed === '>') {
                         flushBullets();
                         let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
                         if (content.endsWith('<')) {
-                          // opened and closed on the same line
                           noteBuffer.push(content.slice(0, -1).trim());
                           flushNote();
                         } else {
@@ -1476,11 +1711,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // +++ Title  → opens a collapsible accordion block.
-                      // Everything after this line is hidden until a lone
-                      // '+++' line closes it. Completely separate from the
-                      // '## '/'### ' headings — those stay plain and always
-                      // visible; only '+++' blocks are ever collapsible.
                       if (trimmed.startsWith('+++ ')) {
                         flushBullets();
                         flushTable();
@@ -1490,20 +1720,17 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // - list
                       if (trimmed.startsWith('- ')) {
                         bulletBuffer.push(trimmed.slice(2));
                         return;
                       }
 
-                      // | Table row |
                       if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
                         flushBullets();
                         tableBuffer.push(trimmed);
                         return;
                       }
 
-                      // --- Divider line
                       if (trimmed === '---') {
                         flushBullets();
                         elements.push(
@@ -1512,14 +1739,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Paragraph (bold **spans** and links are rendered inline
-                      // via renderInlineFormatting regardless of this branch —
-                      // so bold-containing and plain lines share one consistent
-                      // size/color and never jump between the two). The size
-                      // itself comes from BODY_STYLES[currentBodyLevel], so it
-                      // stays fixed for every paragraph AND bullet under the
-                      // same '## '/'### ' heading, and only changes when a new
-                      // heading is hit above.
                       flushBullets();
                       elements.push(
                         <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify mb-3 ${BODY_STYLES[currentBodyLevel]}`}>
@@ -1531,6 +1750,7 @@ const GenericContentPage = ({
                     flushBullets();
                     flushTable();
                     flushNote();
+                    if (inGrid) flushGrid();
                     if (inAccordion) flushAccordion();
 
                     return <div className="space-y-2">{elements}</div>;

@@ -435,25 +435,26 @@ const Contact = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
 
-      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#d4af37]" />
-            Official Administrative Directory
+      <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8">
+        {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+          {/* Left Side: Page Name */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+              Contact Us
+            </h1>
           </div>
-          <h1
-            className="text-2xl sm:text-4xl md:text-5xl font-bold text-[#FAF7F2] mb-2 font-cinzel tracking-wide"
-          >
-            Contact Us
-          </h1>
-          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
-            Reach out to Mahila Maha Vidyalaya — official contact channels &amp; administrative directory
-          </p>
+          {/* Right Side: Breadcrumb */}
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+            <span className="text-slate-400">Home</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-[#7d311f] font-semibold">Contact</span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-10 sm:py-14 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 pb-6 sm:pb-8 space-y-12">
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">

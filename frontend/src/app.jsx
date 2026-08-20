@@ -2,8 +2,8 @@ import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import Home from './pages/Home';
-import About from './pages/About';
+import Home from './pages/home';
+import About from './pages/about';
 import AcademicsRouted from './pages/AcademicsRouted';
 import AdministrationRouted from './pages/AdministrationRouted';
 import FacilitiesRouted from './pages/FacilitiesRouted';
@@ -13,6 +13,7 @@ import Notices from './pages/notice';
 import Contact from './pages/contact';
 import MMVerse from './pages/MMVerse';
 import AdminContentGuide from './pages/adminreadme'; 
+import Feedback from './pages/Feedback';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -46,13 +47,16 @@ function App() {
        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
        <Route path="/About" element={<LayoutWrapper><About/></LayoutWrapper>} />
         
+       <Route path="/facilities" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
        <Route path="/facilities/:sub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
        <Route path="/facilities/:sub/:subsub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
-        <Route path="/administration/:sub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
+       
+       <Route path="/administration" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
+       <Route path="/administration/:sub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
        <Route path="/administration/:sub/:subsub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
 
-
         {/* Academics Routes */}
+       <Route path="/academics" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
        <Route path="/academics/:sub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
        <Route path="/academics/:sub/:subsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
        <Route path="/academics/:sub/:subsub/:subsubsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
@@ -65,6 +69,10 @@ function App() {
        
        {/* Ai Assistant */}
        <Route path="/ai-assistant" element={<LayoutWrapper><MMVerse /></LayoutWrapper>} />
+
+       {/*feedback*/}
+       <Route path="/Feedback" element={<LayoutWrapper><Feedback/></LayoutWrapper>}  />
+
 
 
        {/* Admin Routes */}
@@ -86,6 +94,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+
+
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

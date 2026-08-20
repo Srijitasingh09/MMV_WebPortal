@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -19,6 +20,7 @@ function getCategoryStyle(category) {
 function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
@@ -26,10 +28,29 @@ function formatDate(dateString) {
   });
 }
 
+function formatNoticeDate(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString;
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function getNoticeMonthYear(dateString) {
+  if (!dateString) return 'General Notices';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'General Notices';
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
 // ============================================
 // SHARED: CATEGORY TAG + DATE ROW
 // ============================================
-const MetaRow = ({ notice, isAdmin, onDelete, deleting }) => {
+const MetaRow = ({ notice }) => {
   const style = getCategoryStyle(notice.category);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -42,26 +63,6 @@ const MetaRow = ({ notice, isAdmin, onDelete, deleting }) => {
           {formatDate(notice.created_at)}
         </time>
       </div>
-
-      {isAdmin && onDelete && (
-        <button
-          onClick={onDelete}
-          disabled={deleting}
-          className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-red-600 border border-red-200 rounded-full hover:bg-red-50 hover:border-red-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {deleting ? 'Deleting...' : (
-            <>
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6" />
-                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                <path d="M10 11v6M14 11v6" />
-                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-              </svg>
-              Delete
-            </>
-          )}
-        </button>
-      )}
     </div>
   );
 };
@@ -91,10 +92,7 @@ const AttachmentLink = ({ notice }) => {
 // ============================================
 // MODAL — full notice view
 // ============================================
-const NoticeModal = ({ notice, isAdmin, onClose, onDelete }) => {
-  const [deleting, setDeleting] = useState(false);
-  const style = getCategoryStyle(notice.category);
-
+const NoticeModal = ({ notice, onClose }) => {
   // Close on Escape key
   useEffect(() => {
     const handleKey = (e) => {
@@ -110,27 +108,9 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete }) => {
     };
   }, [onClose]);
 
-  const handleDelete = async () => {
-    if (!window.confirm('Delete this notice? This cannot be undone.')) return;
-    setDeleting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/admin/notice/${notice.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to delete');
-      onDelete(notice.id);
-      onClose();
-    } catch (err) {
-      alert('Could not delete notice. Please try again.');
-      setDeleting(false);
-    }
-  };
-
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[10050] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
       aria-labelledby="notice-modal-title"
@@ -159,12 +139,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete }) => {
         </button>
 
         <div className="p-6 sm:p-8">
-          <MetaRow
-            notice={notice}
-            isAdmin={isAdmin}
-            onDelete={handleDelete}
-            deleting={deleting}
-          />
+          <MetaRow notice={notice} />
 
           <h3
             id="notice-modal-title"
@@ -189,85 +164,61 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete }) => {
 };
 
 // ============================================
-// SINGLE NOTICE CARD (fixed height, fully clickable)
+// LIGHT NOTICE ROW (reduced size, matching BHU portal figure)
 // ============================================
-const NoticeCard = ({ notice, isAdmin, onDelete, onExpand }) => {
-  const [deleting, setDeleting] = useState(false);
-  const isLong = notice.content && notice.content.length > 110;
+const NoticeRow = ({ notice, onExpand }) => {
+  // Check if notice was posted recently (e.g., within last 14 days)
+  const isNew = (() => {
+    if (!notice.created_at) return true;
+    const diffDays = (new Date() - new Date(notice.created_at)) / (1000 * 60 * 60 * 24);
+    return diffDays <= 14;
+  })();
 
-  const handleDelete = async (e) => {
-    e.stopPropagation(); // don't trigger card click (modal open) when deleting
-    if (!window.confirm('Delete this notice? This cannot be undone.')) return;
-    setDeleting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/admin/notice/${notice.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error('Failed to delete');
-      onDelete(notice.id);
-    } catch (err) {
-      alert('Could not delete notice. Please try again.');
-    } finally {
-      setDeleting(false);
-    }
-  };
+  const style = getCategoryStyle(notice.category);
 
   return (
-    <article
+    <div
       onClick={() => onExpand(notice)}
-      className="bg-[#FAF7F2] border-2 border-[#0f3358]/20 rounded-xl p-5 sm:p-6 hover:shadow-md hover:border-[#d4af37] transition-all duration-200 flex flex-col cursor-pointer"
+      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-[#174873] hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
     >
+      {/* Top Row: Title + Category Tag on Right */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0f3358] group-hover:text-[#174873] leading-snug transition-colors flex flex-wrap items-center gap-1.5">
+            <span>{notice.title}</span>
+            {isNew && (
+              <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
+                new
+              </span>
+            )}
+          </h3>
+        </div>
 
-      <MetaRow
-        notice={notice}
-        isAdmin={isAdmin}
-        onDelete={handleDelete}
-        deleting={deleting}
-      />
+        {/* Section / Category badge on top right */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${style.bg} ${style.text}`}>
+            <span className={`w-1 h-1 rounded-full ${style.dot}`} />
+            {notice.category || 'General'}
+          </span>
+        </div>
+      </div>
 
-      {/* Title — clamped to 2 lines so height stays consistent */}
-      <h3
-        className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-3 leading-snug line-clamp-2 flex-shrink-0"
-        style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
-      >
-        {notice.title}
-      </h3>
+      {/* Downside: Formatted Date */}
+      <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-0.5">
+        <time dateTime={notice.created_at} className="font-normal text-slate-500">
+          {formatNoticeDate(notice.created_at)}
+        </time>
 
-      {/* Content — clamped to 2 lines by line-clamp alone, no manual height override */}
-      <p
-        className="text-gray-700 text-base sm:text-lg leading-snug whitespace-pre-wrap overflow-hidden line-clamp-2 flex-shrink-0"
-        style={{ fontFamily: "'EB Garamond', serif" }}
-      >
-        {notice.content}
-      </p>
-
-      {/* See more affordance — only shown when content is actually truncated */}
-      {isLong && (
-        <span className="text-sm font-medium text-[#174873] mt-1">
-          See more
-        </span>
-      )}
-
-      {/* Attachment chip, pinned to bottom, styled to draw attention */}
-      {notice.attachment_url && (
-        <div className="mt-3 pt-1">
-          <a
-            href={`${API_BASE}${notice.attachment_url}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-amber-50 border border-amber-300 text-amber-800 text-sm font-semibold hover:bg-amber-100 hover:border-amber-400 transition-colors shadow-sm"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        {notice.attachment_url && (
+          <span className="inline-flex items-center gap-1 text-[#174873] font-semibold text-[11px] group-hover:underline">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            {notice.attachment_name || 'View Attachment'}
-          </a>
-        </div>
-      )}
-    </article>
+            Attachment
+          </span>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -280,9 +231,15 @@ const Notices = () => {
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeNotice, setActiveNotice] = useState(null); // notice shown in modal
+  const [activeNotice, setActiveNotice] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(20);
 
-  const isAdmin = !!localStorage.getItem('token');
+  const location = useLocation();
+
+  // Reset visible notices count whenever category or search filter changes
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [activeCategory, searchTerm]);
 
   useEffect(() => {
     const fetchNotices = async () => {
@@ -302,9 +259,19 @@ const Notices = () => {
     fetchNotices();
   }, []);
 
-  const handleDelete = (deletedId) => {
-    setNotices((prev) => prev.filter((n) => n.id !== deletedId));
-  };
+  // Direct notice navigation via URL parameter ?id=... (from ticker click)
+  useEffect(() => {
+    if (notices.length > 0) {
+      const params = new URLSearchParams(location.search);
+      const targetId = params.get('id');
+      if (targetId) {
+        const found = notices.find((n) => String(n.id) === String(targetId));
+        if (found) {
+          setActiveNotice(found);
+        }
+      }
+    }
+  }, [location.search, notices]);
 
   const filteredNotices = notices.filter((n) => {
     const matchesCategory = activeCategory === 'All' || n.category === activeCategory;
@@ -315,28 +282,33 @@ const Notices = () => {
     return matchesCategory && matchesSearch;
   });
 
+  const visibleNotices = filteredNotices.slice(0, visibleCount);
+
+  // Group visible notices month-wise as shown in the BHU official layout
+  const groupedNotices = visibleNotices.reduce((acc, notice) => {
+    const key = getNoticeMonthYear(notice.created_at);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(notice);
+    return acc;
+  }, {});
+
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
-
-      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
-            Official Circulars &amp; Notifications
+      <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
+        {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+              Notices &amp; Announcements
+            </h1>
           </div>
-          <h1
-            className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide"
-          >
-            Notices &amp; Announcements
-          </h1>
-          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
-            Stay updated with the latest official announcements from Mahila Maha Vidyalaya
-          </p>
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+            <span className="text-slate-400">Home</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-[#7d311f] font-semibold">Notices</span>
+          </div>
         </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 py-8">
 
         {/* FILTER BAR */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-6">
@@ -363,13 +335,6 @@ const Notices = () => {
             className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent w-full sm:w-56"
           />
         </div>
-
-        {/* Admin indicator */}
-        {isAdmin && (
-          <div className="mb-4 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700 font-medium">
-            You are viewing as admin — delete buttons are visible only to you.
-          </div>
-        )}
 
         {/* Loading */}
         {loading && (
@@ -399,18 +364,57 @@ const Notices = () => {
           </div>
         )}
 
-        {/* Notice grid — uniform height cards */}
+        {/* Month-wise Notice Sections matching figure */}
         {!loading && !error && filteredNotices.length > 0 && (
-          <div className="grid gap-4 sm:gap-5">
-            {filteredNotices.map((notice) => (
-              <NoticeCard
-                key={notice.id}
-                notice={notice}
-                isAdmin={isAdmin}
-                onDelete={handleDelete}
-                onExpand={setActiveNotice}
-              />
+          <div className="space-y-5">
+            {Object.entries(groupedNotices).map(([monthYear, items]) => (
+              <section key={monthYear} className="space-y-2">
+                {/* Month Header Banner matching BHU figure */}
+                <div className="border-b border-[#174873]/30 pb-1 flex items-center justify-between">
+                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-[#174873] tracking-wide">
+                    {monthYear}
+                  </h2>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    {items.length} {items.length === 1 ? 'Notice' : 'Notices'}
+                  </span>
+                </div>
+
+                {/* List of light notice rows */}
+                <div className="grid gap-2">
+                  {items.map((notice) => (
+                    <NoticeRow
+                      key={notice.id}
+                      notice={notice}
+                      onExpand={setActiveNotice}
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
+
+            {/* Load More Button / Count Indicator */}
+            <div className="pt-6 pb-2 text-center">
+              {visibleCount < filteredNotices.length ? (
+                <div className="flex flex-col items-center gap-2">
+                  <button
+                    onClick={() => setVisibleCount((prev) => prev + 20)}
+                    className="px-6 py-2.5 bg-[#0f3358] hover:bg-[#174873] active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
+                  >
+                    <span>View More Notices</span>
+                    <span className="text-xs bg-[#d4af37] text-[#0f3358] font-bold px-2 py-0.5 rounded-full group-hover:bg-amber-300 transition-colors">
+                      +{Math.min(20, filteredNotices.length - visibleCount)}
+                    </span>
+                  </button>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Showing {visibleNotices.length} of {filteredNotices.length} notices
+                  </p>
+                </div>
+              ) : filteredNotices.length > 20 ? (
+                <p className="text-xs text-slate-500 font-medium">
+                  Showing all {filteredNotices.length} notices
+                </p>
+              ) : null}
+            </div>
           </div>
         )}
       </div>
@@ -419,9 +423,7 @@ const Notices = () => {
       {activeNotice && (
         <NoticeModal
           notice={activeNotice}
-          isAdmin={isAdmin}
           onClose={() => setActiveNotice(null)}
-          onDelete={handleDelete}
         />
       )}
     </div>
