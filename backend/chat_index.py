@@ -4,12 +4,12 @@ chat_index.py — Stage B (indexing) + Stage D (sync) for the search chatbot.
 WHAT THIS FILE DOES:
 Reads rows from your real content tables (FacilityContent, Notice, etc.) and
 turns each one into searchable "chunks" stored in chat_index_chunk, with the
-real table/pdf/image payload stored in chat_index_asset.
+real table/pdf payload stored in chat_index_asset. Images are deliberately not indexed.
 
 WHAT THIS FILE DOES NOT DO:
 - It does not call any LLM. Pure search only, per your zero-cost decision.
-- It does not read PDF file contents — PDFs are indexed by filename/description
-  only, and returned whole, per your instruction.
+- It does read text-based PDF contents page by page and stores chunked text.
+- It deliberately does not index images or run OCR/vision processing.
 
 HOW TO USE:
 - index_all(db) -> run once manually to build the index from everything that
@@ -26,13 +26,17 @@ import os
 import json
 import re
 import time
+from pathlib import Path
+
+try:
+    import pymupdf as fitz  # PyMuPDF
+except ImportError:  # pragma: no cover - compatibility with older installations
+    try:
+        import fitz  # type: ignore
+    except ImportError:
+        fitz = None
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
-
-# Same uploads folder main.py serves at /uploads -- needed here to read the
-# actual PDF bytes off disk (pdf_url is a web path like "/uploads/x.pdf",
-# not a filesystem path).
-UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 import voyageai
 
 import models
@@ -77,6 +81,26 @@ def embed_text(text_to_embed: str, max_attempts: int = 5):
     raise last_error
 
 
+def purge_image_chunks():
+    """Remove legacy image chunks so rebuilds remain strictly text/PDF-only."""
+    from database import SessionLocal
+    fresh_db = SessionLocal()
+    try:
+        fresh_db.execute(text("""
+            DELETE FROM chat_index_chunk
+            WHERE content_type = 'image'
+               OR id IN (
+                    SELECT c.id
+                    FROM chat_index_chunk c
+                    JOIN chat_index_asset a ON a.chunk_id = c.id
+                    WHERE a.asset_type = 'image'
+               )
+        """))
+        fresh_db.commit()
+    finally:
+        fresh_db.close()
+
+
 def delete_chunks_for(source_table: str, source_id: int):
     """Remove all existing chunks (and their assets, via cascade) for a given
     source row. Always call this before re-inserting on update, and on delete.
@@ -110,8 +134,9 @@ def save_chunk(
 
     asset dict shape:
       {"asset_type": "table", "table_data": {...}}                  for tables
-      {"asset_type": "pdf",   "file_url": "...", "file_name": "..."} for pdfs
-      {"asset_type": "image", "file_url": "...", "file_name": "..."} for images
+      {"asset_type": "pdf",   "file_url": "...", "file_name": "...", "page_number": 2} for PDFs
+
+    Image assets are intentionally unsupported and are never passed here.
     """
     if not chunk_text_value or not chunk_text_value.strip():
         return  # nothing to index
@@ -144,8 +169,10 @@ def save_chunk(
         if asset:
             fresh_db.execute(
                 text("""
-                    INSERT INTO chat_index_asset (chunk_id, asset_type, table_data, file_url, file_name)
-                    VALUES (:chunk_id, :asset_type, :table_data, :file_url, :file_name)
+                    INSERT INTO chat_index_asset
+                        (chunk_id, asset_type, table_data, file_url, file_name, page_number)
+                    VALUES
+                        (:chunk_id, :asset_type, :table_data, :file_url, :file_name, :page_number)
                 """),
                 {
                     "chunk_id": chunk_id,
@@ -153,6 +180,7 @@ def save_chunk(
                     "table_data": json.dumps(asset["table_data"]) if asset.get("table_data") else None,
                     "file_url": asset.get("file_url"),
                     "file_name": asset.get("file_name"),
+                    "page_number": asset.get("page_number"),
                 },
             )
 
@@ -161,31 +189,113 @@ def save_chunk(
         fresh_db.close()
 
 
-def _index_pdf_real_content(pdf_url: str, pdf_name: str, source_table: str, source_id: int,
-                             section_url: str, section_title: str):
+PDF_CHUNK_CHARS = 1800
+PDF_CHUNK_OVERLAP = 250
+
+
+def _local_upload_path(file_url: str):
+    """Resolve a stored relative /uploads URL to the backend upload file."""
+    if not file_url:
+        return None
+    filename = Path(str(file_url).split("?", 1)[0]).name
+    if not filename:
+        return None
+    return Path(__file__).resolve().parent / "uploads" / filename
+
+
+def _split_pdf_text(text_value: str, max_chars: int = PDF_CHUNK_CHARS, overlap: int = PDF_CHUNK_OVERLAP):
+    """Create bounded, overlapping chunks while preserving paragraph boundaries."""
+    normalized = re.sub(r"[ \t]+", " ", text_value or "")
+    normalized = re.sub(r"\n{3,}", "\n\n", normalized).strip()
+    if not normalized:
+        return []
+    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", normalized) if p.strip()]
+    chunks = []
+    current = ""
+    for paragraph in paragraphs:
+        if len(paragraph) > max_chars:
+            if current:
+                chunks.append(current)
+                current = ""
+            start = 0
+            while start < len(paragraph):
+                end = min(start + max_chars, len(paragraph))
+                chunks.append(paragraph[start:end].strip())
+                if end >= len(paragraph):
+                    break
+                start = max(0, end - overlap)
+            continue
+        candidate = f"{current}\n\n{paragraph}".strip() if current else paragraph
+        if len(candidate) <= max_chars:
+            current = candidate
+        else:
+            if current:
+                chunks.append(current)
+            tail = current[-overlap:] if current else ""
+            current = f"{tail}\n\n{paragraph}".strip()
+            if len(current) > max_chars:
+                current = current[-max_chars:]
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def extract_pdf_pages(file_url: str):
+    """Extract readable PDF text by page; return [] for missing/scanned PDFs.
+
+    OCR and image understanding are intentionally excluded. A PDF with no
+    extractable text still receives a metadata-only document chunk through
+    index_pdf_asset so the frontend can link to it.
     """
-    Reads the ACTUAL text of an uploaded PDF and indexes it as page-level
-    chunks (requirements #5, #6), on top of the existing filename-only chunk.
-    Skips silently (logs and returns) for scanned/image-only PDFs or any
-    file-access error -- indexing must never crash the admin save/sync flow
-    over one bad PDF.
-    """
-    if not pdf_url:
-        return
+    if fitz is None:
+        print("    PyMuPDF is unavailable; skipping PDF text extraction.")
+        return []
+    path = _local_upload_path(file_url)
+    if not path or not path.exists():
+        return []
     try:
-        from mmv_pdf_ingest import index_pdf_content
-        pdf_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf_url))
-        if not os.path.isfile(pdf_path):
-            print(f"  _index_pdf_real_content: file not found on disk: {pdf_path}")
-            return
-        result = index_pdf_content(
-            source_table=source_table, source_id=source_id,
-            pdf_path=pdf_path, pdf_url=pdf_url,
+        with fitz.open(str(path)) as document:
+            pages = []
+            for page_number, page in enumerate(document, start=1):
+                page_text = page.get_text("text") or ""
+                chunks = _split_pdf_text(page_text)
+                for chunk in chunks:
+                    pages.append((page_number, chunk))
+            return pages
+    except Exception as exc:
+        print(f"    PDF extraction failed for {path.name}: {exc}")
+        return []
+
+
+def index_pdf_asset(source_table, source_id, section_url, section_title, file_url, file_name):
+    """Index actual readable PDF text; fall back to metadata without OCR."""
+    readable = _readable_name_from_filename(file_name or "document")
+    extracted_pages = extract_pdf_pages(file_url)
+    if extracted_pages:
+        for page_number, chunk in extracted_pages:
+            save_chunk(
+                source_table, source_id, "pdf",
+                chunk_text_value=f"{readable} — PDF page {page_number}.\n{chunk}",
+                section_url=section_url, section_title=section_title,
+                asset={
+                    "asset_type": "pdf",
+                    "file_url": file_url,
+                    "file_name": file_name,
+                    "page_number": page_number,
+                },
+            )
+    else:
+        save_chunk(
+            source_table, source_id, "pdf",
+            chunk_text_value=f"{readable}. A readable text layer was not available; the PDF is available in the {section_title} section.",
             section_url=section_url, section_title=section_title,
+            asset={
+                "asset_type": "pdf",
+                "file_url": file_url,
+                "file_name": file_name,
+                "page_number": None,
+            },
         )
-        print(f"  _index_pdf_real_content: {pdf_name} -> {result}")
-    except Exception as e:
-        print(f"  _index_pdf_real_content: skipped {pdf_name} due to error: {e}")
 
 
 # ============================================================
@@ -300,7 +410,6 @@ def index_facility_content_row(row: "models.FacilityContent"):
     Powers facilities/* and any other GenericContentPage-routed section."""
 
     pdf_list = [(pdf.pdf_url, pdf.pdf_name) for pdf in row.pdfs]
-    # photo_list intentionally not used -- image indexing disabled, see below
 
     delete_chunks_for("facility_content", row.id)
 
@@ -464,57 +573,13 @@ def index_facility_content_row(row: "models.FacilityContent"):
         except (json.JSONDecodeError, AttributeError):
             pass
 
-    # 3. PDF chunks
+    # 3. PDF chunks: extract actual readable text; never index images.
     for pdf_url, pdf_name in pdf_list:
-        readable = _readable_name_from_filename(pdf_name)
-        save_chunk(
-            "facility_content", row.id, "pdf",
-            chunk_text_value=f"{readable}. Available as a PDF document in the {title} section.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": pdf_url, "file_name": pdf_name},
-        )
-        # Real PDF text content, in addition to the filename-only chunk above
-        # (that one stays -- it's what lets broad "show me the PDF" queries
-        # surface the file even for chunks below). This adds page-level
-        # chunks with the PDF's ACTUAL text, so specific questions can be
-        # answered from the real content instead of just "a PDF exists here".
-        _index_pdf_real_content(pdf_url, pdf_name, "facility_content", row.id, url, title)
+        index_pdf_asset("facility_content", row.id, url, title, pdf_url, pdf_name)
 
-    # 4. Image chunks -- DISABLED (2026-08-20): image captions ("Photo of X.
-    # filename.") were consistently outranking real text/table/PDF content
-    # for factual queries (confirmed via test_no_images.py), since a short
-    # generic caption embeds deceptively close to almost any query. Images
-    # carry no answerable information anyway. Kept here, commented out,
-    # rather than deleted, in case you want them back for browse-style
-    # "show me photos of X" queries later.
-    #
-    # for photo_url, photo_name in photo_list:
-    #     readable = _readable_name_from_filename(photo_name)
-    #     save_chunk(
-    #         "facility_content", row.id, "image",
-    #         chunk_text_value=f"Photo of {title}. {readable}.",
-    #         section_url=url, section_title=title,
-    #         asset={"asset_type": "image", "file_url": photo_url, "file_name": photo_name},
-    #     )
-
-    # Legacy single pdf/photo columns
+    # Legacy single PDF column.
     if row.pdf_url:
-        readable = _readable_name_from_filename(row.pdf_name or 'attachment')
-        save_chunk(
-            "facility_content", row.id, "pdf",
-            chunk_text_value=f"{readable}. Available as a PDF document in the {title} section.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-        )
-        _index_pdf_real_content(row.pdf_url, row.pdf_name or "attachment", "facility_content", row.id, url, title)
-    # if row.photo_url:
-    #     readable = _readable_name_from_filename(row.photo_name or 'photo')
-    #     save_chunk(
-    #         "facility_content", row.id, "image",
-    #         chunk_text_value=f"Photo of {title}. {readable}.",
-    #         section_url=url, section_title=title,
-    #         asset={"asset_type": "image", "file_url": row.photo_url, "file_name": row.photo_name},
-    #     )
+        index_pdf_asset("facility_content", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def sync_notice_by_id(notice_id: int):
@@ -545,13 +610,7 @@ def index_notice_row(row: "models.Notice"):
     )
 
     if row.attachment_url:
-        readable = _readable_name_from_filename(row.attachment_name or 'document')
-        save_chunk(
-            "notices", row.id, "pdf",
-            chunk_text_value=f"Attachment for notice '{title}': {readable}. Download PDF.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": row.attachment_url, "file_name": row.attachment_name},
-        )
+        index_pdf_asset("notices", row.id, url, title, row.attachment_url, row.attachment_name)
 
 
 def index_college_info_item_row(row: "models.CollegeInfoItem"):
@@ -565,14 +624,6 @@ def index_college_info_item_row(row: "models.CollegeInfoItem"):
         section_url=url, section_title=title,
     )
 
-    # if row.image_url:
-    #     readable = _readable_name_from_filename(row.image_name or 'photo')
-    #     save_chunk(
-    #         "college_info_items", row.id, "image",
-    #         chunk_text_value=f"Photo related to {title}. {readable}.",
-    #         section_url=url, section_title=title,
-    #         asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
-    #     )
 
 
 def index_administration_section_row(row: "models.AdministrationSection"):
@@ -589,14 +640,6 @@ def index_administration_section_row(row: "models.AdministrationSection"):
             section_url=url, section_title=title,
         )
 
-    # if row.image_url:
-    #     readable = _readable_name_from_filename(row.image_name or 'photo')
-    #     save_chunk(
-    #         "administration_sections", row.id, "image",
-    #         chunk_text_value=f"Photo related to {title} in administration. {readable}.",
-    #         section_url=url, section_title=title,
-    #         asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
-    #     )
 
 
 def index_academic_nep_row(row: "models.AcademicNEP"):
@@ -611,13 +654,7 @@ def index_academic_nep_row(row: "models.AcademicNEP"):
             section_url=url, section_title=title,
         )
     if row.pdf_url:
-        readable = _readable_name_from_filename(row.pdf_name or 'NEP document')
-        save_chunk(
-            "academic_nep", row.id, "pdf",
-            chunk_text_value=f"National Education Policy (NEP) document at MMV BHU: {readable}. Download PDF.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-        )
+        index_pdf_asset("academic_nep", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def index_academic_syllabus_row(row: "models.AcademicSyllabus"):
@@ -625,13 +662,7 @@ def index_academic_syllabus_row(row: "models.AcademicSyllabus"):
     url = f"/academics/syllabus/{row.category}"
     title = f"Syllabus — {row.category}"
 
-    readable = _readable_name_from_filename(row.pdf_name or 'syllabus')
-    save_chunk(
-        "academic_syllabus", row.id, "pdf",
-        chunk_text_value=f"{readable}. Academic syllabus for {row.category} students at MMV BHU. Download PDF.",
-        section_url=url, section_title=title,
-        asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-    )
+    index_pdf_asset("academic_syllabus", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def index_academic_elective_row(row: "models.AcademicElective"):
@@ -639,13 +670,7 @@ def index_academic_elective_row(row: "models.AcademicElective"):
     url = f"/academics/electives/{row.category}"
     title = f"Elective — {row.category}"
 
-    readable = _readable_name_from_filename(row.pdf_name or 'elective')
-    save_chunk(
-        "academic_electives", row.id, "pdf",
-        chunk_text_value=f"{readable}. Elective course document for {row.category} at MMV BHU. Download PDF.",
-        section_url=url, section_title=title,
-        asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-    )
+    index_pdf_asset("academic_electives", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def index_academic_section_incharge_row(row: "models.AcademicSectionIncharge"):
@@ -719,6 +744,9 @@ def index_all(db: Session):
     after that, this function never touches it again. This avoids Supabase's
     pooler silently dropping a connection that's been sitting open across
     many minutes of deliberately slow embedding calls."""
+
+    print("Removing legacy image chunks (images are not indexed)...")
+    purge_image_chunks()
 
     print("Reading all content from the database (fast)...")
     facility_rows = (

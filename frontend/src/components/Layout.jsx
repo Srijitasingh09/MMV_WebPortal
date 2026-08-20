@@ -1,5 +1,5 @@
 import React from 'react';
-import Navbar from './Navbar';
+import Navbar from './Navbar.jsx';
 import Footer from "./Footer";
 const Layout = ({ children , hideFooter = false }) => {
   return (

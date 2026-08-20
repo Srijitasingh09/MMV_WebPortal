@@ -59,44 +59,15 @@ const SECTIONS = [
 // raw markdown (**bold**, # headers, | pipe-separated lists) instead of
 // plain text. Rather than showing those symbols literally to the user, this
 // strips/converts them before rendering. ───────────────────────────────────
-// Renders **bold** spans and turns markdown links / bare URLs into real,
-// clickable links — internal paths (starting with "/") use react-router's
-// <Link> so navigation stays client-side, everything else opens in a new
-// tab. This is what "links are inactive" was missing: the text was shown
-// as plain characters with no <a>/<Link> around it at all.
 const renderInlineBold = (str, keyPrefix) => {
-  const linkOrBoldRe = /(\*\*[^*]+\*\*)|(\[[^\]]+\]\([^)]+\))|(https?:\/\/[^\s)]+)/g;
-  const parts = str.split(linkOrBoldRe).filter((p) => p !== undefined && p !== "");
-  return parts.map((part, idx) => {
-    if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-      return <strong key={`${keyPrefix}-${idx}`}>{part.slice(2, -2)}</strong>;
-    }
-    const mdLink = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (mdLink) {
-      const [, label, url] = mdLink;
-      return isInternalUrl(url)
-        ? <Link key={`${keyPrefix}-${idx}`} to={url} className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{label}</Link>
-        : <a key={`${keyPrefix}-${idx}`} href={url} target="_blank" rel="noopener noreferrer" className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{label}</a>;
-    }
-    if (/^https?:\/\//.test(part)) {
-      return isInternalUrl(part)
-        ? <Link key={`${keyPrefix}-${idx}`} to={new URL(part).pathname} className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{part}</Link>
-        : <a key={`${keyPrefix}-${idx}`} href={part} target="_blank" rel="noopener noreferrer" className="text-[#C4561A] underline hover:text-[#0D1F3C] font-medium">{part}</a>;
-    }
-    return <span key={`${keyPrefix}-${idx}`}>{part}</span>;
-  });
-};
-
-// A link is "internal" if it points at this same site (bare "/path", or an
-// absolute URL whose host matches window.location) — those use client-side
-// routing instead of a full page reload.
-const isInternalUrl = (url) => {
-  if (url.startsWith("/")) return true;
-  try {
-    return new URL(url).host === window.location.host;
-  } catch {
-    return false;
-  }
+  // Splits on **bold** spans and renders them as <strong>, everything else
+  // stays plain text.
+  const parts = str.split(/(\*\*[^*]+\*\*)/g).filter((p) => p !== "");
+  return parts.map((part, idx) =>
+    part.startsWith("**") && part.endsWith("**") && part.length > 4
+      ? <strong key={`${keyPrefix}-${idx}`}>{part.slice(2, -2)}</strong>
+      : <span key={`${keyPrefix}-${idx}`}>{part}</span>
+  );
 };
 
 // A line of just dashes/pipes/colons (e.g. "|---|---|") is a markdown table
@@ -117,10 +88,6 @@ const AnswerText = ({ text }) => {
         const headerMatch = trimmed.match(/^#{1,6}\s+(.*)/);
         const isHeader = !!headerMatch;
         if (isHeader) trimmed = headerMatch[1];
-
-        // Strip blockquote markers (">", ">>", ...) — the quoted text still
-        // reads fine without the literal angle brackets in a chat bubble.
-        trimmed = trimmed.replace(/^>+\s?/, "");
 
         if (trimmed.startsWith("•") || trimmed.startsWith("-")) {
           const bulletText = trimmed.replace(/^[•\-]\s*/, "");
@@ -300,7 +267,7 @@ const BotMessage = ({ msg }) => (
           target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-2 bg-white border-2 border-[#E3B94F] text-[#0D1F3C] text-[15px] font-semibold px-3.5 py-2.5 rounded-lg hover:bg-[#FBF1DA] transition-colors"
         >
-          <span>📄</span><span>{msg.asset.file_name || "Download PDF"}</span>
+          <span>📄</span><span>{msg.asset.file_name || "Download PDF"}{msg.asset.page_number ? ` — page ${msg.asset.page_number}` : ""}</span>
         </a>
       )}
 
@@ -376,15 +343,11 @@ export default function MMVerse() {
   const [activeSection, setActiveSection] = useState(null); // currently selected section
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const messagesContainerRef = useRef(null);
+  const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    // Scroll only the messages panel itself, never the page. scrollIntoView()
-    // can bubble up and nudge the whole window even with block:"nearest", so
-    // we set scrollTop directly on the panel's own ref instead.
-    const el = messagesContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [items, loading]);
 
   const handleSectionSelect = (section) => {
@@ -475,28 +438,31 @@ export default function MMVerse() {
     <div className="min-h-screen bg-[#EAEFF5]">
       <BrandFonts />
 
-      {/* UNIFIED OFFICIAL PAGE HEADER BANNER */}
-      <div className="relative overflow-hidden bg-[#0f3358] px-4 py-8 sm:py-10 shadow-xl border-b-4 border-[#d4af37]">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#7d311f] text-[#fce8b2] text-xs font-semibold uppercase tracking-wider mb-2 border border-[#d4af37]/40 shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
-            Official AI Information Portal
+      <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8">
+        {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+          {/* Left Side: Page Name */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+              MMVerse Assistant
+            </h1>
           </div>
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 font-cinzel tracking-wide">
-            MMVerse Assistant
-          </h1>
-          <p className="text-slate-200 text-sm sm:text-base max-w-xl mx-auto">
-            Your official AI assistant for Mahila Maha Vidyalaya, BHU — select a topic or ask any query
-          </p>
+          {/* Right Side: Breadcrumb */}
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+            <span className="text-slate-400">Home</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-[#7d311f] font-semibold">AI Assistant</span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-5xl mx-auto px-4 pb-6 sm:pb-8 space-y-6">
 
         {/* Chat card — identical width as header banner */}
         <div
           className="mmv-font-body bg-[#FAF7F2] rounded-2xl shadow-xl border-2 border-[#0f3358]/30 flex flex-col overflow-hidden w-full"
-          style={{ height: "clamp(600px, 88vh, 920px)" }}
+          style={{ height: "clamp(480px, 80vh, 750px)" }}
         >
           {/* Header */}
           <div className="relative flex items-center gap-2.5 sm:gap-3 bg-[#0D1F3C] px-3.5 sm:px-5 py-3 sm:py-4 flex-shrink-0 overflow-hidden">
@@ -517,7 +483,7 @@ export default function MMVerse() {
           </div>
 
           {/* Messages */}
-          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
+          <div className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-4 sm:py-5 space-y-4 sm:space-y-5">
 
             {items.map((item, i) => {
               if (item.type === "intro") return (
@@ -563,7 +529,7 @@ export default function MMVerse() {
             })}
 
             {loading && <TypingIndicator />}
-            <div />
+            <div ref={bottomRef} />
           </div>
 
           {/* Input — select a section */}
