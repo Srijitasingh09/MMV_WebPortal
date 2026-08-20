@@ -33,11 +33,7 @@ const pages = {
     tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work'] 
   },
 
-  'proctorial': { 
-    title: 'Proctorial Board', 
-    pageType: 'table-description',
-    tableColumns: ['Name', 'Department', 'Position in Board', 'Contact']
-  },
+  
 
   'proctorial/chief': { 
     title: 'Chief Proctor', 
@@ -50,11 +46,7 @@ const pages = {
     tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
   },
 
-  'examination': {  
-    title: 'Controller of Examination', 
-    pageType: 'table-description', 
-    tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
-  },
+
 
   'examination/universityexam': {  
     title: 'Controller of Examination — University', 

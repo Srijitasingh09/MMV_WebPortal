@@ -82,11 +82,11 @@ const pages = {
   // ── Calendar & Holidays ───────────────────────────────────────────────────
   'calendar': {
     title: 'Academic Calendar',
-    pageType: 'pdf-list'
+    pageType: 'description-pdf-list'
   },
   'holidays': {
     title: 'Holiday List',
-    pageType: 'pdf-list'
+    pageType: 'description-pdf-list'
   },
 };
 
