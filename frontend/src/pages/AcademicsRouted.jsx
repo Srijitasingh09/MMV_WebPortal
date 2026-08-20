@@ -3,14 +3,18 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
+  'overview': {
+    title: 'Academics',
+    pageType: 'description'
+  },
   // ── NEP ───────────────────────────────────────────────────────────────────
   'nep': {
     title: 'National Education Policy (NEP)',
     pageType: 'description'
   },
 
-  // ── Syllabus — UG ─────────────────────────────────────────────────────────
-  'syllabus/ug/science': {
+  // ── Syllabus ────────────────────────────────────────────────────────────────
+   'syllabus/ug/science': {
     title: 'Syllabus — UG Science',
     pageType: 'pdf-list-table',
     tableColumns: ['Subject', 'Syllabus']
@@ -27,6 +31,7 @@ const pages = {
   // ── Syllabus — PG (three separate pages, not one combined key) ────────────
   // Navbar links to /academics/syllabus/pg/bioinformatics etc. individually.
   // A single 'syllabus/pg' key would never match those URLs.
+  
   'syllabus/pg/bioinformatics': {
     title: 'Syllabus — PG Bioinformatics',
     pageType: 'pdf-list'
@@ -54,8 +59,8 @@ const pages = {
     pageType: 'description'
   },
 
-  // ── Section In-Charge (three separate subject pages) ─────────────────────
-  // Navbar links to /academics/section-incharge/science etc. individually.
+  // ── Section In-Charge ───────────────────────────────────────────────────
+ 
   'section-incharge/science': {
     title: 'Section Incharge — Science',
     pageType: 'table',
@@ -88,7 +93,8 @@ const pages = {
 
 const AcademicsRouted = () => {
   const { sub, subsub, subsubsub } = useParams();
-  const key = [sub, subsub, subsubsub].filter(Boolean).join('/');
+  const rawKey = [sub, subsub, subsubsub].filter(Boolean).join('/');
+  const key = rawKey || 'overview';
   const page = pages[key];
 
   if (!page) return <Navigate to="/" replace />;
