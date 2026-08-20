@@ -3,7 +3,7 @@ import os
 import time
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -40,6 +40,19 @@ async def validate_upload(file: UploadFile, allowed_types: set):
     return contents
 
 import models, database, auth
+from embedding_provider import embed as embed_vectors, provider_status
+from chatbot_runtime import (
+    allow_request,
+    cache_get,
+    cache_key,
+    cache_set,
+    clean_answer,
+    detect_language,
+    language_instruction,
+    normalize_page_url,
+    page_title_from_url,
+    provider_slot,
+)
 from database import engine, get_db
 from chat_index import (
     sync_facility_content_by_id,
@@ -153,6 +166,53 @@ ensure_mmv_knowledge_file()
 ensure_facility_content_table()
 
 app = FastAPI(title="MMV WebPortal")
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "mmv-webportal"}
+
+@app.get("/ready")
+def readiness(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ready", "database": "ok", "embedding": provider_status()}
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Service is not ready: {exc}")
+
+@app.get("/metrics")
+def metrics():
+    return {
+        "service": "mmv-webportal",
+        "embedding": provider_status(),
+        "chat_rate_limit": "enabled",
+        "cache": "redis" if os.getenv("REDIS_URL") else "in-memory",
+        "image_indexing": "disabled",
+    }
+
+_whisper_model = None
+
+@app.post("/transcribe")
+async def transcribe(audio: UploadFile = File(...)):
+    """Optional self-hosted voice fallback; browser speech remains the first choice."""
+    global _whisper_model
+    if not os.getenv("ENABLE_WHISPER", "false").lower() == "true":
+        raise HTTPException(status_code=501, detail="Self-hosted voice fallback is disabled")
+    try:
+        from faster_whisper import WhisperModel
+        if _whisper_model is None:
+            _whisper_model = WhisperModel(os.getenv("WHISPER_MODEL", "small"), device="cpu", compute_type="int8")
+        suffix = os.path.splitext(audio.filename or "voice.webm")[1] or ".webm"
+        temp_path = os.path.join(UPLOADS_DIR, f"voice_{uuid.uuid4().hex}{suffix}")
+        with open(temp_path, "wb") as target:
+            shutil.copyfileobj(audio.file, target)
+        segments, info = _whisper_model.transcribe(temp_path, vad_filter=True)
+        transcript = " ".join(segment.text.strip() for segment in segments).strip()
+        os.remove(temp_path)
+        return {"text": transcript, "language": info.language}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Voice transcription is unavailable: {exc}")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",") 
@@ -1134,24 +1194,25 @@ def classify_question(question: str) -> str:
     """Classify whether the question is MMV-related or off-topic.
     Returns 'mmv' or 'offtopic'. When in doubt returns 'mmv'."""
     try:
-        response = _groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{
-                "role": "user",
-                "content": (
-                    "You are a classifier for MMVerse, AI assistant of Mahila Maha Vidyalaya (MMV), BHU.\n"
-                    "Classify the question as 'mmv' or 'offtopic'. Reply with ONE word only.\n\n"
-                    "'mmv' = questions about MMV/BHU: admissions, fees, courses, faculty, hostels, "
-                    "library, canteen, sports, medical, administration, exams, notices, campus life.\n"
-                    "'offtopic' = clearly unrelated: general knowledge, coding, other universities, "
-                    "entertainment, translation, politics, science facts.\n"
-                    "When in doubt: 'mmv'.\n\n"
-                    f"Question: {question}"
-                )
-            }],
-            max_tokens=5,
-            temperature=0.0,
-        )
+        with provider_slot():
+            response = _groq_client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "You are a classifier for MMVerse, AI assistant of Mahila Maha Vidyalaya (MMV), BHU.\n"
+                        "Classify the question as 'mmv' or 'offtopic'. Reply with ONE word only.\n\n"
+                        "'mmv' = questions about MMV/BHU: admissions, fees, courses, faculty, hostels, "
+                        "library, canteen, sports, medical, administration, exams, notices, campus life.\n"
+                        "'offtopic' = clearly unrelated: general knowledge, coding, other universities, "
+                        "entertainment, translation, politics, science facts.\n"
+                        "When in doubt: 'mmv'.\n\n"
+                        f"Question: {question}"
+                    )
+                }],
+                max_tokens=5,
+                temperature=0.0,
+            )
         result = response.choices[0].message.content.strip().lower()
         return "offtopic" if "offtopic" in result else "mmv"
     except Exception:
@@ -1159,34 +1220,34 @@ def classify_question(question: str) -> str:
 
 
 def expand_query(question: str) -> list:
-    """Generate 2 alternative phrasings with MMV-specific vocabulary mapping.
-    Handles: 'timings'→'hours', 'charges'→'fees', 'ma'am'→proper title, etc."""
+    """Generate 2 alternative phrasings with MMV-specific vocabulary mapping."""
     try:
-        response = _groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[{
-                "role": "user",
-                "content": (
-                    "You are helping search a college portal for Mahila Maha Vidyalaya (MMV), BHU. "
-                    "Rephrase this student question in 2 different ways using formal academic terminology. "
-                    "Common mappings: 'timings'→'hours/schedule', 'charges/fees'→'fee structure', "
-                    "'principal ma'am'→'principal', 'incharge'→'coordinator/in-charge', "
-                    "'gym'→'gymnasium', 'OPD'→'outpatient department'. "
-                    "Output only the 2 rephrased questions, one per line, no numbering.\n\n"
-                    f"Question: {question}"
-                )
-            }],
-            max_tokens=80,
-            temperature=0.0,  # deterministic — same question should always search the same way
-        )
-        lines = response.choices[0].message.content.strip().split("\n")
-        alternatives = [l.strip() for l in lines if l.strip() and l.strip() != question][:2]
+        with provider_slot():
+            response = _groq_client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "You are helping search a college portal for Mahila Maha Vidyalaya (MMV), BHU. "
+                        "Rephrase this student question in 2 different ways using formal academic terminology. "
+                        "Common mappings: 'timings'→'hours/schedule', 'charges/fees'→'fee structure', "
+                        "'principal ma'am'→'principal', 'incharge'→'coordinator/in-charge', "
+                        "'gym'→'gymnasium', 'OPD'→'outpatient department'. "
+                        "Output only the 2 rephrased questions, one per line, no numbering.\n\n"
+                        f"Question: {question}"
+                    )
+                }],
+                max_tokens=80,
+                temperature=0.0,
+            )
+        lines = response.choices[0].message.content.strip().split("\\n")
+        alternatives = [line.strip() for line in lines if line.strip() and line.strip() != question][:2]
         return [question] + alternatives
     except Exception:
         return [question]
 
 
-def search_best_chunk(queries: list, db, section_filter: str = None):
+def search_best_chunk(queries: list, db, section_filter: str = None, page_url: str = None):
     """Embed all query variants, return the single best-matching chunk.
     section_filter: optional section name to restrict search (e.g. 'facilities').
     Returns (row, similarity) or (None, 0.0)."""
@@ -1204,12 +1265,8 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
         if wait:
             time.sleep(wait)
         try:
-            result = voyage_client.embed(
-                texts=queries,
-                model=EMBED_MODEL,
-                input_type="query",
-            )
-            embeddings = result.embeddings
+            with provider_slot():
+                embeddings = embed_vectors(queries, input_type="query")
             last_error = None
             break
         except Exception as e:
@@ -1222,10 +1279,14 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
         )
 
     # Build optional section filter clause
-    section_clause = ""
-    if section_filter:
+    section_clause = "AND c.content_type <> 'image'"
+    if page_url:
+        safe_page_url = page_url.replace("'", "''")
+        section_clause += f" AND c.section_url = '{safe_page_url}'"
+    elif section_filter:
         # Match source_table containing section name, or section_url starting with /section
-        section_clause = f"AND (c.section_url LIKE '/{section_filter}%' OR c.source_table LIKE '%{section_filter}%')"
+        safe_section = section_filter.replace("'", "''")
+        section_clause += f" AND (c.section_url LIKE '/{safe_section}%' OR c.source_table LIKE '%{safe_section}%')"
 
     for q_text, emb in zip(queries, embeddings):
         emb_str = str(emb)
@@ -1310,7 +1371,7 @@ def search_best_chunk(queries: list, db, section_filter: str = None):
     return best_row, best_similarity
 
 
-def generate_answer(question: str, chunk_text: str, section_title: str, content_type: str = "text") -> str:
+def generate_answer(question: str, chunk_text: str, section_title: str, content_type: str = "text", language: str = "en") -> str:
     """Generate a precise, grounded answer from the best matching chunk.
     content_type hint helps the LLM handle table data vs prose differently."""
 
@@ -1347,15 +1408,17 @@ INSTRUCTIONS:
   "STUDENT QUESTION:", "Answer:", or similar, even if the retrieved text above uses that format.
 - Do NOT start with "Based on the information", "According to", or "The text says".
 - Do NOT include markdown links — plain text only.
-- Do NOT include raw file paths or upload URLs (anything containing "/uploads/" or ending in .pdf, .docx, etc.) in your answer text. If the retrieved information is a document, just say it's available and that the link is shown below — the actual file link is already displayed to the user separately."""
+- Do NOT include raw file paths or upload URLs (anything containing "/uploads/" or ending in .pdf, .docx, etc.) in your answer text. If the retrieved information is a document, just say it's available and that the link is shown below — the actual file link is already displayed to the user separately.
+- {language_instruction(language)}"""
 
-    response = _groq_client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+    with provider_slot():
+        response = _groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=250,
         temperature=0.0,
     )
-    return response.choices[0].message.content.strip()
+    return clean_answer(response.choices[0].message.content)
 
 
 # 0.35 is safer than 0.30 — at 0.30 some irrelevant chunks pass through
@@ -1364,8 +1427,23 @@ INSTRUCTIONS:
 SIMILARITY_THRESHOLD = 0.35
 
 
+def related_pages(db: Session, page_url: str | None, section_filter: str | None):
+    """Return safe internal links from the same section for fallback guidance."""
+    prefix = (page_url or (f"/{section_filter}" if section_filter else "/")).rstrip("/")
+    rows = db.execute(text("""
+        SELECT section_url, MAX(section_title) AS section_title
+        FROM chat_index_chunk
+        WHERE content_type <> 'image'
+          AND section_url LIKE :prefix
+        GROUP BY section_url
+        ORDER BY section_url
+        LIMIT 5
+    """), {"prefix": prefix + "%"}).fetchall()
+    return [{"url": row.section_url, "title": row.section_title or page_title_from_url(row.section_url)} for row in rows if row.section_url != page_url]
+
+
 @app.post("/chat")
-def chat(payload: dict, db: Session = Depends(get_db)):
+def chat(payload: dict, request: Request, db: Session = Depends(get_db)):
     """Public endpoint — no auth required.
 
     Request body:  { "question": "What are the hostel facilities?" }
@@ -1390,13 +1468,23 @@ def chat(payload: dict, db: Session = Depends(get_db)):
     """
     question = (payload.get("question") or "").strip()
     section_filter = (payload.get("section") or "").strip() or None
+    page_url = normalize_page_url(payload.get("page_url"))
+    language = detect_language(question)
+    client_key = request.client.host if request.client else "anonymous"
+    if not allow_request(client_key):
+        raise HTTPException(status_code=429, detail="Too many questions right now. Please wait a moment and try again.")
     if not question:
         raise HTTPException(status_code=400, detail="question is required")
+
+    response_cache_key = cache_key(question, section_filter, page_url, language)
+    cached = cache_get(response_cache_key)
+    if cached is not None:
+        return cached
 
     # 1. Classify — off-topic check first.
     intent = classify_question(question)
     if intent == "offtopic":
-        return {
+        result = {
             "matched": False,
             "fallback_type": "offtopic",
             "message": (
@@ -1406,40 +1494,54 @@ def chat(payload: dict, db: Session = Depends(get_db)):
             ),
             "section_title": None,
             "section_url": None,
+            "language": language,
         }
+        cache_set(response_cache_key, result)
+        return result
 
     # 2. Expand question into multiple phrasings.
     queries = expand_query(question)
 
     # 3. Search for best matching chunk with optional section filter.
-    row, similarity = search_best_chunk(queries, db, section_filter=section_filter)
+    row, similarity = search_best_chunk(queries, db, section_filter=section_filter, page_url=page_url)
 
     if not row:
-        return {
+        result = {
             "matched": False,
             "fallback_type": "no_content",
-            "message": "The knowledge base is empty. Please contact the administrator.",
-            "section_title": None,
-            "section_url": None,
+            "message": f"No information is available on {page_title_from_url(page_url)}. Try the main MMVerse assistant for a broader search.",
+            "section_title": page_title_from_url(page_url) if page_url else None,
+            "section_url": page_url,
+            "page_scoped": bool(page_url),
+            "language": language,
+            "related_pages": related_pages(db, page_url, section_filter),
         }
+        cache_set(response_cache_key, result)
+        return result
 
     # 4. Stage F fallback — score too low.
     if similarity < SIMILARITY_THRESHOLD:
-        return {
+        result = {
             "matched": False,
             "fallback_type": "no_content",
             "message": (
-                "This looks like an MMV-related question, but I don't have specific information "
-                "about it yet. The content may not have been added to the portal. "
-                "Please contact the relevant department directly, or check the closest section below."
+                f"No information is available on {page_title_from_url(page_url)}. "
+                "Try the main MMVerse assistant for a broader search."
+                if page_url else
+                "This looks like an MMV-related question, but I don't have specific information about it yet."
             ),
             "section_title": row.section_title,
             "section_url": row.section_url,
+            "page_scoped": bool(page_url),
+            "language": language,
+            "related_pages": related_pages(db, page_url, section_filter),
         }
+        cache_set(response_cache_key, result)
+        return result
 
     # 5. Generate NLP answer from best matching chunk.
     try:
-        answer = generate_answer(question, row.chunk_text, row.section_title, row.content_type or "text")
+        answer = generate_answer(question, row.chunk_text, row.section_title, row.content_type or "text", language=language)
     except Exception:
         answer = row.chunk_text
 
@@ -1466,11 +1568,15 @@ def chat(payload: dict, db: Session = Depends(get_db)):
             if row.page_number is not None:
                 asset["page_number"] = row.page_number
 
-    return {
+    result = {
         "matched": True,
         "answer": answer,
         "chunk_text": row.chunk_text,
         "section_title": row.section_title,
         "section_url": row.section_url,
         "asset": asset,
+        "page_scoped": bool(page_url),
+        "language": language,
     }
+    cache_set(response_cache_key, result)
+    return result
