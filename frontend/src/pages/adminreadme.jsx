@@ -1,244 +1,132 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { FileText, Layout, Table, Image, User, Grid } from 'lucide-react';
 
-
-const SECTIONS = [
-  { id: 'title', label: 'Page Title' },
-  { id: 'headings', label: 'Headings' },
-  { id: 'bold-links', label: 'Bold & Links' },
-  { id: 'bullets', label: 'Bullet Lists' },
-  { id: 'divider', label: 'Divider Line' },
-  { id: 'notes', label: 'Note Boxes' },
-  { id: 'accordion', label: 'Collapsible Sections' },
-  { id: 'tables', label: 'Tables' },
-  { id: 'photos', label: 'Photos' },
-  { id: 'profile', label: 'Profile Photo' },
-  { id: 'slideshow', label: 'Slideshow' },
-];
-
-// Monospace "type this" block
-const CodeBlock = ({ children }) => (
-  <pre className="bg-[#0F3358] text-[#cfe0f3] text-sm leading-relaxed rounded-lg px-4 py-3 overflow-x-auto whitespace-pre-wrap font-mono">
-    {children}
-  </pre>
-);
-
-// Two-column row: raw syntax on the left, rendered result on the right.
-const Example = ({ syntax, children }) => (
-  <div className="grid md:grid-cols-2 gap-4 items-start">
-    <div>
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">Type this</p>
-      <CodeBlock>{syntax}</CodeBlock>
-    </div>
-    <div>
-      <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-1.5">You get</p>
-      <div className="border border-gray-200 rounded-lg px-4 py-3 bg-white">
-        {children}
-      </div>
-    </div>
-  </div>
-);
-
-const Section = ({ id, title, note, children }) => (
-  <section id={id} className="scroll-mt-24 space-y-4">
-    <h3 className="text-2xl font-bold text-[#174873] border-b-2 border-[#174873]/20 pb-2">
-      {title}
-    </h3>
-    {note && <p className="text-[#1F2937] text-md leading-relaxed">{note}</p>}
-    {children}
-  </section>
-);
-
-const AdminContentGuide = () => {
-  const [activeId, setActiveId] = useState('title');
-
-  const scrollTo = (id) => {
-    setActiveId(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
+const AdminReadme = () => {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-
-      {/* ---- HEADER ---- */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-semibold text-[#0F3A5F] tracking-tight">
-          Content Formatting Guide
-        </h1>
-        <p className="text-[#1F2937] text-lg mt-2 max-w-3xl">
-          What to type in the description box, and what it turns into.
+    <div className="bg-white p-5 sm:p-8 rounded-2xl border border-gray-200 shadow-xs space-y-6 font-lato animate-in slide-in-from-bottom-4 duration-500">
+      
+      {/* Clean, compact header matching other admin panel sections */}
+      <div className="border-b border-gray-100 pb-4">
+        <h2 className="text-lg sm:text-xl font-bold font-serif text-[#0F3358]">
+          Administrator Operating & Syntax Guide
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          Documentation for formatting page descriptions, card grids, profile cards, accordions, and data tables.
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-[200px_1fr] gap-8">
+      <div className="space-y-6">
 
-        {/* ---- STICKY SIDE NAV ---- */}
-        <nav className="lg:sticky lg:top-6 lg:self-start">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2 px-1">
-            On this page
-          </p>
-          <ul className="space-y-0.5">
-            {SECTIONS.map(s => (
-              <li key={s.id}>
-                <button
-                  onClick={() => scrollTo(s.id)}
-                  className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${
-                    activeId === s.id
-                      ? 'bg-[#174873]/[10%] text-[#174873] font-semibold'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {s.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        {/* ---- CONTENT ---- */}
-        <div className="space-y-12">
-
-          {/* PAGE TITLE */}
-          <Section
-            id="title"
-            title="Page Title"
-            note="The first line you type becomes the big page heading. No symbol needed."
-          >
-            <Example syntax={`Central Library`}>
-              <h2 className="text-2xl font-semibold text-[#0F3A5F] text-center border-b-2 border-[#174873]/20 pb-2">
-                Central Library
-              </h2>
-            </Example>
-          </Section>
-
-          {/* HEADINGS */}
-          <Section
-            id="headings"
-            title="Headings"
-            note="## makes a subheading, ### makes a smaller one."
-          >
-            <Example syntax={`## Library Timings\n### Weekdays`}>
-              <h3 className="text-xl font-bold text-[#174873]">Library Timings</h3>
-              <h4 className="text-md font-semibold text-[#2E6DA4] mt-1">Weekdays</h4>
-            </Example>
-          </Section>
-
-          {/* BOLD & LINKS */}
-          <Section
-            id="bold-links"
-            title="Bold & Links"
-            note="**text** bolds it. [text](url) makes a link. Plain https:// links work too."
-          >
-            <Example syntax={`**Open 24x7**. Apply here: [Samarth](https://mmv.samarth.edu.in)`}>
-              <p className="text-[#1F2937]">
-                <strong className="font-bold">Open 24x7</strong>. Apply here:{' '}
-                <span className="text-blue-600 underline">Samarth</span>
-              </p>
-            </Example>
-          </Section>
-
-          {/* BULLETS */}
-          <Section
-            id="bullets"
-            title="Bullet Lists"
-            note="Start a line with - to make a bullet. Back-to-back lines group into one list."
-          >
-            <Example syntax={`- Ground floor: Reading hall\n- First floor: Reference section`}>
-              <ul className="list-disc list-inside space-y-1 text-[#1F2937] marker:text-[#174873] marker:font-bold">
-                <li>Ground floor: Reading hall</li>
-                <li>First floor: Reference section</li>
-              </ul>
-            </Example>
-          </Section>
-
-          {/* DIVIDER */}
-          <Section
-            id="divider"
-            title="Divider Line"
-            note="Three dashes alone on a line draws a horizontal rule."
-          >
-            <Example syntax={`---`}>
-              <hr className="border-gray-300" />
-            </Example>
-          </Section>
-
-          {/* NOTES */}
-          <Section
-            id="notes"
-            title="Note Boxes"
-            note="> text < makes a highlighted note box. For longer notes, put > alone on its own line to open, and < at the end to close."
-          >
-            <Example syntax={`> Applications close on 30 June. <`}>
-              <div className="bg-[#200000]/[8%] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-black italic">
-                Applications close on 30 June.
-              </div>
-            </Example>
-          </Section>
-
-          {/* ACCORDION */}
-          <Section
-            id="accordion"
-            title="Collapsible Sections"
-            note="+++ Title ... +++ hides content behind a click-to-expand bar. Headings (##) and dividers (---) don't work inside it — bullets, bold, and links do."
-          >
-            <Example syntax={`+++ Eligibility Criteria\n- Minimum 75% attendance\n- No pending dues\n+++`}>
-              <div className="border border-gray-200 rounded-xl overflow-hidden">
-                <div className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-[#174873]/[6%]">
-                  <span className="text-md font-semibold text-[#174873]">Eligibility Criteria</span>
-                  <span className="text-[#174873] text-sm">▶</span>
-                </div>
-                <div className="px-4 py-3 space-y-1 border-t border-gray-100 text-sm">
-                  <ul className="list-disc list-inside space-y-1 marker:text-[#174873] marker:font-bold">
-                    <li>Minimum 75% attendance</li>
-                    <li>No pending dues</li>
-                  </ul>
-                </div>
-              </div>
-            </Example>
-          </Section>
-
-          {/* TABLES */}
-          <Section
-            id="tables"
-            title="Tables"
-            note="Wrap each row in | pipes |. First row is the header. This is separate from the ▲/▼ admin row-tables used on pages like Notices."
-          >
-            <Example syntax={`| Day | Timing |\n| Mon–Sat | 8 AM – 8 PM |`}>
-              <table className="w-full text-sm text-left">
-                <thead className="bg-[#fadccf]">
-                  <tr><th className="px-3 py-2 font-medium">Day</th><th className="px-3 py-2 font-medium">Timing</th></tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  <tr><td className="px-3 py-2">Mon–Sat</td><td className="px-3 py-2">8 AM – 8 PM</td></tr>
-                </tbody>
-              </table>
-            </Example>
-          </Section>
-
-          {/* PHOTOS */}
-          <Section
-            id="photos"
-            title="Photos"
-            note="The edit icon near a photo section sets photos per row (1–3), position (left/right/top), and size. Use the Upload Photo button to add images."
-          ></Section>
-
-          {/* PROFILE PHOTO */}
-          <Section
-            id="profile"
-            title="Profile Photo vs. Gallery Photos"
-            note="Profile-card pages (VC, Principal, Wardens) have two Upload Photo buttons: one on the profile card sets that person's photo, one in the gallery adds a regular photo. Pick the right one — it's automatic otherwise."
-          ></Section>
-
-          {/* SLIDESHOW */}
-          <Section
-            id="slideshow"
-            title="Slideshow"
-            note="Its own edit icon (separate from the photo gallery) sets height and max width. Add photos the same way, via Upload Photo."
-          ></Section>
-
+        {/* Section 1: Text & Links Formatting */}
+        <div className="bg-[#F8FAFC] rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-[#0F3358] flex items-center gap-2">
+            <FileText size={20} className="text-blue-600 shrink-0" /> 1. Text & Links Formatting
+          </h3>
+          <div className="bg-white p-4 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono space-y-2 text-slate-800 leading-relaxed">
+            <p><strong className="text-[#0F3358]">First Line of Content:</strong> Becomes the main big section title with underline.</p>
+            <p><strong className="text-[#0F3358]">## Section Title:</strong> Creates a major heading (Deep Navy font with maroon bar).</p>
+            <p><strong className="text-[#0F3358]">### Subsection Title:</strong> Creates a smaller subheading (Rotated diamond badge).</p>
+            <p><strong className="text-[#0F3358]">- List item:</strong> Converts to bullet point.</p>
+            <p><strong className="text-[#0F3358]">**Bold Text**:</strong> Renders text in bold.</p>
+            <p><strong className="text-[#0F3358]">*Italic Text* or _Text_:</strong> Renders text in italics.</p>
+            <p><strong className="text-[#0F3358]">[Link Text](/facilities/hostels):</strong> Converts to clickable link (internal or web link).</p>
+            <p><strong className="text-[#0F3358]">---:</strong> Inserts horizontal divider line.</p>
+          </div>
         </div>
+
+        {/* Section 2: 3-Column Grid Accordion Cards */}
+        <div className="bg-[#F8FAFC] rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-[#0F3358] flex items-center gap-2">
+            <Grid size={20} className="text-emerald-600 shrink-0" /> 2. 3-Column Grid Accordions (:::grid ... :::)
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600">
+            Renders 3 interactive cards side-by-side. Cards expand on click to reveal details and collapse on click.
+          </p>
+          <div className="bg-white p-4 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono space-y-1.5 text-slate-800">
+            <p className="text-blue-600 font-bold">:::grid</p>
+            <p className="text-slate-700">=== Hostel Rules</p>
+            <p className="text-slate-700">- Curfew time is **8:00 PM**</p>
+            <p className="text-slate-700">- Check [Hostel Guidelines](/facilities/hostels) for details</p>
+            <p className="text-slate-700">=== Mess Timings</p>
+            <p className="text-slate-700">- Breakfast: **7:30 AM - 9:00 AM**</p>
+            <p className="text-blue-600 font-bold">:::</p>
+            <div className="pt-2 text-xs text-slate-500 font-sans border-t border-slate-100">
+              <strong>Themes available:</strong> <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid</code> (Gold/Navy), <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid blue</code>, <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid green</code>, <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid slate</code>, <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid crimson</code>, <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid purple</code>, <code className="bg-slate-100 px-1 rounded text-slate-700">:::grid amber</code>.
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Inline Profile Cards */}
+        {/* Section 3: Staff Profile Cards */}
+        <div className="bg-[#F8FAFC] rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-[#0F3358] flex items-center gap-2">
+            <User size={20} className="text-[#D4AF37] shrink-0" /> 3. Staff & Warden Profile Cards
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600">
+            Admins can add staff/warden profile cards directly from the Admin Controls bar by clicking <code className="bg-white px-1.5 py-0.5 rounded border border-slate-200 font-bold text-[#0f3358]">+ Profile Card</code>.
+          </p>
+          <div className="bg-white p-4 rounded-lg border border-slate-200 text-xs sm:text-sm space-y-2 text-slate-800 font-sans">
+            <p><strong>Card Details:</strong> Full Name, Designation (e.g. Warden), Hostel / Department, University, Phone, Email, and Photo Avatar.</p>
+            <p className="text-slate-500 text-xs">💡 Photos can be uploaded directly inside the Add/Edit form and will render inside a clean circular avatar!</p>
+          </div>
+        </div>
+
+        {/* Section 4: Accordions & Callout Notes */}
+        <div className="bg-[#F8FAFC] rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-[#0F3358] flex items-center gap-2">
+            <Layout size={20} className="text-amber-600 shrink-0" /> 4. Accordions & Callout Notes
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs sm:text-sm font-mono">
+            <div className="bg-white p-4 rounded-lg border border-slate-200 space-y-1">
+              <p className="font-bold text-[#0F3358] font-sans">Full-Width Accordion:</p>
+              <p className="text-blue-600 font-bold">+++ Section Title</p>
+              <p className="text-slate-700">Enter accordion text here...</p>
+              <p className="text-blue-600 font-bold">+++</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg border border-slate-200 space-y-1">
+              <p className="font-bold text-[#0F3358] font-sans">Callout Note Box:</p>
+              <p className="text-blue-600 font-bold">&gt;</p>
+              <p className="text-slate-700">Notice text inside note box...</p>
+              <p className="text-blue-600 font-bold">&lt;</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: In-Description Tables */}
+        <div className="bg-[#F8FAFC] rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-[#0F3358] flex items-center gap-2">
+            <Table size={20} className="text-purple-600 shrink-0" /> 5. In-Description Tables (| Col 1 | Col 2 |)
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600">
+            Renders styled, responsive data tables directly inside any description text box using pipes (<code className="bg-white px-1 py-0.5 rounded border border-slate-200 font-mono">|</code>).
+          </p>
+          <div className="bg-white p-4 rounded-lg border border-slate-200 text-xs sm:text-sm font-mono space-y-1 text-slate-800">
+            <p className="text-blue-600 font-bold">| Warden Name | Hostel | Contact Number |</p>
+            <p className="text-slate-400">| --- | --- | --- |</p>
+            <p>| Dr. Moumita Das | Swasti Kunj | +91 8967064498 |</p>
+            <p>| Dr. Rana Noor | Swasti Kunj | +91 9451735063 |</p>
+            <div className="pt-2 text-xs text-slate-500 font-sans border-t border-slate-100 space-y-1">
+              <p>• <strong>Line 1 (Headers):</strong> Defines table column headers with deep navy background and gold borders.</p>
+              <p>• <strong>Line 2 (Divider):</strong> Use <code className="bg-slate-100 px-1 rounded text-slate-700">| --- | --- |</code> to split headers from data rows.</p>
+              <p>• <strong>Formatting Support:</strong> Table cells support <code className="bg-slate-100 px-1 rounded text-slate-700">**bold**</code>, <code className="bg-slate-100 px-1 rounded text-slate-700">*italics*</code>, and <code className="bg-slate-100 px-1 rounded text-slate-700">[clickable links](url)</code>.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 6: Interactive Page Admin Controls */}
+        <div className="bg-[#F8FAFC] rounded-xl border border-slate-200 p-4 sm:p-6 space-y-3">
+          <h3 className="text-base sm:text-lg font-bold text-[#0F3358] flex items-center gap-2">
+            <Image size={20} className="text-indigo-600 shrink-0" /> 6. Interactive Page Admin Controls & Tables
+          </h3>
+          <ul className="text-xs sm:text-sm text-slate-700 space-y-2 list-disc list-inside font-medium leading-relaxed">
+            <li><strong className="text-[#0F3358]">Page Admin Toolbar:</strong> When logged in as admin, floating edit bars, photo size controls (⚙), slideshow controls, and PDF upload inputs appear directly on live pages.</li>
+            <li><strong className="text-[#0F3358]">Interactive Tables:</strong> Click <code className="bg-white px-1 py-0.5 rounded border border-slate-200 font-mono">+ Col</code> to add custom columns and <code className="bg-white px-1 py-0.5 rounded border border-slate-200 font-mono">Add Row</code> for structured data tables. Use ▲ / ▼ to reorder rows easily.</li>
+          </ul>
+        </div>
+
       </div>
     </div>
   );
 };
 
-export default AdminContentGuide;
+export default AdminReadme;

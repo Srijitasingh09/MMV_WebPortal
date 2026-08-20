@@ -2,15 +2,16 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
+import ProfileCardsBlock from './ProfileCardsBlock';
 
-const API = `http://${window.location.hostname}:8000`;
+const API =import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // Profile photos are tagged via a filename prefix so they can be told apart
 // from any other photos uploaded on the same page (e.g. via the old
 // standalone "photo" block). This needs no backend changes since photo_name
 // is just whatever filename the browser sends.
 const PROFILE_PHOTO_TAG = '__profile_photo__';
-
+const CARD_PHOTO_TAG = '__profile_card_';
 // Same idea, but for PDFs uploaded into a table cell (e.g. a "syllabus PDF"
 // column). They're stored in the same backend `pdfs` table as the standalone
 // pdf-list block, so they need a tag to be told apart — otherwise they'd also
@@ -19,23 +20,114 @@ const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
-  heading:        'text-2xl sm:text-3xl font-semibold text-[#7D311F]',   // main page-level heading (first line of description)
-  subheading:     'text-xl sm:text-2xl font-bold text-[#7D311F]',       // '## ' — description body, description notes, accordion notes
-  subSubheading:  'text-base sm:text-lg font-bold text-[#174873]',    // '### ' — description body, description notes, accordion notes
-  accordionTitle: 'text-sm sm:text-[16px] font-semibold text-[#174873]',    // accordion bar title ('+++ Title')
+  heading:        'text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-[#0f3358] font-cinzel tracking-wide pb-1.5',   // main page-level heading (first line of description)
+  subheading:     'text-base sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel',       // '## ' — description body, description notes, accordion notes
+  subSubheading:  'text-xs sm:text-base md:text-lg font-bold text-[#174873] font-sans-official',    // '### ' — description body, description notes, accordion notes
+  accordionTitle: 'text-xs sm:text-sm md:text-base font-semibold text-[#0f3358]',    // accordion bar title ('+++ Title')
 };
 
 // ─── Body text size per description section ────────────────────────────────
 const BODY_STYLES = {
-  default:       'text-md',   // text before any '## '/'### ' has appeared yet
-  subheading:    'text-md', // text under the most recent '## ' subheading
-  subSubheading: 'text-md',   // text under the most recent '### ' sub-subheading
+  default:       'text-xs sm:text-sm md:text-base leading-relaxed',   // text before any '## '/'### ' has appeared yet
+  subheading:    'text-xs sm:text-sm md:text-base leading-relaxed', // text under the most recent '## ' subheading
+  subSubheading: 'text-xs sm:text-sm md:text-base leading-relaxed',   // text under the most recent '### ' sub-subheading
 };
 
 // Defined outside component so it never causes stale closure issues inside useCallback/useEffect
 const blankProfile = {
   name: '', designation: '', university: '', address: '',
   phone: '', officeContact: '', email: ''
+};
+
+// ─── Shared link / inline-formatting helpers ────────────────────────────────
+// Defined at module scope (not inside the component) so both the description
+// parser AND the admin data table's cell viewer can use the exact same logic
+// for turning "[label](url)" / bare "https://…" text into clickable links.
+//
+// Links are resolved BEFORE bold/italic splitting — a lot of real URLs
+// contain underscores (Wikipedia, Google Docs, etc.), and running the old
+// italics regex over the whole string first would grab text between two
+// unrelated underscores inside a URL and slice the href apart, silently
+// breaking the link. Resolving links first means their underscores/asterisks
+// are never touched by the formatting pass.
+const splitLinks = (text) => {
+  if (typeof text !== 'string') return [{ type: 'text', content: text }];
+  // Matches [label](url) OR bare http(s):// or /relative URLs
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)/g;
+  const segments = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = linkRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      segments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    const label = match[1] || match[3];
+    // Strip trailing sentence punctuation (e.g. "...(url).") that isn't
+    // actually part of a bare URL.
+    const href = (match[2] || match[3]).replace(/[),.;:!?]+$/, '');
+    segments.push({ type: 'link', label, href });
+    lastIndex = match.index + match[0].length;
+  }
+  if (lastIndex < text.length) {
+    segments.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+  return segments.length > 0 ? segments : [{ type: 'text', content: text }];
+};
+
+const renderLink = (seg, key) => {
+  const isInternal = seg.href.startsWith('/');
+  return (
+    <a
+      key={key}
+      href={seg.href}
+      target={isInternal ? "_self" : "_blank"}
+      rel={isInternal ? "" : "noopener noreferrer"}
+      className="text-blue-600 hover:text-blue-800 hover:underline break-all font-medium"
+    >
+      {seg.label}
+    </a>
+  );
+};
+
+const renderTextWithLinks = (text) =>
+  splitLinks(text).map((seg, i) =>
+    seg.type === 'link'
+      ? renderLink(seg, `link-${i}`)
+      : <React.Fragment key={`txt-${i}`}>{seg.content}</React.Fragment>
+  );
+
+// Renders inline bold (**text**), italics (*text* or _text_) + links together.
+// Links are resolved first via splitLinks, then bold/italic markers are
+// applied only inside the plain-text segments around them.
+const renderInlineFormatting = (text) => {
+  if (!text || typeof text !== 'string') return text || '';
+  return splitLinks(text).map((seg, i) => {
+    if (seg.type === 'link') {
+      return renderLink(seg, `fmt-link-${i}`);
+    }
+    const parts = seg.content.split(/(\*\*.*?\*\*|\*.*?\*|_.*?_)/g).filter(Boolean);
+    return (
+      <React.Fragment key={`fmt-txt-${i}`}>
+        {parts.map((part, j) => {
+          if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+            return (
+              <strong key={j} className="font-bold">
+                {part.slice(2, -2)}
+              </strong>
+            );
+          }
+          if (((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) && part.length >= 2) {
+            return (
+              <em key={j} className="italic">
+                {part.slice(1, -1)}
+              </em>
+            );
+          }
+          return part;
+        })}
+      </React.Fragment>
+    );
+  });
 };
 
 const GenericContentPage = ({
@@ -59,6 +151,7 @@ const GenericContentPage = ({
   const imageRef  = useRef(null);
   const pdfRef    = useRef(null);
   const profileImageRef = useRef(null);
+  const profileCardsRef = useRef(null);
 
   const [data,       setData]       = useState({});
   const [loading,    setLoading]    = useState(true);
@@ -70,6 +163,7 @@ const GenericContentPage = ({
   // in the render below). openSections tracks which block indices are open;
   // every block starts closed until clicked.
   const [openSections, setOpenSections] = useState({});
+  const [openGridCards, setOpenGridCards] = useState({});
 
   // table state
   const [columns,      setColumns]      = useState(tableColumns);
@@ -122,7 +216,7 @@ const GenericContentPage = ({
   // block — the two never overlap, so a page can have both independently.
   const allPhotos    = data.photos || [];
   const profilePhoto  = allPhotos.find(p => p.photo_name?.startsWith(PROFILE_PHOTO_TAG)) || null;
-  const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG));
+ const galleryPhotos = allPhotos.filter(p => !p.photo_name?.startsWith(PROFILE_PHOTO_TAG) && !p.photo_name?.startsWith(CARD_PHOTO_TAG));
 
   // Same split for PDFs: a PDF uploaded into a table cell is tagged so it
   // only shows up inside that table cell, never in the standalone "Documents"
@@ -149,6 +243,7 @@ const GenericContentPage = ({
       }
 
       setOpenSections({}); // reset accordion open/closed state when navigating to a different page
+      setOpenGridCards({});
 
       if (hasTable) {
         setColumns(parsed.columns || tableColumns);
@@ -178,6 +273,7 @@ const GenericContentPage = ({
       if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); }
       if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
       setOpenSections({});
+      setOpenGridCards({});
       setPhotoSettings(blankPhotoSettings);
       setEditPhotoSettings(blankPhotoSettings);
       setEditSlideSettings(blankPhotoSettings);
@@ -508,162 +604,221 @@ const GenericContentPage = ({
   );
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-4">
-      {/*---PILL HEADING---*/}
-       <div className="relative left-1/2 -translate-x-1/2 w-screen mb-10">
-        <div className="w-[90%] sm:w-[75%] md:w-[60%] lg:w-[50%] bg-[#585858] rounded-r-full shadow-sm">
-          <div className="max-w-5xl mx-auto min-h-16 flex items-center justify-center px-4 sm:px-6 py-3">
-            <h1 className="text-white font-semibold text-lg sm:text-2xl md:text-3xl text-center leading-snug">
-              {title}
-            </h1>
-          </div>
+    <div className="max-w-6xl mx-auto px-3.5 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8">
+      {/* ── BHU OFFICIAL PORTAL PAGE HEADING (WITHOUT BACKGROUND CONTAINER) ── */}
+      <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4">
+        {/* Left Side: Page Name */}
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+          <h1 className="text-[#0f3358] font-cinzel font-bold text-base sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            {title}
+          </h1>
+        </div>
+        {/* Right Side: Section / Page Breadcrumb (Smaller) */}
+        <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+          <span className="text-slate-400">{section ? section.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : (backLabel && backLabel !== 'Home' ? backLabel : 'Home')}</span>
+          <span className="text-slate-300">/</span>
+          <span className="text-[#7d311f] font-semibold">{title}</span>
         </div>
       </div>
-      {/* ── PROFILE SECTION ── */}
+
+      {/* ── OFFICIAL EXECUTIVE PROFILE CARD (legacy single-profile block, kept for existing pages using pageType 'profile') ── */}
       {hasProfile && (
-        <div className="bg-[#0D1F3C] rounded-2xl px-4 sm:px-8 py-6 sm:py-8 text-center relative">
-          {/*--admin profile edit --*/}
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#0f3358] p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
+          {/* Admin Edit Button */}
           {isAdmin && !isEditingProfile && (
             <button
               onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }}
-              className="absolute top-4 right-4 px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium bg-white "
+              className="absolute top-4 right-4 z-20 px-4 py-2 bg-[#d4af37] text-[#0f3358] hover:bg-[#e5c158] rounded-xl text-xs font-bold shadow-md transition-all border border-amber-300 flex items-center gap-1.5"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Edit Profile
             </button>
           )}
 
           {isEditingProfile ? (
-            <div className="text-left max-w-xl mx-auto space-y-3">
-              <h3 className="text-lg font-bold text-white text-center mb-2">Edit Profile</h3>
+            <div className="text-left max-w-2xl mx-auto space-y-4 bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-2xl text-slate-800 shadow-2xl relative z-10 border border-amber-300">
+              <div className="flex items-center justify-between border-b pb-3">
+                <h3 className="text-xl font-bold text-[#0f3358] font-cinzel">Edit Profile</h3>
+                <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
+              </div>
 
-              {/* PROFILE PHOTO */}
-              <div className="flex flex-col items-center gap-2 mb-2">
+              {/* PROFILE PHOTO EDIT */}
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
                 {profilePhoto ? (
                   <img
                     src={`${API}${profilePhoto.photo_url}`}
                     alt={profilePhoto.photo_name}
-                    className="rounded-lg object-cover border border-gray-200 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
+                    className="rounded-xl object-cover border-2 border-[#d4af37] w-36 h-44 shadow-md"
                     style={{ objectPosition: 'top center' }}
                   />
                 ) : (
-                  <div className="w-[160px] h-[190px] sm:w-[220px] sm:h-[260px] flex items-center justify-center rounded-lg border-2 border-dashed border-gray-300 text-gray-400 text-sm bg-white">
-                    No photo yet
+                  <div className="w-36 h-44 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 text-xs bg-white p-2 text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 mb-1 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    No Photo Uploaded
                   </div>
                 )}
-                <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => profileImageRef.current?.click()}
-                    className="px-3 py-1.5 bg-white text-black rounded-lg text-xs font-medium"
-                  >
-                    {profilePhoto ? 'Change Photo' : 'Upload Photo'}
-                  </button>
-                  {profilePhoto && (
+                <div className="space-y-2 text-center sm:text-left">
+                  <p className="text-xs font-semibold text-slate-600">Profile Photo</p>
+                  <p className="text-[11px] text-slate-500">Recommended high-resolution portrait format.</p>
+                  <input type="file" accept="image/*" ref={profileImageRef} className="hidden" onChange={handleProfilePhotoUpload} />
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
                     <button
-                      onClick={handleRemoveProfilePhoto}
-                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg text-xs font-medium bg-white"
+                      onClick={() => profileImageRef.current?.click()}
+                      className="px-3.5 py-1.5 bg-[#0f3358] text-white rounded-lg text-xs font-semibold hover:bg-[#174873] transition-colors"
                     >
-                      Remove Photo
+                      {profilePhoto ? 'Change Photo' : 'Upload Photo'}
                     </button>
-                  )}
+                    {profilePhoto && (
+                      <button
+                        onClick={handleRemoveProfilePhoto}
+                        className="px-3 py-1.5 border border-red-200 text-red-600 rounded-lg text-xs font-medium hover:bg-red-50 transition-colors"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
 
-         
-              {[
-                { key: 'name',          label: 'Name' },
-                { key: 'designation',   label: 'Designation' },
-                { key: 'university',    label: 'University / Department' },
-                { key: 'address',       label: 'Address' },
-                { key: 'phone',         label: 'Contact' },
-                { key: 'officeContact', label: 'Office Contact' },
-                { key: 'email',         label: 'Email' },
-              ].map(field => (
-                <div key={field.key}>
-                  <label className="block text-base font-semibold text-white mb-1">
-                    {field.label}
-                  </label>
-                  <input
-                    value={editProfile[field.key] || ''}
-                    onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
-                    placeholder={field.label}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]/20 bg-white"
-                  />
-                </div>
-              ))}
+              {/* INPUT FIELDS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { key: 'name',          label: 'Full Name' },
+                  { key: 'designation',   label: 'Official Designation' },
+                  { key: 'university',    label: 'Department / Institution' },
+                  { key: 'address',       label: 'Office Location / Address' },
+                  { key: 'phone',         label: 'Contact Number' },
+                  { key: 'officeContact', label: 'Office Phone / Extension' },
+                  { key: 'email',         label: 'Official Email Address' },
+                ].map(field => (
+                  <div key={field.key} className={field.key === 'address' || field.key === 'university' ? 'sm:col-span-2' : ''}>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 uppercase tracking-wider">
+                      {field.label}
+                    </label>
+                    <input
+                      value={editProfile[field.key] || ''}
+                      onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
+                      placeholder={field.label}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"
+                    />
+                  </div>
+                ))}
+              </div>
 
-              <div className="flex gap-3 justify-center pt-2">
-                <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-4 py-2 bg-white text-black rounded-lg text-sm font-medium disabled:opacity-50 ">
-                  {savingProfile ? 'Saving...' : 'Save'}
-                </button>
+              <div className="flex gap-3 justify-end pt-3 border-t">
                 <button onClick={() => setIsEditingProfile(false)}
-                  className="px-4 py-2 text-black rounded-lg font-medium bg-white text-sm">
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-semibold hover:bg-slate-100 text-xs">
                   Cancel
+                </button>
+                <button onClick={handleSaveProfile} disabled={savingProfile}
+                  className="px-5 py-2 bg-[#0f3358] text-white rounded-lg text-xs font-bold hover:bg-[#174873] disabled:opacity-50 shadow-md">
+                  {savingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
                 </button>
               </div>
             </div>
           ) : profile.name ? (
-            <> {/*--user view profile--*/}
-              {profilePhoto && (
-                <img
-                  src={`${API}${profilePhoto.photo_url}`}
-                  alt={profilePhoto.photo_name}
-                  className="rounded-lg object-cover border-3 border-white mx-auto mb-4 w-[160px] h-[190px] sm:w-[220px] sm:h-[260px]"
-                  style={{ objectPosition: 'top center' }}
-                />
+            /* ── EXECUTIVE USER VIEW ── */
+            <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+              {/* Executive Photo with Simple Muted Gold Frame */}
+              {profilePhoto ? (
+                <div className="relative flex-shrink-0">
+                  <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
+                    <img
+                      src={`${API}${profilePhoto.photo_url}`}
+                      alt={profilePhoto.photo_name}
+                      className="rounded-xl object-cover w-44 h-56 sm:w-52 sm:h-64"
+                      style={{ objectPosition: 'top center' }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="relative flex-shrink-0">
+                  <div className="p-1 rounded-2xl border border-[#d4af37]/50 bg-[#081a2f] shadow-md">
+                    <div className="w-44 h-56 sm:w-52 sm:h-64 rounded-xl bg-[#081a2f] flex flex-col items-center justify-center text-slate-400 p-4 text-center border border-white/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-16 h-16 mb-2 text-[#d4af37]/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      <span className="text-xs font-semibold text-slate-300">Administrative Office</span>
+                    </div>
+                  </div>
+                </div>
               )}
 
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#E8C97A] break-words">
-                {profile.name}
-              </h2>
+              {/* Profile Details & Metadata Cards */}
+              <div className="flex-1 text-center md:text-left space-y-4 w-full">
+                <div>
+                  <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white font-cinzel tracking-wide leading-tight">
+                    {profile.name}
+                  </h2>
+                  {profile.designation && (
+                    <p className="text-base sm:text-lg md:text-xl font-semibold text-[#fce8b2] mt-1 font-sans">
+                      {profile.designation}
+                    </p>
+                  )}
+                  {profile.university && (
+                    <p className="text-sm sm:text-base text-slate-300 mt-1 font-medium">
+                      {profile.university}
+                    </p>
+                  )}
+                  {profile.address && (
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 flex items-center justify-center md:justify-start gap-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#d4af37]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      {profile.address}
+                    </p>
+                  )}
+                </div>
 
-              {profile.designation && (
-                <p className="text-base sm:text-lg md:text-2xl font-semibold text-[#E8C97A] mt-1">
-                  {profile.designation}
-                </p>
-              )}
+                {/* Contact Items — Displayed on separate lines, tight wrapping container */}
+                <div className="flex flex-col items-center md:items-start gap-2.5 pt-2 w-full">
+                  {profile.phone && (
+                    <a
+                      href={`tel:${profile.phone}`}
+                      className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                      </div>
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Phone No.:</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white">{profile.phone}</span>
+                      </div>
+                    </a>
+                  )}
 
-              {profile.university && (
-                <p className="text-base text-white mt-1">
-                  {profile.university}
-                </p>
-              )}
+                  {profile.officeContact && (
+                    <div className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 text-left w-fit max-w-full">
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                      </div>
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Office Extension:</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white">{profile.officeContact}</span>
+                      </div>
+                    </div>
+                  )}
 
-              {profile.address && (
-                <p className="text-sm text-white mt-1">
-                  {profile.address}
-                </p>
-              )}
-
-              <div className="mt-4 space-y-1">
-                {profile.phone && (
-                  <p className="text-sm text-white">
-                    <span className="font-semibold">Contact:</span>{" "}
-                    {profile.phone}
-                  </p>
-                )}
-
-                {profile.officeContact && (
-                  <p className="text-sm text-white">
-                    <span className="font-semibold">Office Contact:</span>{" "}
-                    {profile.officeContact}
-                  </p>
-                )}
-
-                {profile.email && (
-                  <p className="text-sm text-white">
-                    <span className="font-semibold">Email:</span>{" "}
-                    {profile.email}
-                  </p>
-                )}
-
+                  {profile.email && (
+                    <a
+                      href={`mailto:${profile.email}`}
+                      className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                      </div>
+                      <div className="min-w-0 pr-1">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider mr-2">Official Email:</span>
+                        <span className="text-xs sm:text-sm font-semibold text-white break-all">{profile.email}</span>
+                      </div>
+                    </a>
+                  )}
+                </div>
               </div>
-            </>
+            </div>
           ) : (
-            <p className="italic text-gray-400">
-              {isAdmin ? 'No profile yet. Click Edit Profile to add one.' : 'Profile coming soon.'}
-            </p>
+            <div className="text-center py-8 text-slate-300 italic">
+              {isAdmin ? 'No profile details saved. Click Edit Profile above to configure.' : 'Official leadership profile coming soon.'}
+            </div>
           )}
         </div>
       )}
@@ -696,21 +851,18 @@ const GenericContentPage = ({
               Edit Description
             </button>
           )}
+          <button onClick={() => profileCardsRef.current?.openAddForm()}
+            className="px-4 py-2 border-2 border-[#174873] text-[#174873] rounded-lg text-sm font-medium">
+            Add Profile Card
+          </button>
         </div>
       )}
 
-      {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
-      {(hasPhoto || hasDesc || hasSlideshow) && (
-        <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${
-          hasPhoto && !hasSlideshow && galleryPhotos.length && hasDesc 
-           ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
-           : 'md:grid-cols-3' // Default fallback grid structure
-        }`}>
-
-          {/* SLIDESHOW */}
-          {hasSlideshow && (
-             <div className="md:col-span-3 w-full">
-              {isAdmin && (
+      {/* ── SLIDESHOW ── rendered as its own full-width block, ahead of the
+          profile cards below, so slideshow always sits above them. ── */}
+      {hasSlideshow && (
+        <div className="w-full">
+          {isAdmin && (
                 <div className="flex justify-end mb-2 relative">
                   <button
                     onClick={() => { setEditSlideSettings(photoSettings); setIsEditingSlideSize(v => !v); }}
@@ -767,6 +919,30 @@ const GenericContentPage = ({
             </div>
             </div>
           )}
+
+      {/* ── STAFF / WARDEN PROFILE CARDS ── standalone, shows on every page
+          regardless of pageType. Positioned after the slideshow/photos and
+          before the description. Admin can add up to as many as needed;
+          layout auto-wraps: 1 centered, 2-3 side by side, 4+ wrap into rows
+          of 3 with any leftover row centered. Data is separate from the
+          page description/content below. ── */}
+      <ProfileCardsBlock
+        ref={profileCardsRef}
+        section={section}
+        subsection={subsection}
+        content={data}
+        isAdmin={isAdmin}
+        token={token}
+        onChanged={(fresh) => setData(fresh)}
+      />
+
+      {/* ── PHOTO + DESCRIPTION LAYOUT ── */}
+      {(hasPhoto || hasDesc) && (
+        <div className={`grid grid-cols-1 gap-4 sm:gap-6 ${
+          hasPhoto && galleryPhotos.length && hasDesc 
+           ? (photoSettings.align === 'top' ? '' : 'md:grid-cols-3') 
+           : 'md:grid-cols-3' // Default fallback grid structure
+        }`}>
 
           {/*---photo grid options---*/}
           {hasPhoto && galleryPhotos.length > 0 && (
@@ -851,7 +1027,7 @@ const GenericContentPage = ({
                 'sm:grid-cols-2'
               }`}>
                 {galleryPhotos.map((photo) => (
-                  <div key={photo.id} className="relative min-w-0 border border-blue-100 shadow-lg bg-[#eef6ff] p-3 rounded-2xl text-center">
+                  <div key={photo.id} className="relative min-w-0 border border-slate-200 shadow-md bg-slate-50 p-3 rounded-2xl text-center">
                     <img
                       src={`${API}${photo.photo_url}`}
                       alt={photo.photo_name}
@@ -889,7 +1065,7 @@ const GenericContentPage = ({
             }`}>
 
               {/*---description--*/}
-              <div className="bg-[#fff8cd] rounded-2xl border border-gray-200 shadow-sm p-4 sm:p-8 w-full min-h-[180px]">
+              <div className="bg-white rounded-2xl border-2 border-[#7d311f]/30 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     <textarea
@@ -949,60 +1125,102 @@ const GenericContentPage = ({
                     let accordionTitle = '';
                     let inAccordion = false;
                     let accordionCount = 0;     // gives each rendered block a stable index for open/closed state
-                    {/*--links---*/}
-                    const renderTextWithLinks = (text) => {      
-                      // Regex: matches [label](url) OR bare http(s):// URLs
-                      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s]+)/g;
-                      const parts = [];
-                      let lastIndex = 0;
-                      let match;
-                      let keyCounter = 0;
-                      while ((match = linkRegex.exec(text)) !== null) {
-                        // Push any plain text before this match
-                        if (match.index > lastIndex) {
-                          parts.push(text.slice(lastIndex, match.index));
-                        }
-                        const label = match[1] || match[3]; // markdown label or raw URL
-                        const href  = match[2] || match[3]; // markdown url or raw URL
-                        parts.push(
-                          <a
-                            key={`link-${keyCounter++}`}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 break-all "
-                          >
-                            {label}
-                          </a>
-                        );
-                        lastIndex = match.index + match[0].length;
-                      }
-                      // Remaining plain text
-                      if (lastIndex < text.length) {
-                        parts.push(text.slice(lastIndex));
-                      }
-                      return parts.length > 0 ? parts : [text];
+
+                    let gridBuffer = [];
+                    let inGrid = false;
+                    let gridTheme = 'default';
+                    let gridCount = 0;
+
+                    const GRID_THEMES = {
+                      default: {
+                        cardBorder: 'border-slate-200/90 hover:border-[#d4af37]',
+                        cardBg: 'bg-white hover:bg-[#FAF7F2]/80',
+                        headerHoverBg: 'group-hover:bg-[#FAF7F2]',
+                        headerText: 'text-[#0f3358] group-hover:text-[#7d311f]',
+                        badge: 'bg-[#d4af37] group-hover:bg-[#7d311f]',
+                        arrowBg: 'bg-slate-100 group-hover:bg-[#0f3358]',
+                        arrowText: 'text-slate-500 group-hover:text-white',
+                        dividerBorder: 'border-[#d4af37]/40',
+                        bodyBg: 'bg-white',
+                      },
+                      blue: {
+                        cardBorder: 'border-blue-100 hover:border-blue-400',
+                        cardBg: 'bg-white hover:bg-blue-50/60',
+                        headerHoverBg: 'group-hover:bg-blue-50/50',
+                        headerText: 'text-[#174873] group-hover:text-blue-900',
+                        badge: 'bg-blue-500 group-hover:bg-[#174873]',
+                        arrowBg: 'bg-blue-50 group-hover:bg-[#174873]',
+                        arrowText: 'text-blue-500 group-hover:text-white',
+                        dividerBorder: 'border-blue-200',
+                        bodyBg: 'bg-white',
+                      },
+                      green: {
+                        cardBorder: 'border-emerald-100 hover:border-emerald-500',
+                        cardBg: 'bg-white hover:bg-emerald-50/60',
+                        headerHoverBg: 'group-hover:bg-emerald-50/50',
+                        headerText: 'text-emerald-900 group-hover:text-emerald-950',
+                        badge: 'bg-emerald-500 group-hover:bg-emerald-700',
+                        arrowBg: 'bg-emerald-50 group-hover:bg-emerald-700',
+                        arrowText: 'text-emerald-600 group-hover:text-white',
+                        dividerBorder: 'border-emerald-200',
+                        bodyBg: 'bg-white',
+                      },
+                      slate: {
+                        cardBorder: 'border-slate-200 hover:border-slate-500',
+                        cardBg: 'bg-white hover:bg-slate-100/70',
+                        headerHoverBg: 'group-hover:bg-slate-100/50',
+                        headerText: 'text-slate-800 group-hover:text-black',
+                        badge: 'bg-slate-400 group-hover:bg-slate-700',
+                        arrowBg: 'bg-slate-100 group-hover:bg-slate-800',
+                        arrowText: 'text-slate-500 group-hover:text-white',
+                        dividerBorder: 'border-slate-200',
+                        bodyBg: 'bg-white',
+                      },
+                      crimson: {
+                        cardBorder: 'border-rose-100 hover:border-[#7d311f]',
+                        cardBg: 'bg-white hover:bg-rose-50/60',
+                        headerHoverBg: 'group-hover:bg-rose-50/40',
+                        headerText: 'text-[#7d311f] group-hover:text-rose-900',
+                        badge: 'bg-[#7d311f] group-hover:bg-rose-700',
+                        arrowBg: 'bg-rose-50 group-hover:bg-[#7d311f]',
+                        arrowText: 'text-[#7d311f] group-hover:text-white',
+                        dividerBorder: 'border-rose-200',
+                        bodyBg: 'bg-white',
+                      },
+                      purple: {
+                        cardBorder: 'border-purple-100 hover:border-purple-500',
+                        cardBg: 'bg-white hover:bg-purple-50/60',
+                        headerHoverBg: 'group-hover:bg-purple-50/40',
+                        headerText: 'text-purple-900 group-hover:text-purple-950',
+                        badge: 'bg-purple-500 group-hover:bg-purple-700',
+                        arrowBg: 'bg-purple-50 group-hover:bg-purple-700',
+                        arrowText: 'text-purple-600 group-hover:text-white',
+                        dividerBorder: 'border-purple-200',
+                        bodyBg: 'bg-white',
+                      },
+                      amber: {
+                        cardBorder: 'border-amber-100 hover:border-amber-500',
+                        cardBg: 'bg-white hover:bg-amber-50/60',
+                        headerHoverBg: 'group-hover:bg-amber-50/40',
+                        headerText: 'text-amber-900 group-hover:text-amber-950',
+                        badge: 'bg-amber-500 group-hover:bg-amber-700',
+                        arrowBg: 'bg-amber-50 group-hover:bg-amber-700',
+                        arrowText: 'text-amber-600 group-hover:text-white',
+                        dividerBorder: 'border-amber-200',
+                        bodyBg: 'bg-white',
+                      },
                     };
 
-                    // Renders inline bold (**text**) + links together, usable anywhere
-                    const renderInlineFormatting = (text) => {
-                      const parts = text.split(/(\*\*.*?\*\*)/g).filter(Boolean);
-                      return parts.map((part, i) => {
-                        if (part.startsWith('**') && part.endsWith('**')) {
-                          return (
-                            <strong key={i} className="font-bold">
-                              {renderTextWithLinks(part.slice(2, -2))}
-                            </strong>
-                          );
-                        }
-                        return <span key={i}>{renderTextWithLinks(part)}</span>;
-                      });
-                    };
-                    {/*bullets*/}
+                    {/*--links---*/}
+                    {/*--links--- resolved via the module-level splitLinks/renderInlineFormatting
+                        helpers defined near the top of the file, shared with the
+                        admin data table's cell viewer below. ---*/}
+
+                    //bullets
                     const flushBullets = () => {
                       if (bulletBuffer.length > 0) {
                         elements.push(
-                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-black marker:text-[#174873] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
+                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#7d311f] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
                             {bulletBuffer.map((b, i) => (
                               <li key={i}>{renderInlineFormatting(b)}</li>
                             ))}
@@ -1012,17 +1230,9 @@ const GenericContentPage = ({
                       }
                     };
                     
+
+
                     {/*notes*/}
-                    // Renders the whole accumulated note block as ONE callout box.
-                    // Supports the same formatting as the main description:
-                    // - '## ' / '### ' become headings (smaller, since they're
-                    //   inside a callout — text-sm/text-xs instead of text-lg/base)
-                    // - '- ' lines become real bullet points
-                    // - '---' becomes a divider line
-                    // - '**bold**' and links work on every line, including
-                    //   inside headings and bullets
-                    // Consecutive non-bullet lines stay as separate lines (breaks
-                    // preserved); consecutive bullet lines group into one <ul>.
                     const flushNote = () => {
                       if (noteBuffer.length > 0) {
                         const noteElements = [];
@@ -1031,7 +1241,7 @@ const GenericContentPage = ({
                         const flushNoteBullets = () => {
                           if (noteBulletBuffer.length > 0) {
                             noteElements.push(
-                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1">
+                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
                                 {noteBulletBuffer.map((b, i) => (
                                   <li key={i}>{renderInlineFormatting(b)}</li>
                                 ))}
@@ -1045,35 +1255,36 @@ const GenericContentPage = ({
                           if (lineText.startsWith('### ')) {
                             flushNoteBullets();
                             noteElements.push(
-                              <h4 key={`note-h4-${i}`} className={`${HEADING_STYLES.subSubheading} mt-2 not-italic`}>
-                                {renderInlineFormatting(lineText.slice(4))}
+                              <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                                <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                                <span>{renderInlineFormatting(lineText.slice(4))}</span>
                               </h4>
                             );
                           } else if (lineText.startsWith('## ')) {
                             flushNoteBullets();
                             noteElements.push(
-                              <h3 key={`note-h3-${i}`} className={`${HEADING_STYLES.subheading} mt-2 not-italic`}>
-                                {renderInlineFormatting(lineText.slice(3))}
+                              <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                                <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                                <span>{renderInlineFormatting(lineText.slice(3))}</span>
                               </h3>
                             );
                           } else if (lineText === '---') {
                             flushNoteBullets();
                             noteElements.push(
-                              <hr key={`note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                              <hr key={`note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
                             );
                           } else if (lineText.startsWith('- ')) {
                             noteBulletBuffer.push(lineText.slice(2));
                           } else {
                             flushNoteBullets();
                             noteElements.push(
-                              <div key={`note-line-${i}`}>{renderInlineFormatting(lineText)}</div>
+                              <div key={`note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
                             );
                           }
                         });
                         flushNoteBullets();
-                        {/*notes normal text*/}
                         elements.push(
-                          <div key={`note-${elements.length}`} className="bg-[#FFFBEA] border-l-4 border-[#174873] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
+                          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
                             {noteElements}
                           </div>
                         );
@@ -1082,12 +1293,137 @@ const GenericContentPage = ({
                       inNote = false;
                     };
 
+                    //dynamic grid accordion cards - Hubspot style clean cards with hover color transitions & zero hollow spaces
+                    const flushGrid = () => {
+                      if (gridBuffer.length === 0) {
+                        inGrid = false;
+                        return;
+                      }
+
+                      const gridId = gridCount++;
+                      const themeKey = gridTheme.toLowerCase();
+                      const theme = GRID_THEMES[themeKey] || GRID_THEMES.default;
+                      const cards = [];
+                      let currentCard = null;
+
+                      gridBuffer.forEach((line) => {
+                        const t = line.trim();
+                        if (t.startsWith('=== ')) {
+                          if (currentCard) cards.push(currentCard);
+                          currentCard = { title: t.slice(4), lines: [] };
+                        } else if (currentCard) {
+                          currentCard.lines.push(line);
+                        }
+                      });
+                      if (currentCard) cards.push(currentCard);
+
+                      if (cards.length > 0) {
+                        const numCols = Math.min(cards.length, 3);
+                        const columns = Array.from({ length: numCols }, () => []);
+
+                        cards.forEach((card, cardIdx) => {
+                          const colIdx = cardIdx % numCols;
+                          columns[colIdx].push({ card, cardIdx });
+                        });
+
+                        const gridColClass =
+                          numCols === 1
+                            ? 'grid-cols-1'
+                            : numCols === 2
+                            ? 'grid-cols-1 md:grid-cols-2'
+                            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+
+                        elements.push(
+                          <div key={`grid-${gridId}`} className={`grid items-start ${gridColClass} gap-6 my-6`}>
+                            {columns.map((colCards, colIdx) => (
+                              <div key={`grid-${gridId}-col-${colIdx}`} className="flex flex-col space-y-6">
+                                {colCards.map(({ card, cardIdx }) => {
+                                  const cardKey = `grid-${gridId}-card-${cardIdx}`;
+                                  const isExpanded = !!openGridCards[cardKey];
+
+                                  const cardContentElements = [];
+                                  let cardBullets = [];
+
+                                  const flushCardBullets = () => {
+                                    if (cardBullets.length > 0) {
+                                      cardContentElements.push(
+                                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm text-slate-700 my-2">
+                                          {cardBullets.map((b, bi) => (
+                                            <li key={bi} className="flex items-start gap-2.5">
+                                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
+                                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
+                                            </li>
+                                          ))}
+                                        </ul>
+                                      );
+                                      cardBullets = [];
+                                    }
+                                  };
+
+                                  card.lines.forEach((lineText, li) => {
+                                    const trimmedLine = lineText.trim();
+                                    if (trimmedLine === '') {
+                                      flushCardBullets();
+                                      cardContentElements.push(<div key={`card-sp-${li}`} className="h-1" />);
+                                      return;
+                                    }
+                                    if (trimmedLine.startsWith('- ')) {
+                                      cardBullets.push(trimmedLine.slice(2));
+                                      return;
+                                    }
+                                    flushCardBullets();
+                                    cardContentElements.push(
+                                      <p key={`card-p-${li}`} className="text-xs sm:text-sm text-slate-800 leading-relaxed my-1">
+                                        {renderInlineFormatting(trimmedLine)}
+                                      </p>
+                                    );
+                                  });
+                                  flushCardBullets();
+
+                                  return (
+                                    <div
+                                      key={cardKey}
+                                      className={`group rounded-2xl border-2 transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 overflow-hidden ${theme.cardBorder} ${theme.cardBg}`}
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() => setOpenGridCards(prev => ({ ...prev, [cardKey]: !prev[cardKey] }))}
+                                        className={`w-full flex items-center justify-between gap-4 px-6 py-5 text-left transition-colors cursor-pointer ${theme.headerHoverBg}`}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          <span className={`w-3 h-3 rounded-full shrink-0 transition-colors ${theme.badge}`} />
+                                          <h3 className={`text-base sm:text-lg font-bold font-serif tracking-wide ${theme.headerText} transition-colors`}>
+                                            {renderInlineFormatting(card.title)}
+                                          </h3>
+                                        </div>
+                                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 shrink-0 ${theme.arrowBg} ${theme.arrowText} ${isExpanded ? 'rotate-180' : ''}`}>
+                                          ▼
+                                        </span>
+                                      </button>
+
+                                      {/* ONLY visible when expanded */}
+                                      {isExpanded && (
+                                        <div className={`px-6 py-5 border-t border-dashed ${theme.dividerBorder} ${theme.bodyBg} text-slate-800 animate-in fade-in duration-200`}>
+                                          {cardContentElements.length > 0 ? cardContentElements : (
+                                            <p className="text-xs text-slate-500 italic">No details specified.</p>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      gridBuffer = [];
+                      inGrid = false;
+                      gridTheme = 'default';
+                    };
+
                     //---accordion or collapsible headings
-                    // Renders one '+++ Title ... +++' block as a self-contained
-                    // click-to-expand widget. Unlike the note/table/bullet
-                    // helpers above, this doesn't touch `elements` incrementally
-                    // — it builds its own little content list, then pushes ONE
-                    // finished accordion component.
                     const flushAccordion = () => {
                       const index = accordionCount++;
                       const contentElements = [];
@@ -1098,7 +1434,7 @@ const GenericContentPage = ({
                       const flushLocalBullets = () => {
                         if (localBulletBuffer.length > 0) {
                           contentElements.push(
-                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-md marker:text-[#174873] marker:font-bold">
+                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1 text-black text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
                               {localBulletBuffer.map((b, bi) => (
                                 <li key={bi}>{renderInlineFormatting(b)}</li>
                               ))}
@@ -1117,7 +1453,7 @@ const GenericContentPage = ({
                           const flushLocalNoteBullets = () => {
                             if (localNoteBulletBuffer.length > 0) {
                               noteElements.push(
-                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1">
+                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
                                   {localNoteBulletBuffer.map((b, i) => (
                                     <li key={i}>{renderInlineFormatting(b)}</li>
                                   ))}
@@ -1131,35 +1467,37 @@ const GenericContentPage = ({
                             if (lineText.startsWith('### ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h4 key={`acc-note-h4-${i}`} className={`${HEADING_STYLES.subSubheading} mt-2 not-italic`}>
-                                  {renderInlineFormatting(lineText.slice(4))}
+                                <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                                  <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                                  <span>{renderInlineFormatting(lineText.slice(4))}</span>
                                 </h4>
                               );
                             } else if (lineText.startsWith('## ')) {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <h3 key={`acc-note-h3-${i}`} className={`${HEADING_STYLES.subheading} mt-2 not-italic`}>
-                                  {renderInlineFormatting(lineText.slice(3))}
+                                <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                                  <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                                  <span>{renderInlineFormatting(lineText.slice(3))}</span>
                                 </h3>
                               );
                             } else if (lineText === '---') {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <hr key={`acc-note-hr-${i}`} className="border-[#174873]/20 my-1" />
+                                <hr key={`acc-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
                               );
                             } else if (lineText.startsWith('- ')) {
                               localNoteBulletBuffer.push(lineText.slice(2));
                             } else {
                               flushLocalNoteBullets();
                               noteElements.push(
-                                <div key={`acc-note-line-${i}`}>{renderInlineFormatting(lineText)}</div>
+                                <div key={`acc-note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
                               );
                             }
                           });
                           flushLocalNoteBullets();
 
                           contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FFF4C2] border-l-4 border-[#D4A017] pl-4 py-2 rounded-r-lg text-black italic text-md space-y-1">
+                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm leading-relaxed">
                               {noteElements}
                             </div>
                           );
@@ -1171,8 +1509,6 @@ const GenericContentPage = ({
                       accordionBuffer.forEach((lineText, li) => {
                         const t = lineText.trim();
 
-                        // Currently inside an open note block within this
-                        // accordion — swallow lines until the closing '<'.
                         if (inLocalNote) {
                           let lineContent = t.startsWith('> ') ? t.slice(2) : t;
                           if (lineContent.endsWith('<')) {
@@ -1190,9 +1526,6 @@ const GenericContentPage = ({
                           return;
                         }
 
-                        // '> ... <' opens/closes a note block, same syntax as
-                        // the top-level description. Checked before the bullet
-                        // check below for the same reason as the top level.
                         if (t.startsWith('> ') || t === '>') {
                           flushLocalBullets();
                           let content = t.startsWith('> ') ? t.slice(2) : '';
@@ -1212,33 +1545,31 @@ const GenericContentPage = ({
                         }
                         flushLocalBullets();
 
-                        //normal text in accordian
                         contentElements.push(
-                          <p key={`acc-line-${li}`} className="text-black text-md leading-relaxed">
+                          <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm leading-relaxed">
                             {renderInlineFormatting(t)}
                           </p>
                         );
                       });
                       flushLocalBullets();
-                      flushLocalNote(); // in case a note was left open at the end of this accordion's content
-                      //accordian topmost view
+                      flushLocalNote();
                       const isOpen = !!openSections[index];
                       elements.push(
-                        <div key={`accordion-${index}`} className="border border-gray-200 rounded-xl overflow-hidden">
+                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">
                           <button
                             type="button"
                             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
-                            className="w-full flex items-center justify-between gap-2 px-4 py-1.5 bg-white  text-left"
+                            className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
                           >
-                            <span className={HEADING_STYLES.accordionTitle}>
+                            <span className="text-sm sm:text-base font-bold text-[#0f3358] font-cinzel tracking-wide">
                               {renderInlineFormatting(accordionTitle)}
                             </span>
-                            <span className={`text-[#174873] text-sm transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`}>
-                              ▶
+                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
+                              ►
                             </span>
                           </button>
                           {isOpen && (
-                            <div className="px-4 py-3 space-y-1 border-t-2 border-[#174873] bg-[#E6F0F5]/[60%]">
+                            <div className="px-4 sm:px-5 py-3.5 sm:py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
                               {contentElements}
                             </div>
                           )}
@@ -1270,41 +1601,47 @@ const GenericContentPage = ({
                         const [headerRow, ...rawBodyRows] = rowsParsed;
                         const colCount = headerRow.length;
 
-                        // Normalize every body row to exactly colCount cells —
-                        // pad short rows with empty cells, drop extra cells on
-                        // long rows — so every <tr> lines up under the header
-                        // regardless of how many '|' the admin typed on a line.
                         const bodyRows = rawBodyRows.map(cells => {
                           const normalized = cells.slice(0, colCount);
                           while (normalized.length < colCount) normalized.push('');
                           return normalized;
                         });
 
+                        const colWidthPct = `${(100 / colCount).toFixed(2)}%`;
+
                         elements.push(
-                          <div key={`table-${elements.length}`} className="overflow-x-auto rounded-xl border border-gray-200">
-                            <table className="w-full text-md text-left table-fixed">
-                              <thead className="bg-white">
-                                <tr >
-                                    {headerRow.map((cell, ci) => (
-                                    <th key={ci} className="px-4 py-3 text-black font-medium">
+                          <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white overflow-hidden">
+                            <table className="w-full text-left border-collapse table-fixed">
+                              <thead>
+                                <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                                  {headerRow.map((cell, ci) => (
+                                    <th
+                                      key={ci}
+                                      style={{ width: colWidthPct }}
+                                      className="px-1.5 sm:px-4 py-2 sm:py-3 text-left font-cinzel font-bold text-[11px] sm:text-base md:text-lg text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                                    >
+                                      {renderInlineFormatting(cell)}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-200">
+                                {bodyRows.map((cells, ri) => (
+                                  <tr key={ri} className="odd:bg-[#F8FAFC] even:bg-[#EEF2F6] hover:bg-[#E2E8F0] transition-colors">
+                                    {cells.map((cell, ci) => (
+                                      <td
+                                        key={ci}
+                                        style={{ width: colWidthPct }}
+                                        className="px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[11px] sm:text-base text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                                      >
                                         {renderInlineFormatting(cell)}
-                                      </th>
+                                      </td>
                                     ))}
                                   </tr>
-                                </thead>
-                              <tbody className="divide-y divide-gray-100">
-                                  {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="hover:bg-gray-50 divide-x divide-gray-200">
-                                      {cells.map((cell, ci) => (
-                                      <td key={ci} className="px-4 py-2.5 text-[#374151] text-sm">
-                                          {renderInlineFormatting(cell)}
-                                        </td>
-                                      ))}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         );
                       }
                       tableBuffer = [];
@@ -1314,7 +1651,15 @@ const GenericContentPage = ({
                     lines.forEach((line, idx) => {
                       const trimmed = line.trim();
 
-                    //if note in description
+                      if (inGrid) {
+                        if (trimmed === ':::') {
+                          flushGrid();
+                        } else {
+                          gridBuffer.push(line);
+                        }
+                        return;
+                      }
+
                       if (inNote) {
                         let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
                         if (lineContent.endsWith('<')) {
@@ -1326,9 +1671,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Currently inside an open '+++ Title ... +++' accordion
-                      // block — every line is swallowed until a line that is
-                      // exactly '+++' on its own closes it.
                       if (inAccordion) {
                         if (trimmed === '+++') {
                           flushAccordion();
@@ -1338,7 +1680,15 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // blank line → spacer
+                      if (trimmed.startsWith(':::grid')) {
+                        flushBullets();
+                        flushTable();
+                        gridTheme = trimmed.slice(7).trim() || 'default';
+                        gridBuffer = [];
+                        inGrid = true;
+                        return;
+                      }
+
                       if (trimmed === '') {
                         flushBullets();
                         flushTable();
@@ -1346,51 +1696,52 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // very first non-blank line → big centered heading
                       if (firstLine) {
                         firstLine = false;
                         flushBullets();
                         flushTable();
                         elements.push(
-                          <h2 key={idx} className={`${HEADING_STYLES.heading} text-center pb-3 border-b-2 border-[#174873]/20 tracking-tight`}>
-                            {trimmed}
-                          </h2>
+                          <div key={idx} className="mb-3.5 sm:mb-4 text-center">
+                            <h2 className={`${HEADING_STYLES.heading} font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f]`}>
+                              {trimmed}
+                            </h2>
+                          </div>
                         );
                         return;
                       }
 
-                      // ## Subheading
                       if (trimmed.startsWith('## ')) {
                         flushBullets();
                         flushTable();
-                        currentBodyLevel = 'subheading'; // everything below this, until the next heading, uses BODY_STYLES.subheading
+                        currentBodyLevel = 'subheading';
                         elements.push(
-                          <h3 key={idx} className={`${HEADING_STYLES.subheading} mt-6`}>
-                            {trimmed.slice(3)}
-                          </h3>
+                          <div key={idx} className="mt-5 mb-2.5">
+                            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl tracking-wide`}>
+                              <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
+                              <span>{trimmed.slice(3)}</span>
+                            </h3>
+                          </div>
                         );
                         return;
                       }
 
-                      // ### Smaller subheading
                       if (trimmed.startsWith('### ')) {
                         flushBullets();
                         flushTable();
-                        currentBodyLevel = 'subSubheading'; // everything below this, until the next heading, uses BODY_STYLES.subSubheading
+                        currentBodyLevel = 'subSubheading';
                         elements.push(
-                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-4`}>
-                            {trimmed.slice(4)}
+                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-base sm:text-lg flex items-center gap-2.5`}>
+                            <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
+                            <span>{trimmed.slice(4)}</span>
                           </h4>
                         );
                         return;
                       }
 
-                     //notes in description
                       if (trimmed.startsWith('> ') || trimmed === '>') {
                         flushBullets();
                         let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
                         if (content.endsWith('<')) {
-                          // opened and closed on the same line
                           noteBuffer.push(content.slice(0, -1).trim());
                           flushNote();
                         } else {
@@ -1400,11 +1751,6 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // +++ Title  → opens a collapsible accordion block.
-                      // Everything after this line is hidden until a lone
-                      // '+++' line closes it. Completely separate from the
-                      // '## '/'### ' headings — those stay plain and always
-                      // visible; only '+++' blocks are ever collapsible.
                       if (trimmed.startsWith('+++ ')) {
                         flushBullets();
                         flushTable();
@@ -1414,21 +1760,17 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // - list
                       if (trimmed.startsWith('- ')) {
                         bulletBuffer.push(trimmed.slice(2));
                         return;
                       }
 
-                      // | Table row |
                       if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
                         flushBullets();
-                        flushTable();
                         tableBuffer.push(trimmed);
                         return;
                       }
 
-                      // --- Divider line
                       if (trimmed === '---') {
                         flushBullets();
                         elements.push(
@@ -1437,17 +1779,9 @@ const GenericContentPage = ({
                         return;
                       }
 
-                      // Paragraph (bold **spans** and links are rendered inline
-                      // via renderInlineFormatting regardless of this branch —
-                      // so bold-containing and plain lines share one consistent
-                      // size/color and never jump between the two). The size
-                      // itself comes from BODY_STYLES[currentBodyLevel], so it
-                      // stays fixed for every paragraph AND bullet under the
-                      // same '## '/'### ' heading, and only changes when a new
-                      // heading is hit above.
                       flushBullets();
                       elements.push(
-                        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify ${BODY_STYLES[currentBodyLevel]}`}>
+                        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify mb-3 ${BODY_STYLES[currentBodyLevel]}`}>
                           {renderInlineFormatting(trimmed)}
                         </p>
                       );
@@ -1456,6 +1790,7 @@ const GenericContentPage = ({
                     flushBullets();
                     flushTable();
                     flushNote();
+                    if (inGrid) flushGrid();
                     if (inAccordion) flushAccordion();
 
                     return <div className="space-y-2">{elements}</div>;
@@ -1519,38 +1854,40 @@ const GenericContentPage = ({
       {hasTable && (
         <div className="space-y-3">
 
-          {/* Table heading / caption, sits above the table */}
+          {/* Table heading / caption */}
           {(tableHeading || isAdmin) && (
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3">
               {isEditingHeading ? (
-                <div className="flex-1 flex gap-2 items-center">
+                <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:items-center">
                   <input
                     value={editTableHeading}
                     onChange={e => setEditTableHeading(e.target.value)}
                     placeholder="Table heading, e.g. Faculty List"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm sm:text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
                     autoFocus
                   />
-                  <button onClick={handleSaveTableHeading} disabled={savingHeading}
-                    className="px-3 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
-                    {savingHeading ? 'Saving...' : 'Save'}
-                  </button>
-                  <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
-                    className="px-3 py-2 text-gray-500 text-sm">
-                    Cancel
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveTableHeading} disabled={savingHeading}
+                      className="px-3 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                      {savingHeading ? 'Saving...' : 'Save'}
+                    </button>
+                    <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
+                      className="px-3 py-2 text-gray-500 text-sm">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <>
                   {tableHeading ? (
-                    <h3 className="text-3xl font-bold text-[#174873]">{tableHeading}</h3>
+                    <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#174873]">{tableHeading}</h3>
                   ) : (
                     <span className="italic text-gray-400 text-sm">No table heading yet.</span>
                   )}
                   {isAdmin && (
                     <button
                       onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(true); }}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0"
+                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"
                     >
                       {tableHeading ? 'Edit Heading' : '+ Add Heading'}
                     </button>
@@ -1560,276 +1897,269 @@ const GenericContentPage = ({
             </div>
           )}
 
-          <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-base">
-                <thead>
-                  <tr className="bg-[#174873] text-white ">
-                    {columns.map(col => (
-                    <th key={col} className="px-4 py-3 text-left font-semibold">
-                        {col}
-                      {isAdmin && (
-                        <button onClick={() => handleDeleteColumn(col)}
-                          className="ml-2 text-red-300 hover:text-white text-xs">×</button>
-                      )}
-                    </th>
-                  ))}
-                  {isAdmin && (
-                    <th className="px-4 py-3">
-                      {addingCol ? (
-                        <div className="flex gap-1">
-                          <input value={newColName} onChange={e => setNewColName(e.target.value)}
-                            placeholder="Column name"
-                            className="px-2 py-1 text-black rounded text-xs w-24" />
-                          <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
-                          <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
-                        </div>
-                      ) : (
-                        <button onClick={() => setAddingCol(true)}
-                          className="text-blue-200 hover:text-white text-xs font-bold">
-                          + Col
-                        </button>
-                      )}
-                    </th>
-                  )}
-                  {isAdmin && <th className="px-4 py-3 w-20">Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 && (
-                  <tr>
-                    <td colSpan={columns.length + (isAdmin ? 2 : 0)}
-                      className="px-4 py-8 text-center text-gray-400 italic">
-                      {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
-                    </td>
-                  </tr>
-                )}
-                {displayRows.map(({ row, origIdx }) => {
-                  const idx = origIdx; // keeps existing edit/delete logic below untouched
-                  const isEditingThisRow = isAdmin && editingRowIdx === idx;
-                  return (
-                    <tr
-                      key={idx}
-                      className={`border-t border-gray-100 transition-colors
-                        odd:bg-white even:bg-[#DFE3E6]
-                        ${isEditingThisRow ? 'bg-[#FFF8CD]' : ''}
-                      `}
-                    >
-                      {columns.map(col => (
-                        <td key={col} className="px-8 py-3 text-black">
-                          {isEditingThisRow ? (
-                            /* ── EDIT MODE: show input for each cell ── */
-                            col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
-                              <div className="space-y-1">
-                                {editingRowData[col] ? (
-                                  <div className="flex items-center gap-1">
-                                    <a href={editingRowData[col].startsWith('http') ? editingRowData[col] : `${API}${editingRowData[col]}`}
-                                      target="_blank" rel="noopener noreferrer"
-                                      className="text-sm text-[#174873] hover:underline truncate max-w-[80px]">
-                                      Current PDF
-                                    </a>
-                                    <button onClick={() => setEditingRowData(prev => ({ ...prev, [col]: '' }))}
-                                      className="text-red-400 text-xs hover:text-red-600">✕</button>
-                                  </div>
-                                ) : (
-                                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
-                                    <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                    </svg>
-                                    Upload PDF
-                                    <input type="file" accept=".pdf" className="hidden"
-                                      onChange={async (e) => {
-                                        const file = e.target.files[0];
-                                        if (!file) return;
-                                        try {
-                                          const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
-                                          const form = new FormData();
-                                          form.append('section', section || '');
-                                          form.append('category', subsection || '');
-                                          form.append('sub_category', '');
-                                          form.append('files', taggedFile);
-                                          const res = await axios.post(
-                                            `${API}/admin/facility-content/upload-pdf`, form,
-                                            { headers: { Authorization: `Bearer ${token}` } }
-                                          );
-                                          const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
-                                          if (pdfUrl) setEditingRowData(prev => ({ ...prev, [col]: pdfUrl }));
-                                          else alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
-                                        } catch (err) {
-                                          alert('Upload failed: ' + JSON.stringify(err.response?.data));
-                                        }
-                                      }}
-                                    />
-                                  </label>
-                                )}
-                                <input
-                                  value={editingRowData[col] || ''}
-                                  onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
-                                  placeholder="or paste URL"
-                                  className="w-full px-2 py-1 border border-blue-300 rounded text-xs outline-none focus:ring-1 focus:ring-[#174873]"
-                                />
-                              </div>
-                            ) : (
-                              <input
-                                value={editingRowData[col] || ''}
-                                onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
-                                placeholder={col}
-                                className="w-full px-2 py-1 border border-blue-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#174873]"
-                              />
-                            )
-                          ) : (
-                            /* ── VIEW MODE: show value as before ── */
-                            row[col]
-                              ? row[col].startsWith('/uploads/') || row[col].startsWith('http')
-                                ? (
-                                  <a href={row[col].startsWith('http') ? row[col] : `${API}${row[col]}`}
-                                    target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-3sm">
-                                    <svg className="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="currentColor">
-                                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                    </svg>
-                                    View PDF
-                                  </a>
-                                )
-                                : row[col]
-                              : '—'
-                          )}
-                        </td>
-                      ))}
+          {(() => {
+            const isPdfCol = (col) =>
+              col.toLowerCase().includes('pdf') ||
+              col.toLowerCase().includes('document') ||
+              col.toLowerCase().includes('syllabus');
 
-                      {/* Action cell: Edit/Save/Cancel + Remove */}
-                      {isAdmin && (
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {isEditingThisRow ? (
-                            <div className="flex gap-2">
-                              <button onClick={handleSaveEditRow}
-                                className="text-green-600 hover:text-green-800 text-sm font-bold">
-                                Save
-                              </button>
-                              <button onClick={handleCancelEditRow}
-                                className="text-gray-400 hover:text-gray-600 text-xs">
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="flex gap-2 items-center">
-                              <button onClick={() => handleMoveRow(idx, 'up')}
-                                disabled={idx === 0}
-                                title="Move row up"
-                                className={`text-xs font-bold ${idx === 0 ? 'text-gray-300 cursor-not-allowed' : 'text-[#174873] hover:text-[#406BC7]'}`}>
-                                ▲
-                              </button>
-                              <button onClick={() => handleMoveRow(idx, 'down')}
-                                disabled={idx === rows.length - 1}
-                                title="Move row down"
-                                className={`text-xs font-bold ${idx === rows.length - 1 ? 'text-gray-300 cursor-not-allowed' : 'text-[#174873] hover:text-[#406BC7]'}`}>
-                                ▼
-                              </button>
-                              <button onClick={() => handleStartEditRow(idx)}
-                                className="text-[#174873] hover:text-[#406BC7] text-xs font-bold">
-                                Edit
-                              </button>
-                              <button onClick={() => handleDeleteRow(idx)}
-                                className="text-red-500 hover:text-red-700 text-xs font-bold">
-                                Remove
-                              </button>
-                            </div>
-                          )}
-                        </td>
-                      )}
-                    </tr>
+            const uploadPdf = async (onSet) => {
+              return async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                  const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
+                  const form = new FormData();
+                  form.append('section', section || '');
+                  form.append('category', subsection || '');
+                  form.append('sub_category', '');
+                  form.append('files', taggedFile);
+                  const res = await axios.post(
+                    `${API}/admin/facility-content/upload-pdf`, form,
+                    { headers: { Authorization: `Bearer ${token}` } }
                   );
-                })}
+                  const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
+                  if (pdfUrl) onSet(pdfUrl);
+                  else alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                } catch (err) {
+                  alert('Upload failed: ' + JSON.stringify(err.response?.data));
+                }
+              };
+            };
 
-                {/* Add row */}
-                {isAdmin && columns.length > 0 && (
-                  <tr className="border-t-2 border-gray-200 bg-gray-50">
-                    {columns.map(col => (
-                      <td key={col} className="px-4 py-2">
-                        {col.toLowerCase().includes('pdf') || col.toLowerCase().includes('document') || col.toLowerCase().includes('syllabus') ? (
-                          <div className="space-y-1">
-                            {/* Show upload button if no value yet */}
-                            {!newRow[col] ? (
-                              <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-xs">
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
-                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
-                                </svg>
-                                Upload PDF
-                                <input
-                                  type="file"
-                                  accept=".pdf"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-                                    try {
-                                      const taggedFile = new File([file], `${TABLE_PDF_TAG}${file.name}`, { type: file.type });
-                                      const form = new FormData();
-                                      form.append('section', section || '');
-                                      form.append('category', subsection || '');
-                                      form.append('sub_category', '');
-                                      form.append('files', taggedFile);
-
-                                      const res = await axios.post(
-                                        `${API}/admin/facility-content/upload-pdf`, form,
-                                        { headers: { Authorization: `Bearer ${token}` } }
-                                      );
-                                      const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
-                                      if (pdfUrl) {
-                                        setNewRow(prev => ({ ...prev, [col]: pdfUrl }));
-                                      } else {
-                                        alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
-                                      }
-                                    } catch (err) {
-                                      alert('Upload failed: ' + JSON.stringify(err.response?.data));
-                                    }
-                                  }}
-                                />
-                              </label>
-                            ) : (
-                              /* Show filename + remove option if uploaded */
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs text-green-600 truncate max-w-[80px]">✓ Uploaded</span>
-                                <button
-                                  onClick={() => setNewRow({ ...newRow, [col]: '' })}
-                                  className="text-red-400 text-xs hover:text-red-600">
-                                  ✕
-                                </button>
-                              </div>
-                            )}
-                            {/* Also allow manual URL paste */}
-                            <input
-                              value={newRow[col] || ''}
-                              onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                              placeholder="or paste URL"
-                              className="w-full px-2 py-1 border border-blue-200 rounded text-xs outline-none"
-                            />
-                          </div>
-                        ) : (
-                          /* Normal text input for non-PDF columns */
-                          <input
-                            value={newRow[col] || ''}
-                            onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
-                            placeholder={col}
-                            className="w-full px-2 py-1 border border-blue-200 rounded text-sm outline-none"
-                          />
-                        )}
-                      </td>
-                    ))}
-                   
-                    <td className="px-4 py-2">
-                      <button onClick={handleAddRow}
-                        className="px-3 py-1 bg-[#174873] text-white rounded text-xs font-bold">
-                        Add
-                      </button>
-                    </td>
-                  </tr>
+            const renderPdfEditor = (value, onChange) => (
+              <div className="space-y-1 min-w-[140px]">
+                {value ? (
+                  <div className="flex items-center gap-1">
+                    <a href={value.startsWith('http') ? value : `${API}${value}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-sm text-[#174873] hover:underline truncate max-w-[120px]">
+                      Current PDF
+                    </a>
+                    <button onClick={() => onChange('')}
+                      className="text-red-400 text-xs hover:text-red-600 min-w-[28px] min-h-[28px]">✕</button>
+                  </div>
+                ) : (
+                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 bg-[#174873] text-white rounded text-xs whitespace-nowrap min-h-[32px]">
+                    <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                    </svg>
+                    Upload PDF
+                    <input type="file" accept=".pdf" className="hidden" onChange={uploadPdf(onChange)} />
+                  </label>
                 )}
-              </tbody>
-            </table>
-          </div>
+                <input
+                  value={value || ''}
+                  onChange={e => onChange(e.target.value)}
+                  placeholder="or paste URL"
+                  className="w-full px-2 py-1.5 border border-blue-300 rounded text-xs outline-none focus:ring-1 focus:ring-[#174873]"
+                />
+              </div>
+            );
+
+            const renderViewValue = (val) =>
+              val
+                ? val.startsWith('/uploads/') || val.startsWith('http')
+                  ? (
+                    <a href={val.startsWith('http') ? val : `${API}${val}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-sm sm:text-base whitespace-nowrap">
+                      <svg className="w-4 h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                      </svg>
+                      View PDF
+                    </a>
+                  )
+                  // Plain cell text: run through the same [label](url) / bare-URL
+                  // link parser used in the description, notes, accordion, and grid,
+                  // so links typed inside a normal table cell become clickable too.
+                  : renderInlineFormatting(val)
+                : '—';
+
+            // Icon buttons with generous tap targets (min ~36px) — same on every breakpoint
+            const IconBtn = ({ onClick, disabled, title, colorClass, children }) => (
+              <button
+                onClick={onClick}
+                disabled={disabled}
+                title={title}
+                className={`inline-flex items-center justify-center min-w-[36px] min-h-[36px] rounded-lg text-sm font-bold
+                  ${disabled ? 'text-gray-300 cursor-not-allowed' : `${colorClass} hover:bg-black/5 active:bg-black/10`}`}
+              >
+                {children}
+              </button>
+            );
+
+            const rowActions = (idx, isEditingThisRow) =>
+              isEditingThisRow ? (
+                <div className="flex gap-1">
+                  <IconBtn onClick={handleSaveEditRow} title="Save" colorClass="text-green-600">✓</IconBtn>
+                  <IconBtn onClick={handleCancelEditRow} title="Cancel" colorClass="text-gray-400">✕</IconBtn>
+                </div>
+              ) : (
+                <div className="flex gap-0.5">
+                  <IconBtn onClick={() => handleMoveRow(idx, 'up')} disabled={idx === 0} title="Move up" colorClass="text-[#174873]">▲</IconBtn>
+                  <IconBtn onClick={() => handleMoveRow(idx, 'down')} disabled={idx === rows.length - 1} title="Move down" colorClass="text-[#174873]">▼</IconBtn>
+                  <IconBtn onClick={() => handleStartEditRow(idx)} title="Edit" colorClass="text-[#174873]">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                    </svg>
+                  </IconBtn>
+                  <IconBtn onClick={() => handleDeleteRow(idx)} title="Delete" colorClass="text-red-500">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
+                    </svg>
+                  </IconBtn>
+                </div>
+              );
+
+            return (
+              <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white w-full">
+                {/* Responsive table fitting screen without horizontal scrolling */}
+                <div className="w-full">
+                  <table className="w-full text-left border-collapse table-fixed text-sm sm:text-base md:text-lg">
+                    <thead>
+                      <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                        {columns.map((col, i) => (
+                          <th
+                            key={col}
+                            className="px-1.5 sm:px-4 py-2 sm:py-3 text-left font-cinzel font-bold text-[11px] sm:text-base md:text-lg text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                          >
+                            {col}
+                            {isAdmin && (
+                              <button onClick={() => handleDeleteColumn(col)}
+                                className="ml-1.5 text-red-300 hover:text-white text-xs">×</button>
+                            )}
+                          </th>
+                        ))}
+                        {isAdmin && (
+                          <th className="px-2 sm:px-4 py-2 sm:py-3 bg-[#0f3358] text-[#fce8b2] font-bold text-[11px] sm:text-sm">
+                            {addingCol ? (
+                              <div className="flex gap-1">
+                                <input value={newColName} onChange={e => setNewColName(e.target.value)}
+                                  placeholder="Column name"
+                                  className="px-2 py-1 text-black rounded text-xs w-16 sm:w-24" />
+                                <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
+                                <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
+                              </div>
+                            ) : (
+                              <button onClick={() => setAddingCol(true)}
+                                className="text-blue-200 hover:text-white text-xs sm:text-sm font-bold whitespace-nowrap">
+                                + Col
+                              </button>
+                            )}
+                          </th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {rows.length === 0 && (
+                        <tr>
+                          <td colSpan={columns.length + (isAdmin ? 1 : 0)}
+                            className="px-4 py-8 text-center text-gray-400 italic text-sm sm:text-base">
+                            {isAdmin ? 'No rows yet. Add columns first, then add rows.' : 'No data available.'}
+                          </td>
+                        </tr>
+                      )}
+                      {displayRows.map(({ row, origIdx }) => {
+                        const idx = origIdx;
+                        const isEditingThisRow = isAdmin && editingRowIdx === idx;
+                        const baseBg = isEditingThisRow ? 'bg-[#FFF8CD]' : (idx % 2 === 0 ? 'bg-[#F8FAFC]' : 'bg-[#EEF2F6]');
+                        const cellBg = isEditingThisRow ? 'bg-[#FFF8CD]' : `${baseBg} group-hover:bg-[#E2E8F0] transition-colors`;
+                        return (
+                          <tr key={idx} className="group border-t border-slate-200">
+                            {columns.map((col, i) => (
+                              <td
+                                key={col}
+                                className={`px-1.5 sm:px-4 py-1.5 sm:py-2.5 text-[11px] sm:text-base text-slate-800 font-medium align-middle border-r border-slate-300 last:border-r-0 break-words leading-tight ${cellBg}`}
+                              >
+                                {isEditingThisRow ? (
+                                  isPdfCol(col)
+                                    ? renderPdfEditor(editingRowData[col], (v) =>
+                                        setEditingRowData(prev => ({ ...prev, [col]: v })))
+                                    : (
+                                      <input
+                                        value={editingRowData[col] || ''}
+                                        onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
+                                        placeholder={col}
+                                        className="w-full min-w-[80px] px-2 py-1 border border-blue-300 rounded text-xs sm:text-base outline-none focus:ring-1 focus:ring-[#174873]"
+                                      />
+                                    )
+                                ) : (
+                                  <span className="break-words leading-tight">{renderViewValue(row[col])}</span>
+                                )}
+                              </td>
+                            ))}
+                            {isAdmin && (
+                              <td className={`px-2 sm:px-3 py-2 sticky right-0 z-10 ${cellBg} shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]`}>
+                                {rowActions(idx, isEditingThisRow)}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
+
+                      {/* Add row */}
+                      {isAdmin && columns.length > 0 && (
+                        <tr className="border-t-2 border-gray-200 bg-gray-50">
+                          {columns.map((col, i) => (
+                            <td key={col} className={`px-3 sm:px-4 py-2 ${i === 0 ? 'sticky left-0 z-10 bg-gray-50' : ''}`}>
+                              {isPdfCol(col) ? (
+                                <div className="space-y-1 min-w-[140px]">
+                                  {!newRow[col] ? (
+                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1.5 bg-[#174873] text-white rounded text-xs whitespace-nowrap min-h-[32px]">
+                                      <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
+                                      </svg>
+                                      Upload PDF
+                                      <input type="file" accept=".pdf" className="hidden"
+                                        onChange={uploadPdf((v) => setNewRow(prev => ({ ...prev, [col]: v })))} />
+                                    </label>
+                                  ) : (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-green-600">✓ Uploaded</span>
+                                      <button onClick={() => setNewRow({ ...newRow, [col]: '' })}
+                                        className="text-red-400 text-xs hover:text-red-600 min-w-[28px] min-h-[28px]">✕</button>
+                                    </div>
+                                  )}
+                                  <input
+                                    value={newRow[col] || ''}
+                                    onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+                                    placeholder="or paste URL"
+                                    className="w-full px-2 py-1.5 border border-blue-200 rounded text-xs outline-none"
+                                  />
+                                </div>
+                              ) : (
+                                <input
+                                  value={newRow[col] || ''}
+                                  onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
+                                  placeholder={col}
+                                  className="w-full min-w-[100px] px-2 py-1.5 border border-blue-200 rounded text-sm outline-none"
+                                />
+                              )}
+                            </td>
+                          ))}
+                          <td className="px-2 sm:px-3 py-2 sticky right-0 z-10 bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
+                            <button onClick={handleAddRow}
+                              className="min-w-[36px] min-h-[36px] px-3 py-1.5 bg-[#174873] text-white rounded text-xs font-bold whitespace-nowrap">
+                              Add
+                            </button>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Add column (mobile-friendly hint — actions are on the sticky right column) */}
+                {isAdmin && (
+                  <div className="md:hidden flex justify-center py-3 border-t border-gray-100 bg-gray-50">
+                    <span className="text-xs text-gray-400">Scroll → to edit/delete rows</span>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
-      </div>
       )}
     </div>
   );

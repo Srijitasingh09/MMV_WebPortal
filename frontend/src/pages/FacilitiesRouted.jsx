@@ -3,7 +3,16 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
+  'overview': {
+    title: 'Facilities',
+    pageType: 'description'
+  },
   // ── Hostels ──────────────────────────────────────────────────────────────
+  'hostels': {
+    title: 'Hostels',
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+  },
   'hostels/chiefwarden': {
     title: 'Chief Warden',
     pageType: 'profile'          // data stored as profile object in details JSON
@@ -44,6 +53,7 @@ const pages = {
   },
 
   // ── Library ───────────────────────────────────────────────────────────────
+  
   'library/central': {
     title: 'Central Library',
     pageType: 'slideshow-pdf-list-description',
@@ -61,6 +71,7 @@ const pages = {
   },
 
   // ── Sports ────────────────────────────────────────────────────────────────
+  
   'sports/universitysports': {
     title: 'University Sports Board',
     pageType: 'slideshow-description',
@@ -78,6 +89,7 @@ const pages = {
   },
 
   // ── Well-being ────────────────────────────────────────────────────────────
+  
   'wellbeing/wbsc': {              // key matches navbar: /facilities/wellbeing/wbsc
     title: 'Well Being Service Cell, BHU',
     pageType: 'slideshow-description',
@@ -90,6 +102,7 @@ const pages = {
   },
 
   // ── Training & Placement ──────────────────────────────────────────────────
+ 
   'trainingplacement/universitytraining': {
     title: 'University Training & Placement Cell',
     pageType: 'description-pdf-list'
@@ -119,6 +132,7 @@ const pages = {
   },
 
   // ── Medical ───────────────────────────────────────────────────────────────
+  
   'medical/ssh': {                 // key must be 'ssh' not 'ssr' — matches navbar
     title: 'Sir Sundarlal Hospital',
     pageType: 'slideshow-description',
@@ -136,6 +150,7 @@ const pages = {
   },
 
   // ── Extracurricular ───────────────────────────────────────────────────────
+ 
   'extracurricular/ncc': {
     title: 'National Cadet Corps (NCC)',
     pageType: 'description'
@@ -159,6 +174,7 @@ const pages = {
   },
 
   // ── Canteen ───────────────────────────────────────────────────────────────
+  
   'canteen/universitycanteen': {
     title: 'University Canteen',
     pageType: 'slideshow-description',
@@ -176,6 +192,7 @@ const pages = {
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
+ 
   'other/vt': {
     title: 'Vishwanath Temple',
     pageType: 'slideshow-description',
@@ -210,7 +227,8 @@ const pages = {
 
 const FacilitiesRouted = () => {
   const { sub, subsub } = useParams();
-  const key = [sub, subsub].filter(Boolean).join('/');
+  const rawKey = [sub, subsub].filter(Boolean).join('/');
+  const key = rawKey || 'overview';
   const page = pages[key];
 
   if (!page) return <Navigate to="/" replace />;

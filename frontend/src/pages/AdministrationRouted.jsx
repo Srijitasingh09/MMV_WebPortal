@@ -3,6 +3,10 @@ import { useParams, Navigate } from 'react-router-dom';
 import GenericContentPage from './generic';
 
 const pages = {
+  'overview': { 
+    title: 'Administration', 
+    pageType: 'description' 
+  },
   'vc': { 
     title: 'Vice Chancellor', 
     pageType: 'profile-description' 
@@ -29,6 +33,8 @@ const pages = {
     tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work'] 
   },
 
+  
+
   'proctorial/chief': { 
     title: 'Chief Proctor', 
     pageType: 'profile-description'
@@ -39,6 +45,8 @@ const pages = {
     pageType: 'table-description',
     tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
   },
+
+
 
   'examination/universityexam': {  
     title: 'Controller of Examination — University', 
@@ -55,7 +63,8 @@ const pages = {
 
 const AdministrationRouted = () => {
   const { sub, subsub } = useParams();
-  const key = subsub ? `${sub}/${subsub}` : sub;
+  const rawKey = [sub, subsub].filter(Boolean).join('/');
+  const key = rawKey || 'overview';
   const page = pages[key];
 
   if (!page) return <Navigate to="/" replace />;

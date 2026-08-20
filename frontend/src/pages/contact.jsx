@@ -433,24 +433,28 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#EAEFF5]">
 
-      {/* PAGE HEADER */}
-      <div className="bg-[#0f3358] py-6 sm:py-8 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1
-            className="text-4xl sm:text-5xl font-semibold text-white mb-1"
-            style={{ fontFamily: "'Cormorant Garamond', serif" }}
-          >
-            Contact Us
-          </h1>
-          <p className="text-blue-200 text-sm sm:text-base mt-2">
-            Reach out to Mahila Mahavidyalaya — we're here to help
-          </p>
+      <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8">
+        {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+          {/* Left Side: Page Name */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+              Contact Us
+            </h1>
+          </div>
+          {/* Right Side: Breadcrumb */}
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+            <span className="text-slate-400">Home</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-[#7d311f] font-semibold">Contact</span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-10 sm:py-14 space-y-12">
+      <div className="max-w-5xl mx-auto px-4 pb-6 sm:pb-8 space-y-12">
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
@@ -473,7 +477,7 @@ const Contact = () => {
               <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 h-full">
                 <h2
                   className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-6"
-                  style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                  style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
                 >
                   Connect with us
                 </h2>
@@ -491,7 +495,7 @@ const Contact = () => {
               </div>
             </div>
             <div className="lg:col-span-3">
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden h-72 sm:h-full sm:min-h-[420px]">
+              <div className="bg-[#FAF7F2] border border-gray-200 rounded-xl overflow-hidden h-72 sm:h-full sm:min-h-[420px]">
                 {getMapEmbedUrl() ? (
                   <iframe
                     title="MMV Location Map" src={getMapEmbedUrl()}
@@ -517,7 +521,7 @@ const Contact = () => {
               <ShieldAlert size={20} className="text-red-500" />
               <h2
                 className="text-2xl sm:text-3xl font-bold text-[#0f3358]"
-                style={{ fontFamily: "'Cormorant Garamond', serif" }}
+                style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
               >
                 Emergency Contact
               </h2>
