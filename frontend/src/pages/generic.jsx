@@ -1610,7 +1610,7 @@ const GenericContentPage = ({
                         flushTable();
                         elements.push(
                           <div key={idx} className="mb-4 sm:mb-6 text-center">
-                            <h2 className="font-cinzel text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
+                            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
                               {trimmed}
                             </h2>
                           </div>
