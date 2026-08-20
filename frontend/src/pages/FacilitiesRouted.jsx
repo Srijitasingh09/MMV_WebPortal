@@ -10,8 +10,8 @@ const pages = {
   // ── Hostels ──────────────────────────────────────────────────────────────
   'hostels': {
     title: 'Hostels',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
+    pageType: 'description',
+    
   },
   'hostels/chiefwarden': {
     title: 'Chief Warden',
@@ -23,33 +23,29 @@ const pages = {
   },
   'hostels/swastikunj': {
     title: 'Swasti Kunj Hostel',
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center',
-    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
+   
   },
   'hostels/kirtikunj': {
     title: 'Kirti Kunj Hostel',
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center',
-    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
   'hostels/kundandevi': {
     title: 'Kundan Devi Malviya Hostel',
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center',
-    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
   'hostels/pragyakunj': {
     title: 'Pragya Kunj Hostel',
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center',
-    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
   'hostels/jyotikunj': {
     title: 'Jyoti Kunj Hostel',
-    pageType: 'slideshow-description-table',
-    photoAlign: 'center',
-    tableColumns: ['S.No.', 'Name', 'Designation', 'Contact']
+    pageType: 'slideshow-description',
+    photoAlign: 'center'
   },
 
   // ── Library ───────────────────────────────────────────────────────────────
@@ -83,7 +79,7 @@ const pages = {
     photoAlign: 'center'
   },
   'sports/gym': {
-    title: 'Open-Gym',
+    title: 'Open-Gym & Indoor-Gym',
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
