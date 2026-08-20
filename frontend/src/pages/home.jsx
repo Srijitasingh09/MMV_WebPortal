@@ -34,7 +34,6 @@ const CountUpStat = ({ targetStr, label, startFrom = 0 }) => {
           const animate = (now) => {
             const elapsedTime = now - startTime;
             const progress = Math.min(elapsedTime / duration, 1);
-            // Ease-out cubic calculation for smooth slowing down at the end
             const easeProgress = 1 - Math.pow(1 - progress, 3);
             const currentVal = Math.floor(startFrom + easeProgress * (rawNumber - startFrom));
             setCount(currentVal);
@@ -84,16 +83,13 @@ const Hero = () => (
       .font-hero-cormorant { font-family: 'Cormorant Garamond', 'Georgia', serif; }
     `}</style>
     
-    {/* Main Hero Banner with Warm Transparent Backdrop */}
     <div className="relative min-h-[95vh] sm:min-h-[115vh] md:min-h-[130vh] lg:min-h-[140vh] flex flex-col justify-center items-center p-6 sm:p-16 md:p-24 lg:p-32">
-      {/* Background Campus Photo (Full Page Coverage) */}
       <div className="absolute inset-0 w-full h-full">
         <img
           src="/bhu/web (1).png"
           alt="Mahila Maha Vidyalaya BHU Campus"
           className="w-full h-full object-cover object-center"
         />
-        {/* Warm transparent heritage overlay */}
         <div
           className="absolute inset-0"
           style={{
@@ -103,9 +99,7 @@ const Hero = () => (
         />
       </div>
 
-      {/* Main Content */}
       <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col items-center text-center">
-        {/* Emblem Logo */}
         <div className="mb-4 sm:mb-6">
           <div className="w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-48 lg:h-48 rounded-full p-2 bg-white ring-4 ring-[#D4AF37] shadow-2xl flex items-center justify-center mx-auto overflow-hidden">
             <img
@@ -116,34 +110,28 @@ const Hero = () => (
           </div>
         </div>
 
-        {/* Devanagari & Hindi Title */}
         <p className="font-serif text-[#D4AF37] text-base sm:text-lg md:text-xl font-semibold tracking-normal mb-1.5 drop-shadow-sm">
           महिला महाविद्यालय • काशी हिन्दू विश्वविद्यालय
         </p>
 
-        {/* English Title */}
         <h1 className="font-hero-cormorant text-3xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-2 sm:mb-3 drop-shadow-md">
           Mahila Mahavidyalaya
         </h1>
 
-        {/* Subtitle */}
         <p className="font-lato text-amber-100/95 text-sm sm:text-lg md:text-xl font-medium tracking-wide max-w-2xl mb-4 drop-shadow-xs">
           Banaras Hindu University • Premier Institution for Women's Education (Est. 1929)
         </p>
 
-        {/* Decorative Gold Rule */}
         <div className="flex items-center gap-3 w-48 mx-auto my-3">
           <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent flex-1" />
           <span className="text-[#D4AF37] text-xs font-serif">✦</span>
           <div className="h-px bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent flex-1" />
         </div>
 
-        {/* Inspirational Motto */}
         <p className="font-hero-cormorant italic text-sm sm:text-base text-slate-200 max-w-xl mb-8 leading-relaxed drop-shadow-xs">
           "Vidya Dadati Vinayam" — Empowering women through holistic education, leadership, and moral values.
         </p>
 
-        {/* Primary Action Buttons — Row 1: Ask MMVerse AI & Samarth Portal */}
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-4">
           <Link
             to="/ai-assistant"
@@ -161,7 +149,6 @@ const Hero = () => (
           </a>
         </div>
 
-        {/* Row 2: Explore Portal Services below both options */}
         <div className="mt-2">
           <a
             href="#about"
@@ -175,14 +162,10 @@ const Hero = () => (
   </section>
 );
 
-
-
 // ─── ABOUT ────────────────────────────────────────────────────────────────────
 const About = () => (
   <section id="about" className="bg-[#FAF7F2] py-12 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto">
-
-      {/* Header */}
       <div className="text-center mb-8 sm:mb-14">
         <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           About the Portal
@@ -198,8 +181,7 @@ const About = () => (
         </p>
       </div>
 
-      {/* Stats */}
-      <div className=" grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5">
         {[
           ['1929', 'Year Established', 1900],
           ['30+',  'Departments', 0],
@@ -213,23 +195,21 @@ const About = () => (
   </section>
 );
 
-
-// ─── FACILITIES HIGHLIGHT ─────────────────────────────────────────────────────
+// ─── FACILITIES HIGHLIGHT (Real Routes from Navbar.jsx) ───────────────────────
 const facilities = [
-  { label: 'Hostels',       detail: 'Five on-campus hostels with mess, security & Wi-Fi.' },
-  { label: 'Libraries',     detail: 'MMV, Central & Cyber Library — 1 lakh+ books & digital access.' },
-  { label: 'Sports',        detail: 'Courts, athletics track, gymnasium & sports ground' },
-  { label: 'Health Centre', detail: 'On-campus medical facilities, Sir Sundarlal Hospital & Trauma Centre.' },
-  { label: 'Canteen',       detail: 'Access to affordable, hygienic meals and snacks within the campus.' },
-  { label: 'Computer Labs', detail: 'High-speed internet connectivity with well-equipped computer facilities.' },
-  { label: 'Auditorium',    detail: 'Spacious halls and facilities for seminars, cultural programmes, and guest lectures.' },
-  { label: 'Transport',     detail: 'BHU bus routes connecting all campus points.' },
+  { label: 'Hostels',       detail: 'Five on-campus hostels with mess, security & Wi-Fi.', link: '/facilities/hostels' },
+  { label: 'Libraries',     detail: 'MMV, Central & Cyber Library — 1 lakh+ books & digital access.', link: '/facilities/library/mmvlibrary' },
+  { label: 'Sports',        detail: 'Courts, athletics track, gymnasium & sports ground', link: '/facilities/sports/mmvsports' },
+  { label: 'Health Centre', detail: 'On-campus medical facilities, Sir Sundarlal Hospital & Trauma Centre.', link: '/facilities/medical/health' },
+  { label: 'Canteen',       detail: 'Access to affordable, hygienic meals and snacks within the campus.', link: '/facilities/canteen/mmvcanteen' },
+  { label: 'MMV Pahal',     detail: 'Assist students in addressing academic, personal, and social challenges.', link: '/facilities/wellbeing/mmvwell' },
+  { label: 'Auditorium',    detail: 'Spacious halls and facilities for seminars, cultural programmes, and guest lectures.', link: '/facilities/other/auditorium' },
+  { label: 'Transport',     detail: 'BHU bus routes connecting all campus points.', link: '/facilities/other/transportation' },
 ];
 
 const Facilities = () => (
   <section id="facilities" className="bg-[#EAEFF5] py-12 sm:py-16 px-4 sm:px-6 border-y border-slate-200">
     <div className="max-w-5xl mx-auto">
-
       <div className="text-center mb-8 sm:mb-12">
         <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           Campus Resources
@@ -246,33 +226,30 @@ const Facilities = () => (
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {facilities.map((f) => (
-          <div
+          <Link
             key={f.label}
-            className="group bg-white border-2 border-[#0f3358]/20 hover:border-[#d4af37] rounded-xl p-3.5 sm:p-5 shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.03] cursor-pointer"
+            to={f.link}
+            className="group bg-white border-2 border-[#0f3358]/20 hover:border-[#d4af37] rounded-xl p-3.5 sm:p-5 shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.03] cursor-pointer block text-left"
           >
             <div className="font-cormorant text-sm sm:text-lg font-bold text-[#0f3358] group-hover:text-[#7d311f] transition-colors mb-1 sm:mb-2">
               {f.label}
             </div>
             <div className="font-lato text-[11px] sm:text-sm text-slate-600 leading-relaxed">{f.detail}</div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>
   </section>
 );
 
-
-// ─── ACADEMICS FEATURE — Side-by-side on mobile ──────────────────────────────
+// ─── ACADEMICS FEATURE — Side-by-side on mobile (Plain Text List) ──────────────
 const Academics = () => (
   <section id="academics" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
-
-      {/* Photo left side on mobile & desktop */}
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
         <img src="/bhu/academics.png" alt="Academics" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
-      {/* Text right side on mobile & desktop */}
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
         <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Academics
@@ -306,35 +283,35 @@ const Academics = () => (
   </section>
 );
 
-
-// ─── ADMINISTRATION FEATURE — Side-by-side on mobile ─────────────────────────
+// ─── ADMINISTRATION FEATURE — Side-by-side on mobile (Plain Text List) ────────
 const Administration = () => (
   <section id="administration" className="bg-[#EAEFF5] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row-reverse gap-3 sm:gap-8 items-center">
-
-      {/* Photo right side on mobile & desktop */}
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
         <img src="/bhu/admin.png" alt="Administration" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
-      {/* Text left side on mobile & desktop */}
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
         <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Administration
         </p>
+        
         <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
-          Governance & Leadership
+          Leadership & Administration
         </h2>
+        
         <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
+
         <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
-          Official information about the governance structure —
-          Principal office, administrative departments, and institutional policies.
+          Official information about the administrative structure —
+          Principal's Office, administrative departments, staff, and institutional policies.
         </p>
+
         <ul className="space-y-1.5 sm:space-y-3">
           {[
-            ["Principal's Office",        'Contact details & communications.'],
-            ['Controller of Exam',        'Semester exam queries.'],
-            ['Staff Directory',           'Teaching & admin staff directory.'],
+            ["Principal's Office", 'Contact details & communications.'],
+            ['Controller of Exam', 'Semester exam queries.'],
+            ['Staff Directory', 'Teaching & administrative staff directory.'],
           ].map(([label, detail]) => (
             <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
               <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
@@ -351,18 +328,14 @@ const Administration = () => (
   </section>
 );
 
-
-// ─── NOTICES FEATURE — Side-by-side on mobile ────────────────────────────────
+// ─── NOTICES FEATURE — Side-by-side on mobile (Plain Text List) ───────────────
 const Notices = () => (
   <section id="notices" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
-
-      {/* Photo left side on mobile & desktop */}
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
         <img src="/bhu/notice.png" alt="Notices" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
-      {/* Text right side on mobile & desktop */}
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
         <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Notices
@@ -396,13 +369,10 @@ const Notices = () => (
   </section>
 );
 
-
 // ─── AI ASSISTANT ─────────────────────────────────────────────────────────────
 const AIAssistant = () => (
   <section id="ai-assistant" className="bg-[#EAEFF5] py-12 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
-
-      {/* Text */}
       <div className="md:w-7/12 w-full">
         <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           AI Assistant
@@ -438,10 +408,8 @@ const AIAssistant = () => (
         </Link>
       </div>
 
-      {/* Chat preview — matches real MMVerse page colors 100% */}
       <div className="md:w-5/12 w-full max-w-sm sm:max-w-none mx-auto">
         <div className="bg-[#FAF7F2] rounded-2xl shadow-xl border-2 border-[#0D1F3C]/30 overflow-hidden">
-          {/* Header */}
           <div className="flex items-center gap-2.5 sm:gap-3 bg-[#0D1F3C] px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-[#E3B94F]/40">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FBF1DA] ring-2 ring-[#E3B94F] flex items-center justify-center overflow-hidden flex-shrink-0 shadow-xs">
               <img src="/bhu/AI-icon.png" alt="MMVerse AI" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
@@ -457,7 +425,6 @@ const AIAssistant = () => (
             </div>
           </div>
 
-          {/* Messages */}
           <div className="p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 bg-[#FAF7F2]">
             {[
               { from: 'user', text: 'What are the Cyber Library timings?' },
@@ -476,13 +443,14 @@ const AIAssistant = () => (
             ))}
           </div>
 
-          {/* Input */}
           <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-2 bg-[#FAF7F2] border-t border-slate-200">
             <div className="flex gap-2">
               <div className="flex-1 bg-white rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 font-lato text-xs sm:text-sm text-slate-400 border-2 border-[#0D1F3C]/40">
                 Ask a question...
               </div>
-              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-[#C4561A] hover:bg-[#a3450f] rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0 shadow-xs">→</div>
+              <Link to="/ai-assistant" className="w-9 h-9 sm:w-10 sm:h-10 bg-[#C4561A] hover:bg-[#a3450f] rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0 shadow-xs">
+                →
+              </Link>
             </div>
           </div>
         </div>
