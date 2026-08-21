@@ -1,24 +1,22 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react'
-
+import { useState, useEffect, useRef } from 'react';
 
 // ============================================
 // SHARED MENU DATA
-// Pulled out once so both the desktop hover-dropdowns AND the mobile
-// accordion menu read from the same source — no more keeping two
-// separate copies of this list in sync by hand.
+// Only items with REAL pages have a `path` property.
+// Items with children that have NO page omit `path`.
 // ============================================
 const administrationItems = [
   { label: "Vice Chancellor", path: "/administration/vc" },
   { label: "MMV Principal", path: "/administration/principal" },
   { label: "Dean of Students", path: "/administration/dean" },
   { label: "Student Advisor", path: "/administration/advisor" },
-  { label: "Proctorial Board", path: "/administration/proctorial", children: [
+  { label: "Proctorial Board", children: [
     { label: "Chief Proctor", path: "/administration/proctorial/chief" },
     { label: "University Proctorial Board", path: "/administration/proctorial/uniboard" },
   ]},
-  { label: "Controller of Examination", path: "/administration/examination", children: [
+  { label: "Controller of Examination", children: [
     { label: "University", path: "/administration/examination/universityexam" },
     { label: "MMV", path: "/administration/examination/mmvexam" },
   ]},
@@ -27,13 +25,13 @@ const administrationItems = [
 
 const academicsItems = [
   { label: "NEP", path: "/academics/nep" },
-  { label: "Syllabus", path: "/academics/syllabus", children: [
-    { label: "Under Graduate", path: "/academics/syllabus/ug", children: [
+  { label: "Syllabus", children: [
+    { label: "Under Graduate", children: [
       { label: "Science", path: "/academics/syllabus/ug/science" },
       { label: "Social Science", path: "/academics/syllabus/ug/socialscience" },
       { label: "Arts", path: "/academics/syllabus/ug/arts" },
     ]},
-    { label: "Post Graduate", path: "/academics/syllabus/pg", children: [
+    { label: "Post Graduate", children: [
       { label: "Bioinformatics", path: "/academics/syllabus/pg/bioinformatics" },
       { label: "Home Science", path: "/academics/syllabus/pg/homescience" },
       { label: "Education", path: "/academics/syllabus/pg/education" },
@@ -41,16 +39,17 @@ const academicsItems = [
   ]},
   { label: "Electives", path: "/academics/electives" },
   { label: "SWAYAM Courses", path: "/academics/swayam" },
-  { label: "Section Incharge", path: "/academics/section-incharge", children: [
-    { label: "Science", path: "/academics/section-incharge/science"},
-    { label: "Social Science", path: "/academics/section-incharge/socialscience"},
-    { label: "Arts", path: "/academics/section-incharge/arts"}
+  { label: "Incharge", children: [
+    { label: "Science", path: "/academics/incharge/science"},
+    { label: "Social Science", path: "/academics/incharge/socialscience"},
+    { label: "Arts", path: "/academics/incharge/arts"}
   ]},
   { label: "Academic Calendar", path: "/academics/calendar" },
   { label: "Holiday List", path: "/academics/holidays" },
 ];
 
 const facilitiesItems = [
+  // Hostels HAS A REAL PAGE -> path: "/facilities/hostels"
   { label: "Hostels", path: "/facilities/hostels", children: [
     { label: "Chief Warden", path: "/facilities/hostels/chiefwarden" },
     { label: "Hostel Coordinator", path: "/facilities/hostels/coordinator" },
@@ -60,31 +59,31 @@ const facilitiesItems = [
     { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
     { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
   ]},
-  { label: "Library", path: "/facilities/library", children: [
+  { label: "Library", children: [
     { label: "Central Library", path: "/facilities/library/central" },
     { label: "Cyber Library", path: "/facilities/library/cyber" },
     { label: "MMV Library", path: "/facilities/library/mmvlibrary" },
   ]},
-  { label: "Sports", path: "/facilities/sports", children: [
+  { label: "Sports", children: [
     { label: "University Sports Board", path: "/facilities/sports/universitysports" },
     { label: "MMV Sports Board", path: "/facilities/sports/mmvsports" },
-    { label: "Open Gym", path: "/facilities/sports/gym" },
+    { label: "Gym", path: "/facilities/sports/gym" },
   ]},
-  { label: "Well-Being", path: "/facilities/wellbeing", children: [
+  { label: "Well-Being", children: [
     { label: "WBSC", path: "/facilities/wellbeing/wbsc" },
     { label: "MMV Pahal", path: "/facilities/wellbeing/mmvwell" },
   ]},
-  { label: "Training & Placement", path: "/facilities/trainingplacement", children: [
+  { label: "Training & Placement", children: [
     { label: "University T&P", path: "/facilities/trainingplacement/universitytraining" },
     { label: "MMV T&P", path: "/facilities/trainingplacement/mmvtraining" },
   ]},
   { label: "Central Discovery Centre", path: "/facilities/cdc" },
-  { label: "Medical", path: "/facilities/medical", children: [
+  { label: "Medical", children: [
     { label: "Sir Sundarlal Hospital", path: "/facilities/medical/ssh" },
     { label: "Trauma Center", path: "/facilities/medical/tc" },
     { label: "Student Health Center", path: "/facilities/medical/health" },
   ]},
-  { label: "Extra Curricular", path: "/facilities/extracurricular", children: [
+  { label: "Extra Curricular", children: [
     { label: "NCC", path: "/facilities/extracurricular/ncc" },
     { label: "NSS", path: "/facilities/extracurricular/nss" },
     { label: "NLSC", path: "/facilities/extracurricular/nlsc" },
@@ -92,12 +91,12 @@ const facilitiesItems = [
   ]},
   { label: "Samarth Portal", path: "/facilities/samarth" },
   { label: "Namaste BHU App", path: "/facilities/namaste" },
-  { label: "Canteen", path: "/facilities/canteen", children: [
+  { label: "Canteen", children: [
     { label: "University", path: "/facilities/canteen/universitycanteen" },
     { label: "MMV", path: "/facilities/canteen/mmvcanteen" },
   ]},
   { label: "City Delegacy", path: "/facilities/citydelegacy" },
-  { label: "Other Amenities", path: "/facilities/other", children: [
+  { label: "Other Amenities", children: [
     { label: "Vishwanath Temple", path: "/facilities/other/vt" },
     { label: "Bharat Kala Bhawan", path: "/facilities/other/bkb" },
     { label: "Transportation", path: "/facilities/other/transportation" },
@@ -107,22 +106,22 @@ const facilitiesItems = [
   ]},
 ];
 
-// Flat list used to build the mobile accordion menu — same data as the
-// desktop dropdowns above, plus the plain top-level links that live
-// directly in the nav bar (Home, About, Notices, etc.)
+// Mobile menu structure with valid top-level routes
 const mobileNavItems = [
   { label: "Home", path: "/" },
   { label: "About MMV", path: "/about" },
-  { label: "Administration", children: administrationItems },
-  { label: "Academics", children: academicsItems },
-  { label: "Facilities", children: facilitiesItems },
+  { label: "Administration", path: "/administration", children: administrationItems },
+  { label: "Academics", path: "/academics", children: academicsItems },
+  { label: "Facilities", path: "/facilities", children: facilitiesItems },
   { label: "Notices", path: "/notices" },
+  { label: "News", path: "/news" },
   { label: "AI Assistant", path: "/ai-assistant" },
   { label: "Contact", path: "/contact" },
+  { label: "Feedback", path: "/feedback" },
 ];
 
 // ============================================
-// DESKTOP — LEVEL 3 - Deepest submenu (hover flyout)
+// DESKTOP — LEVEL 3
 // ============================================
 const SubSubMenu = ({ label, path, children }) => {
   return (
@@ -136,7 +135,7 @@ const SubSubMenu = ({ label, path, children }) => {
           <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
         </Link>
       ) : (
-        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors">
+        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
           <span>{label}</span>
           <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
         </div>
@@ -144,22 +143,26 @@ const SubSubMenu = ({ label, path, children }) => {
 
       <div className="absolute top-0 left-full bg-[#0f3358] shadow-2xl min-w-52 lg:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
         {children.map((item, idx) => (
-          <Link
-            key={item.path || idx}
-            to={item.path}
-            className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
-          >
-            {item.label}
-          </Link>
+          item.children ? (
+            <SubSubMenu key={item.label || idx} label={item.label} path={item.path} children={item.children} />
+          ) : (
+            <Link
+              key={item.path || idx}
+              to={item.path || "#"}
+              onClick={(e) => { if (!item.path) e.preventDefault(); }}
+              className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+            >
+              {item.label}
+            </Link>
+          )
         ))}
       </div>
     </div>
   );
 };
 
-
 // ============================================
-// DESKTOP — LEVEL 2 - Middle submenu (hover flyout)
+// DESKTOP — LEVEL 2
 // ============================================
 const SubMenu = ({ label, path, children }) => {
   return (
@@ -173,7 +176,7 @@ const SubMenu = ({ label, path, children }) => {
           <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
         </Link>
       ) : (
-        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors">
+        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
           <span>{label}</span>
           <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
         </div>
@@ -191,7 +194,8 @@ const SubMenu = ({ label, path, children }) => {
           ) : (
             <Link
               key={item.path || idx}
-              to={item.path}
+              to={item.path || "#"}
+              onClick={(e) => { if (!item.path) e.preventDefault(); }}
               className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
@@ -203,9 +207,8 @@ const SubMenu = ({ label, path, children }) => {
   );
 };
 
-
 // ============================================
-// DESKTOP — LEVEL 1 - Main dropdown menu (hover flyout)
+// DESKTOP — LEVEL 1
 // ============================================
 const DropdownMenu = ({ title, path, items }) => {
   return (
@@ -230,7 +233,8 @@ const DropdownMenu = ({ title, path, items }) => {
           ) : (
             <Link
               key={item.path || idx}
-              to={item.path}
+              to={item.path || "#"}
+              onClick={(e) => { if (!item.path) e.preventDefault(); }}
               className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
@@ -243,11 +247,7 @@ const DropdownMenu = ({ title, path, items }) => {
 };
 
 // ============================================
-// MOBILE — one combined golden-bordered menu, with each open section's
-// content nested inside its own inner golden border (so opening
-// Administration -> Proctorial Board shows border-within-border-within-
-// border, visually spelling out the section > subsection > sub-subsection
-// hierarchy). Depth keeps its own background + hover color, same as before.
+// MOBILE MENU ITEM
 // ============================================
 const depthStyles = [
   {
@@ -255,19 +255,19 @@ const depthStyles = [
     text: "text-white",
     weight: "font-bold",
     hover: "hover:bg-[#174873] hover:text-[#d4af37]",
-  }, // Level 1
+  },
   {
     bg: "bg-[#133a63]",
     text: "text-slate-100",
     weight: "font-semibold",
     hover: "hover:bg-[#1b4d7e] hover:text-[#f4d580]",
-  }, // Level 2
+  },
   {
     bg: "bg-[#091f38]",
     text: "text-amber-200",
     weight: "font-medium",
     hover: "hover:bg-[#12314f] hover:text-[#fce8b2]",
-  }, // Level 3
+  },
 ];
 
 const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
@@ -291,7 +291,8 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
             </Link>
           ) : (
             <span
-              className={`flex-1 py-3 text-xs sm:text-sm text-left transition-colors ${style.bg} ${style.text} ${style.weight}`}
+              onClick={() => setOpen((o) => !o)}
+              className={`flex-1 py-3 text-xs sm:text-sm text-left transition-colors cursor-pointer ${style.bg} ${style.text} ${style.weight}`}
               style={{ paddingLeft: `${indentPad}px` }}
             >
               <span className={depth === 0 ? "font-cinzel tracking-wide" : ""}>{item.label}</span>
@@ -306,9 +307,6 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
             </span>
           </button>
         </div>
-        {/* Nested golden border wraps this section's own content — so an
-            opened sub-subsection appears as its own border INSIDE its
-            parent's border, instead of everything sharing one flat box. */}
         {open && (
           <div className="border-2 border-[#d4af37] rounded-lg mx-2 my-1.5 overflow-hidden divide-y divide-[#d4af37]/25">
             {item.children.map((child) => (
@@ -327,8 +325,14 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
 
   return (
     <Link
-      to={item.path}
-      onClick={onNavigate}
+      to={item.path || "#"}
+      onClick={(e) => {
+        if (!item.path) {
+          e.preventDefault();
+        } else {
+          onNavigate();
+        }
+      }}
       className={`block py-3 pr-4 text-xs sm:text-sm transition-colors ${style.bg} ${style.text} ${style.weight} ${style.hover}`}
       style={{ paddingLeft: `${indentPad}px` }}
     >
@@ -338,7 +342,7 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
 };
 
 // ============================================
-// MOBILE — slide-in menu panel
+// MOBILE MENU PANEL
 // ============================================
 const MobileMenu = ({ isOpen, onClose }) => {
   useEffect(() => {
@@ -348,13 +352,11 @@ const MobileMenu = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         onClick={onClose}
         className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[998] transition-opacity duration-200 md:hidden
           ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       />
-      {/* Panel */}
       <div
         className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-[#081a2f] z-[999] shadow-2xl
           overflow-y-auto transition-transform duration-300 md:hidden border-l-2 border-[#d4af37]
@@ -385,7 +387,6 @@ const MobileMenu = ({ isOpen, onClose }) => {
   );
 };
 
-
 // ============================================
 // THE FULL NAVBAR
 // ============================================
@@ -396,28 +397,20 @@ const Navbar = () => {
   const location = useLocation();
   const isHomePage = location.pathname.toLowerCase() === '/' || location.pathname.toLowerCase() === '/home';
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const isAdminPage = location.pathname.toLowerCase().startsWith('/admin');
   const token = localStorage.getItem('token');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notices, setNotices] = useState([]);
 
-  // ---- SCROLL-DRIVEN HEADER (Columbia-site style) ----
-  // The <header> below is `sticky top-0`, so it's always pinned to the
-  // viewport. The logo/banner/ticker block collapses away as soon as the
-  // user scrolls DOWN, leaving just the Home / About / Administration /
-  // Academics / Facilities / Notices / AI Assistant / Contact bar pinned
-  // at the very top. Scrolling UP (or landing back at the top of the
-  // page) brings the full banner back down.
-  const [headerVisible, setHeaderVisible] = useState(true);
-
-  
-  const autoHideTimerRef = useRef(null);
-  const hoverTimerRef = useRef(null);
-
-  // Header collapse/hover-reveal only applies on desktop (md and up).
-  // On mobile the header always stays visible so the hamburger is never lost.
   const [isMobile, setIsMobile] = useState(
     typeof window !== 'undefined' ? window.innerWidth < 768 : false
   );
+
+  const isDisableCollapse = isHomePage || isMobile || isAdmin || isAdminPage;
+
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const autoHideTimerRef = useRef(null);
+  const hoverTimerRef = useRef(null);
 
   useEffect(() => {
     const mql = window.matchMedia('(max-width: 767px)');
@@ -438,20 +431,18 @@ const Navbar = () => {
     }
   };
 
-  // Auto-hide header after 5 seconds on non-home pages upon page load or navigation
-  // (desktop only — mobile keeps the header always visible)
   useEffect(() => {
     clearTimers();
     setHeaderVisible(true);
 
-    if (!isHomePage && !isMobile) {
+    if (!isDisableCollapse) {
       autoHideTimerRef.current = setTimeout(() => {
         setHeaderVisible(false);
       }, 5000);
     }
 
     return () => clearTimers();
-  }, [location.pathname, isHomePage, isMobile]);
+  }, [location.pathname, isDisableCollapse]);
 
   useEffect(() => {
     const fetchNotices = async () => {
@@ -477,43 +468,37 @@ const Navbar = () => {
   };
 
   const handleMouseMove = (e) => {
-    if (isHomePage || isMobile) return;
+    if (isDisableCollapse) return;
 
-    // Clear auto-hide timer if active
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
       autoHideTimerRef.current = null;
     }
 
-    // Check if user is hovering over interactive buttons / links / dropdown items
     const isOverButton = Boolean(e.target.closest('a, button, [role="button"], input, select'));
 
     if (isOverButton) {
-      // If hovering over buttons/links, cancel the reveal timer so header stays hidden
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
         hoverTimerRef.current = null;
       }
     } else {
-      // If hovering over empty background space (not buttons), start timer to reveal header
       if (!hoverTimerRef.current && !headerVisible) {
         hoverTimerRef.current = setTimeout(() => {
           setHeaderVisible(true);
-        }, 2000); // reduced from 3000ms to 2000ms
+        }, 2000);
       }
     }
   };
 
   const handleMouseLeave = () => {
-    if (isHomePage || isMobile) return;
+    if (isDisableCollapse) return;
 
-    // Clear hover timer if mouse leaves
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
 
-    // Auto-hide header 5 seconds after mouse leaves
     if (!autoHideTimerRef.current) {
       autoHideTimerRef.current = setTimeout(() => {
         setHeaderVisible(false);
@@ -530,7 +515,7 @@ const Navbar = () => {
       {/* Collapsible Header Container */}
       <div 
         className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
-          headerVisible || isHomePage || isMobile
+          headerVisible || isDisableCollapse
             ? "grid-rows-[1fr] opacity-100" 
             : "grid-rows-[0fr] opacity-0 overflow-hidden pointer-events-none"
         }`}
@@ -538,15 +523,13 @@ const Navbar = () => {
         <div className="overflow-hidden">
           <header className="w-full bg-[#0f3358]">
             {/* Top-most view line */}
-           <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 flex justify-between items-center border-b border-[#d4af37]/40">
-  <div className="flex items-center gap-3">
-    <span className="text-[#d4af37] text-xs sm:text-xs font-bold font-cinzel leading-tight tracking-wide whitespace-normal block">
-      {/* Mobile view (hidden on sm screens and above) */}
-      <span className="sm:hidden">Mahila Mahavidyalaya</span>
-      {/* Desktop view (hidden on mobile, shown on sm screens and above) */}
-      <span className="hidden sm:inline">Banaras Hindu University | Mahila Mahavidyalaya</span>
-    </span>
-  </div>
+            <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 flex justify-between items-center border-b border-[#d4af37]/40">
+              <div className="flex items-center gap-3">
+                <span className="text-[#d4af37] text-xs sm:text-xs font-bold font-cinzel leading-tight tracking-wide whitespace-normal block">
+                  <span className="sm:hidden">Mahila Mahavidyalaya</span>
+                  <span className="hidden sm:inline">Banaras Hindu University | Mahila Mahavidyalaya</span>
+                </span>
+              </div>
 
               <div>
                 {token && isAdmin ? (
@@ -575,7 +558,6 @@ const Navbar = () => {
 
             {/* Main Branding Header Bar */}
             <div className="bg-white px-3 sm:px-8 py-3 flex items-center justify-between gap-2 sm:gap-3 border-b border-[#d4af37]/40 shadow-sm">
-              {/* Desktop & Mobile Left: BHU Logo */}
               <div className="flex-shrink-0">
                 <img
                   src="/bhu/logo_bhu.png"
@@ -584,7 +566,6 @@ const Navbar = () => {
                 />
               </div>
 
-              {/* Desktop Center: MMV Saarthi Logo (hidden on mobile) */}
               <div className="hidden md:block flex-shrink-0 bg-transparent">
                 <img 
                   src="/mmv_saarthi_logo.png" 
@@ -593,15 +574,14 @@ const Navbar = () => {
                 />
               </div>
 
-              {/* Desktop Right: MMV Title + MMV Logo (hidden on mobile) */}
               <div className="hidden md:flex items-center gap-2 sm:gap-3 min-w-0">
                 <div className="min-w-0 text-right">
-                   <h1 className="text-[#353375] text-xs sm:text-lg md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
-                Mahila Mahavidyalaya
-              </h1>
-              <p className="text-[9px] sm:text-xs text-[#353375] font-semibold tracking-wider uppercase whitespace-normal">
-                Varanasi
-              </p>
+                  <h1 className="text-[#353375] text-xs sm:text-lg md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
+                    Mahila Mahavidyalaya
+                  </h1>
+                  <p className="text-[9px] sm:text-xs text-[#353375] font-semibold tracking-wider uppercase whitespace-normal">
+                    Varanasi
+                  </p>
                 </div>
                 <div className="bg-transparent p-0 flex-shrink-0">
                   <img
@@ -612,7 +592,6 @@ const Navbar = () => {
                 </div>
               </div>
 
-              {/* Mobile Right: MMV Saarthi Logo + Hamburger Button (hidden on desktop) */}
               <div className="md:hidden flex items-center gap-2 flex-shrink-0">
                 <img 
                   src="/mmv_saarthi_logo.png" 
@@ -669,8 +648,6 @@ const Navbar = () => {
 
       {/* ── Navigation Bar (Stays visible at top) ── */}
       <nav className="bg-[#0f3358] px-4 border-b-2 border-[#d4af37] shadow-lg">
-        
-
         {/* Desktop Navigation Row */}
         <div className="hidden md:flex relative justify-end items-center">
           <Link to="/"
@@ -697,10 +674,17 @@ const Navbar = () => {
             Notices
           </Link>
 
-          <Link to="/ai-assistant"
+          <Link to="/News"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
                     hover:bg-[#174873] hover:text-[#d4af37]
                     transition-all duration-200 whitespace-nowrap">
+            News
+          </Link>
+
+          <Link to="/ai-assistant"
+            className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
+                    rounded-full bg-[#FFD700] 
+                    transition-all duration-200 whitespace-nowrap shadow-sm">
             AI Assistant
           </Link>
 

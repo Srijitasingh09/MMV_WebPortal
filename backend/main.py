@@ -121,6 +121,35 @@ def save_mmv_chat_knowledge(entries):
         json.dump(entries, f, indent=2, ensure_ascii=False)
 
 
+def split_news_title_and_body(raw_text: str):
+    """The admin types one block of text for a news item — the first line
+    becomes the heading (title), everything after it becomes the body."""
+    normalized = (raw_text or "").replace("\r\n", "\n").strip("\n")
+    if not normalized.strip():
+        return "", ""
+    lines = normalized.split("\n", 1)
+    title = lines[0].strip()
+    body = lines[1].strip() if len(lines) > 1 else ""
+    return title, body
+
+
+def serialize_news(n: "models.News"):
+    return {
+        "id": n.id,
+        "title": n.title,
+        "content": n.content,
+        "created_at": n.created_at,
+        "photos": [
+            {"id": p.id, "photo_name": p.photo_name, "photo_url": p.photo_url}
+            for p in n.photos
+        ],
+        "pdfs": [
+            {"id": p.id, "pdf_name": p.pdf_name, "pdf_url": p.pdf_url}
+            for p in n.pdfs
+        ],
+    }
+
+
 def ensure_notice_attachment_columns():
     with engine.connect() as conn:
         column_rows = conn.execute(text(
@@ -157,13 +186,22 @@ def ensure_emergency_contacts_table():
     models.Base.metadata.create_all(bind=engine, tables=[
         models.EmergencyContact.__table__,
     ], checkfirst=True)
- 
+
+
+def ensure_news_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.News.__table__,
+        models.NewsPhoto.__table__,
+        models.NewsPdf.__table__,
+    ], checkfirst=True)
+
 
 ensure_emergency_contacts_table() 
 ensure_notice_attachment_columns()
 ensure_college_info_columns()
 ensure_mmv_knowledge_file()
 ensure_facility_content_table()
+ensure_news_table()
 
 app = FastAPI(title="MMV WebPortal")
 
@@ -407,6 +445,174 @@ def update_notice(
     db.refresh(notice)
     background_tasks.add_task(sync_notice_by_id, notice.id)
     return notice
+
+# ===================== NEWS =====================
+# Same idea as Notices, except the admin only types one block of text —
+# the first line becomes the heading — and any number of images/PDFs can
+# be attached. Clicking a news item opens the same style of detail view
+# used for notices.
+
+@app.get("/news")
+def get_news(db: Session = Depends(get_db)):
+    rows = db.query(models.News).order_by(models.News.created_at.desc()).all()
+    return [serialize_news(r) for r in rows]
+
+
+@app.post("/admin/news")
+async def add_news(
+    text: str = Form(...),
+    attachments: List[UploadFile] = File(None),
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    ensure_admin(user)
+
+    title, body = split_news_title_and_body(text)
+    if not title:
+        raise HTTPException(
+            status_code=400,
+            detail="News text cannot be empty — the first line becomes the heading."
+        )
+
+    new_news = models.News(title=title, content=body)
+    db.add(new_news)
+    db.commit()
+    db.refresh(new_news)
+
+    for file in (attachments or []):
+        if not file or not file.filename:
+            continue
+        if file.content_type in ALLOWED_IMAGE_TYPES:
+            await validate_upload(file, ALLOWED_IMAGE_TYPES)
+            unique_name = f"news_photo_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NewsPhoto(
+                news_id=new_news.id,
+                photo_name=file.filename,
+                photo_url=f"/uploads/{unique_name}",
+            ))
+        elif file.content_type in ALLOWED_PDF_TYPES:
+            await validate_upload(file, ALLOWED_PDF_TYPES)
+            unique_name = f"news_pdf_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NewsPdf(
+                news_id=new_news.id,
+                pdf_name=file.filename,
+                pdf_url=f"/uploads/{unique_name}",
+            ))
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File type '{file.content_type}' is not allowed. Only images or PDFs can be attached."
+            )
+
+    db.commit()
+    db.refresh(new_news)
+    return serialize_news(new_news)
+
+
+@app.put("/admin/news/{news_id}")
+def update_news(
+    news_id: int,
+    payload: dict,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    ensure_admin(user)
+    news = db.query(models.News).filter(models.News.id == news_id).first()
+    if not news:
+        raise HTTPException(status_code=404, detail="News not found")
+
+    if "text" in payload:
+        # Same rule applies on edit: first line of the given text is the heading.
+        title, body = split_news_title_and_body(payload["text"])
+        if not title:
+            raise HTTPException(
+                status_code=400,
+                detail="News text cannot be empty — the first line becomes the heading."
+            )
+        news.title = title
+        news.content = body
+    else:
+        if "title" in payload:
+            news.title = payload["title"]
+        if "content" in payload:
+            news.content = payload["content"]
+
+    db.commit()
+    db.refresh(news)
+    return serialize_news(news)
+
+
+@app.delete("/admin/news/{news_id}")
+def delete_news(
+    news_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    ensure_admin(user)
+    news = db.query(models.News).filter(models.News.id == news_id).first()
+    if not news:
+        raise HTTPException(status_code=404, detail="News not found")
+
+    for photo in news.photos:
+        stored_path = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
+    for pdf in news.pdfs:
+        stored_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
+
+    db.delete(news)  # cascades to news_photos / news_pdfs
+    db.commit()
+    return {"message": "News deleted"}
+
+
+@app.delete("/admin/news/{news_id}/photo/{photo_id}")
+def delete_news_photo(
+    news_id: int,
+    photo_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    ensure_admin(user)
+    photo = db.query(models.NewsPhoto).filter(
+        models.NewsPhoto.id == photo_id, models.NewsPhoto.news_id == news_id
+    ).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    stored_path = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
+    if os.path.exists(stored_path):
+        os.remove(stored_path)
+    db.delete(photo)
+    db.commit()
+    return {"message": "Photo deleted"}
+
+
+@app.delete("/admin/news/{news_id}/pdf/{pdf_id}")
+def delete_news_pdf(
+    news_id: int,
+    pdf_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    ensure_admin(user)
+    pdf = db.query(models.NewsPdf).filter(
+        models.NewsPdf.id == pdf_id, models.NewsPdf.news_id == news_id
+    ).first()
+    if not pdf:
+        raise HTTPException(status_code=404, detail="PDF not found")
+    stored_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
+    if os.path.exists(stored_path):
+        os.remove(stored_path)
+    db.delete(pdf)
+    db.commit()
+    return {"message": "PDF deleted"}
 
 # ================emergency contact=======================
 

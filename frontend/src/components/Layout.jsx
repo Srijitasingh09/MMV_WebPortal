@@ -2,7 +2,7 @@ import React from 'react';
 import Navbar from './Navbar.jsx';
 import Footer from "./Footer";
 import ChatWidget from "./ChatWidget";
-const Layout = ({ children , hideFooter = false }) => {
+const Layout = ({ children , hideFooter = false, hideChatWidget = false }) => {
   return (
     <div className=" bg-[#EAF0F6]">
       <Navbar />
@@ -10,7 +10,7 @@ const Layout = ({ children , hideFooter = false }) => {
         {children}
       </main>
       {!hideFooter && <Footer />}
-      <ChatWidget />
+      {!hideChatWidget && <ChatWidget />}
     </div>
   );
 };

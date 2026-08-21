@@ -234,7 +234,7 @@ After logging in, the navbar top bar shows an **Admin Panel** link and a **Logou
 - Contact info and emergency contacts
 - College info cards
 - Administration section content
-- Academics: NEP info, syllabus uploads, electives, section in-charges, SWAYAM
+- Academics: NEP info, syllabus uploads, electives, incharges, SWAYAM
 - Facility content (description, photos, PDFs, tables, profiles) across all 57 pages
 - MMV Knowledge Base — content intended for a planned AI assistant (not yet built; see below)
 

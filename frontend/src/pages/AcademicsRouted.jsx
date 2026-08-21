@@ -62,17 +62,17 @@ const pages = {
   // ── Section In-Charge ───────────────────────────────────────────────────
  
   'section-incharge/science': {
-    title: 'Section Incharge — Science',
+    title: 'Incharge — Science',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/socialscience': {
-    title: 'Section Incharge — Social Science',
+    title: 'Incharge — Social Science',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/arts': {
-    title: 'Section Incharge — Arts',
+    title: 'Incharge — Arts',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },

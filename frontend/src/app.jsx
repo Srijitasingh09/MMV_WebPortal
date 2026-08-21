@@ -14,6 +14,7 @@ import Contact from './pages/contact';
 import MMVerse from './pages/MMVerse';
 import AdminContentGuide from './pages/adminreadme'; 
 import Feedback from './pages/Feedback';
+import News from './pages/News';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
@@ -31,9 +32,16 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   return children;
 };
 
-// Layout Wrapper to conditionally show Layout
-const LayoutWrapper = ({ children, hideFooter = false }) => {
-  return <Layout hideFooter={hideFooter}>{children}</Layout>;
+// Layout Wrapper to conditionally show Layout & automatically hide chat widget for logged-in Admins
+const LayoutWrapper = ({ children, hideFooter = false, hideChatWidget = false }) => {
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const shouldHideChatWidget = hideChatWidget || isAdmin;
+
+  return (
+    <Layout hideFooter={hideFooter} hideChatWidget={shouldHideChatWidget}>
+      {children}
+    </Layout>
+  );
 };
 
 function App() {
@@ -44,44 +52,43 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
 
         {/* Student Routes */}
-       <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
-       <Route path="/About" element={<LayoutWrapper><About/></LayoutWrapper>} />
-        
-       <Route path="/facilities" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
-       <Route path="/facilities/:sub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
-       <Route path="/facilities/:sub/:subsub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
+        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
+        <Route path="/About" element={<LayoutWrapper hideChatWidget><About/></LayoutWrapper>} />
+        <Route path="/facilities" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
+        <Route path="/facilities/:sub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
+        <Route path="/facilities/:sub/:subsub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
        
-       <Route path="/administration" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
-       <Route path="/administration/:sub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
-       <Route path="/administration/:sub/:subsub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
+        <Route path="/administration" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
+        <Route path="/administration/:sub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
+        <Route path="/administration/:sub/:subsub" element={<LayoutWrapper><AdministrationRouted /></LayoutWrapper>} />
 
         {/* Academics Routes */}
-       <Route path="/academics" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
-       <Route path="/academics/:sub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
-       <Route path="/academics/:sub/:subsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
-       <Route path="/academics/:sub/:subsub/:subsubsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
+        <Route path="/academics" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
+        <Route path="/academics/:sub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
+        <Route path="/academics/:sub/:subsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
+        <Route path="/academics/:sub/:subsub/:subsubsub" element={<LayoutWrapper><AcademicsRouted /></LayoutWrapper>} />
        
-       {/*notice*/}
+        {/* notice */}
         <Route path="/Notices" element={<LayoutWrapper><Notices/></LayoutWrapper>} />
 
-         {/*contact*/}
+        {/* news */}
+        <Route path="/News" element={<LayoutWrapper><News/></LayoutWrapper>} />
+
+        {/* contact */}
         <Route path="/Contact" element={<LayoutWrapper><Contact/></LayoutWrapper>} />
        
-       {/* Ai Assistant */}
-       <Route path="/ai-assistant" element={<LayoutWrapper><MMVerse /></LayoutWrapper>} />
+        {/* Ai Assistant */}
+        <Route path="/ai-assistant" element={<LayoutWrapper hideChatWidget><MMVerse /></LayoutWrapper>} />
 
-       {/*feedback*/}
-       <Route path="/Feedback" element={<LayoutWrapper><Feedback/></LayoutWrapper>}  />
+        {/* feedback */}
+        <Route path="/Feedback" element={<LayoutWrapper><Feedback/></LayoutWrapper>} />
 
-
-
-       {/* Admin Routes */}
+        {/* Admin Routes */}
         <Route 
           path="/admin" 
           element={
             <ProtectedRoute adminOnly={true}>
-              <LayoutWrapper><AdminDashboard /></LayoutWrapper>
-
+              <LayoutWrapper hideChatWidget><AdminDashboard /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />
@@ -90,12 +97,10 @@ function App() {
           path="/admin/content-guide" 
           element={
             <ProtectedRoute adminOnly={true}>
-              <LayoutWrapper><AdminContentGuide /></LayoutWrapper>
+              <LayoutWrapper hideChatWidget><AdminContentGuide /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />
-
-
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
