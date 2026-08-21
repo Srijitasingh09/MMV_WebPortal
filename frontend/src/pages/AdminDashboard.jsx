@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
-import { Bell, Send, Paperclip, Phone, FileText } from 'lucide-react';
+import { Bell, Send, Paperclip, Phone, FileText, Newspaper, X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import AdminReadme from './adminreadme';
 
@@ -14,6 +14,13 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
 
   const noticeAttachmentInputRef = useRef(null);
+
+  // ── NEWS TAB STATE ──
+  // Backend expects one text block (first line = heading) plus any number
+  // of image/PDF attachments — same shape as /admin/news in main.py.
+  const [newsText, setNewsText] = useState('');
+  const [newsAttachments, setNewsAttachments] = useState([]);
+  const newsAttachmentInputRef = useRef(null);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -88,6 +95,51 @@ const AdminDashboard = () => {
     }
   };
 
+  // ── NEWS: file picker (append, don't replace, since input is multi) ──
+  const handleNewsFilesChange = (e) => {
+    const picked = Array.from(e.target.files || []);
+    if (picked.length === 0) return;
+    setNewsAttachments((prev) => [...prev, ...picked]);
+    // reset the input so picking the same file again still fires onChange
+    if (newsAttachmentInputRef.current) newsAttachmentInputRef.current.value = '';
+  };
+
+  const removeNewsAttachment = (index) => {
+    setNewsAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitNews = async (e) => {
+    e.preventDefault();
+    if (!newsText.trim()) {
+      alert('News text cannot be empty — the first line becomes the heading.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('text', newsText);
+      newsAttachments.forEach((file) => {
+        formData.append('attachments', file);
+      });
+
+      await axios.post('/admin/news', formData, {
+        headers: {
+          ...authHeader(),
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setNewsText('');
+      setNewsAttachments([]);
+      if (newsAttachmentInputRef.current) newsAttachmentInputRef.current.value = '';
+      showSuccess('News published successfully!');
+    } catch (err) {
+      alert('Error creating news: ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmitContactInfo = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -107,7 +159,7 @@ const AdminDashboard = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold font-serif text-gray-900">Admin Control Panel</h1>
-          <p className="text-muted text-xs sm:text-sm mt-1">Manage portal notices, contact details, and view administrator documentation</p>
+          <p className="text-muted text-xs sm:text-sm mt-1">Manage portal notices, news, contact details, and view administrator documentation</p>
         </div>
 
         <button
@@ -131,6 +183,12 @@ const AdminDashboard = () => {
           className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'notice' ? 'border-[#0f3358] text-[#0f3358] bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <Bell size={18} className="mr-2 text-[#7d311f]" /> CREATE NOTICE
+        </button>
+        <button
+          onClick={() => setActiveTab('news')}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'news' ? 'border-[#0f3358] text-[#0f3358] bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+        >
+          <Newspaper size={18} className="mr-2 text-[#7d311f]" /> CREATE NEWS
         </button>
         <button
           onClick={() => setActiveTab('contact-info')}
@@ -210,6 +268,76 @@ const AdminDashboard = () => {
           >
             <Send size={18} className="mr-3" />
             {loading ? 'POSTING NOTICE...' : 'PUBLISH NOTICE'}
+          </button>
+        </form>
+      )}
+
+      {/* Create News Tab */}
+      {activeTab === 'news' && (
+        <form onSubmit={handleSubmitNews} className="bg-white p-5 sm:p-8 md:p-10 rounded-2xl shadow-sm border border-gray-200 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+          <div>
+            <h3 className="font-bold text-lg text-[#0f3358] font-serif">Publish News</h3>
+            <p className="text-slate-600 text-sm mt-1">
+              Type the story as one block of text — the first line becomes the headline,
+              everything after it becomes the body. Attach any number of photos or PDFs below.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+              News Text (first line = headline)
+            </label>
+            <textarea
+              required
+              rows={8}
+              value={newsText}
+              onChange={(e) => setNewsText(e.target.value)}
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              placeholder={'MMV Students Win National Debate Championship\nWrite the full story here. It can span as many lines as you need...'}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+              <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachments (Images / PDFs — any number)
+            </label>
+            <input
+              ref={newsAttachmentInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.png,.jpg,.jpeg,.webp"
+              onChange={handleNewsFilesChange}
+              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm"
+            />
+
+            {newsAttachments.length > 0 && (
+              <ul className="space-y-1.5 pt-1">
+                {newsAttachments.map((file, idx) => (
+                  <li
+                    key={`${file.name}-${idx}`}
+                    className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-slate-700"
+                  >
+                    <span className="truncate">{file.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeNewsAttachment(idx)}
+                      className="p-1 rounded-full text-red-500 hover:bg-red-50 shrink-0"
+                      title="Remove"
+                    >
+                      <X size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <button
+            disabled={loading}
+            className="w-full py-4 sm:py-5 bg-[#0f3358] text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
+          >
+            <Send size={18} className="mr-3" />
+            {loading ? 'POSTING NEWS...' : 'PUBLISH NEWS'}
           </button>
         </form>
       )}

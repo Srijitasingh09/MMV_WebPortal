@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-// Navy   #0D1F3C   — institution authority, headings, dark surfaces
-// Ivory  #FAF7F2   — warm background, alternating sections
-// Terra  #C4561A   — BHU terracotta heritage accent, numbers, icons
-// Gold   #E8C97A   — thin accent rules, subtle highlights
-// White  #FFFFFF   — cards, clean surfaces
-// Body   #1A1A1A   — near-black readable text
+// Navy   #0D1F3C / #0F3358 — institution authority, headings, dark surfaces
+// Ivory  #FAF7F2 / #EAEFF5 — warm background, alternating sections
+// Terra  #7D311F / #C4561A — BHU terracotta heritage accent, numbers, icons
+// Gold   #D4AF37 / #E8C97A — thin accent rules, subtle highlights
+// White  #FFFFFF — cards, clean surfaces
+// Body   #1A1A1A — near-black readable text
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // ─── ANIMATED STAT COUNTER ───────────────────────────────────────────────────
 const CountUpStat = ({ targetStr, label, startFrom = 0 }) => {
@@ -87,7 +89,7 @@ const Hero = () => (
       <div className="absolute inset-0 w-full h-full">
         <img
           src="/bhu/web (1).png"
-          alt="Mahila Maha Vidyalaya BHU Campus"
+          alt="Mahila Mahavidyalaya BHU Campus"
           className="w-full h-full object-cover object-center"
         />
         <div
@@ -151,10 +153,10 @@ const Hero = () => (
 
         <div className="mt-2">
           <a
-            href="#about"
+            href="#live-notices-news"
             className="inline-block font-lato text-xs sm:text-sm font-semibold bg-black/30 hover:bg-black/50 text-amber-100 hover:text-white border border-amber-200/30 px-6 py-2.5 rounded-full backdrop-blur-xs transition-all transform hover:-translate-y-0.5"
           >
-            Explore Portal Services ↓
+            Explore Latest Notices & News ↓
           </a>
         </div>
       </div>
@@ -162,9 +164,253 @@ const Hero = () => (
   </section>
 );
 
-// ─── ABOUT ────────────────────────────────────────────────────────────────────
+// ─── NOTICES & NEWS BOARD (FULL WIDTH & OPTIMIZED SPACING) ──────────────────
+const NoticesAndNews = () => {
+  const [notices, setNotices] = useState([]);
+  const [loadingNotices, setLoadingNotices] = useState(true);
+
+  const [news, setNews] = useState([]);
+  const [loadingNews, setLoadingNews] = useState(true);
+
+  const fallbackNotices = [
+    { id: '1', title: 'Operating of Shops, Gumaties etc. within the premises of Rajiv Gandhi South Campus, B...', date: 'Fri, 21 Aug 2026', isNew: true },
+    { id: '2', title: 'Notification of Conference/Seminar/Symposium/Workshop etc.-reg', date: 'Mon, 17 Aug 2026', isNew: true },
+    { id: '3', title: 'Application forms for M.Pharma (Ay) and B.Pharma (Ay) Entrance Test 2026 (Self Finance)', date: 'Thu, 13 Aug 2026', isNew: true },
+    { id: '4', title: 'Operating of Shops, Gumaties etc. within the premises of BHU', date: 'Wed, 12 Aug 2026', isNew: true },
+    { id: '5', title: 'Diploma in Yoga Training Programme', date: 'Mon, 10 Aug 2026', isNew: false },
+    { id: '6', title: 'Theater Performance - Satya Harishchandra', date: 'Mon, 10 Aug 2026', isNew: false },
+    { id: '7', title: 'Revised Schedule for BA / BSc Semester III Examination', date: 'Fri, 07 Aug 2026', isNew: false },
+  ];
+
+  const fallbackNews = [
+    { id: 'n1', title: 'National Workshop on "Application of (AI) Artificial Intelligence on Scientific Research" (AAISR-2026)', date: 'Thu, 01 Sep 2026', isNew: true },
+    { id: 'n2', title: '8th Drosophila Training Workshop organized by Department of Zoology', date: 'Tue, 02 Sep 2026', isNew: true },
+    { id: 'n3', title: 'National Workshop on "Emerging Trends and Application of Rules in Athletics" (ETARA-2026)', date: 'Sun, 07 Sep 2026', isNew: true },
+    { id: 'n4', title: 'Summer School on Innovative Technologies for Breeding Nutrient-Dense & Stress-Resilient Crops', date: 'Wed, 07 Sep 2026', isNew: false },
+    { id: 'n5', title: 'Special Lecture Series on Molecular Biology & Biotechnology Techniques', date: 'Mon, 10 Sep 2026', isNew: false },
+    { id: 'n6', title: 'MMV Annual Fine Arts & Heritage Painting Exhibition 2026', date: 'Fri, 14 Sep 2026', isNew: false },
+  ];
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      try {
+        setLoadingNotices(true);
+        const res = await fetch(`${API_BASE}/notices`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const formatted = data.map(n => ({
+              id: n.id,
+              title: n.title,
+              date: n.created_at
+                ? new Date(n.created_at).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                : 'Fri, 21 Aug 2026',
+              isNew: (() => {
+                if (!n.created_at) return true;
+                const diffDays = (new Date() - new Date(n.created_at)) / (1000 * 60 * 60 * 24);
+                return diffDays <= 14;
+              })()
+            }));
+            setNotices(formatted);
+          } else {
+            setNotices(fallbackNotices);
+          }
+        } else {
+          setNotices(fallbackNotices);
+        }
+      } catch (err) {
+        console.error('Failed to fetch notices:', err);
+        setNotices(fallbackNotices);
+      } finally {
+        setLoadingNotices(false);
+      }
+    };
+
+    const fetchNews = async () => {
+      try {
+        setLoadingNews(true);
+        const res = await fetch(`${API_BASE}/news`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            const formatted = data.map(n => ({
+              id: n.id,
+              title: n.title,
+              date: n.created_at || n.date
+                ? new Date(n.created_at || n.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                : 'Thu, 01 Sep 2026',
+              isNew: (() => {
+                const dateVal = n.created_at || n.date;
+                if (!dateVal) return true;
+                const diffDays = (new Date() - new Date(dateVal)) / (1000 * 60 * 60 * 24);
+                return diffDays <= 14;
+              })()
+            }));
+            setNews(formatted);
+          } else {
+            setNews(fallbackNews);
+          }
+        } else {
+          setNews(fallbackNews);
+        }
+      } catch (err) {
+        console.error('Failed to fetch news:', err);
+        setNews(fallbackNews);
+      } finally {
+        setLoadingNews(false);
+      }
+    };
+
+    fetchNotices();
+    fetchNews();
+  }, []);
+
+  const displayNotices = notices.length > 0 ? notices : fallbackNotices;
+  const displayNews = news.length > 0 ? news : fallbackNews;
+
+  return (
+    <section id="live-notices-news" className="bg-[#FAF7F2] pt-8 sm:pt-12 pb-6 sm:pb-8 px-4 sm:px-6 md:px-8 border-b border-slate-200">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Section Header */}
+        <div className="text-center mb-4 sm:mb-6">
+          <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#7d311f] mb-1.5">
+            Official Bulletin Hub
+          </p>
+          <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#0f3358] mb-2 leading-snug">
+            Campus Notices & News
+          </h2>
+          <div className="w-12 h-0.5 bg-[#d4af37] mx-auto" />
+        </div>
+
+        {/* Dual Card Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+          {/* Left Column: NOTICES CARD */}
+          <div className="bg-white rounded-xl border-2 border-[#0f3358]/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
+            <div>
+              <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-[#0f3358] leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
+                <span>Notices & Circulars</span>
+                <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Live</span>
+              </h3>
+
+              {/* Notice Stream */}
+              <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
+                {loadingNotices ? (
+                  <div className="py-8 text-center">
+                    <div className="w-7 h-7 border-3 border-[#0f3358] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <p className="font-lato text-xs text-slate-500 font-medium">Loading Notices...</p>
+                  </div>
+                ) : (
+                  displayNotices.map((n) => (
+                    <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
+                      <Link
+                        to={`/Notices?id=${n.id}`}
+                        className="font-lato text-xs sm:text-sm font-semibold text-[#0f3358] hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
+                      >
+                        {n.title}
+                      </Link>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-[11px] font-medium">{n.date}</span>
+                          {n.isNew && (
+                            <span className="bg-red-600 text-white font-extrabold text-[9px] px-1.5 py-0.2 rounded uppercase animate-pulse">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <Link
+                          to={`/Notices?id=${n.id}`}
+                          className="text-[#7d311f] font-bold text-xs hover:underline"
+                        >
+                          Read More →
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Single Read More Footer */}
+            <div className="mt-3 pt-3 border-t border-slate-100 text-right">
+              <Link
+                to="/Notices"
+                className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-[#0f3358] hover:text-[#7d311f] transition-colors"
+              >
+                <span>Read More Notices</span>
+                <span className="text-base font-bold">→</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Right Column: NEWS CARD */}
+          <div className="bg-white rounded-xl border-2 border-[#0f3358]/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
+            <div>
+              <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-[#0f3358] leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
+                <span>Latest Campus News</span>
+                <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Updates</span>
+              </h3>
+
+              {/* News Stream */}
+              <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
+                {loadingNews ? (
+                  <div className="py-8 text-center">
+                    <div className="w-7 h-7 border-3 border-[#0f3358] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <p className="font-lato text-xs text-slate-500 font-medium">Loading News...</p>
+                  </div>
+                ) : (
+                  displayNews.map((n) => (
+                    <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
+                      <Link
+                        to={`/news?id=${n.id}`}
+                        className="font-lato text-xs sm:text-sm font-semibold text-[#0f3358] hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
+                      >
+                        {n.title}
+                      </Link>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-500 text-[11px] font-medium">{n.date}</span>
+                          {n.isNew && (
+                            <span className="bg-red-600 text-white font-extrabold text-[9px] px-1.5 py-0.2 rounded uppercase animate-pulse">
+                              NEW
+                            </span>
+                          )}
+                        </div>
+                        <Link
+                          to={`/news?id=${n.id}`}
+                          className="text-[#7d311f] font-bold text-xs hover:underline"
+                        >
+                          Read More →
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Single Read More Footer */}
+            <div className="mt-3 pt-3 border-t border-slate-100 text-right">
+              <Link
+                to="/news"
+                className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-[#0f3358] hover:text-[#7d311f] transition-colors"
+              >
+                <span>Read More News</span>
+                <span className="text-base font-bold">→</span>
+              </Link>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// ─── ABOUT (Alternating Slate/Blue Shade #EAEFF5) ─────────────────────────────
 const About = () => (
-  <section id="about" className="bg-[#FAF7F2] py-12 sm:py-20 px-4 sm:px-6">
+  <section id="about" className="bg-[#EAEFF5] py-12 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-8 sm:mb-14">
         <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#7d311f] mb-2">
@@ -176,7 +422,7 @@ const About = () => (
         <div className="w-12 h-0.5 bg-[#d4af37] mx-auto mb-5" />
         <p className="font-lato text-xs sm:text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
           The MMV Student Portal is the centralized information hub for all students of
-          Mahila Maha Vidyalaya. Whether you need your syllabus, hostel details,
+          Mahila Mahavidyalaya. Whether you need your syllabus, hostel details,
           administrative contacts, or the latest notices — it is all organized here.
         </p>
       </div>
@@ -186,7 +432,7 @@ const About = () => (
           ['1929', 'Year Established', 1900],
           ['30+',  'Departments', 0],
           ['2,500+', 'Students Enrolled', 1000],
-          ['75+', 'Faculty Members', 0],
+          ['100+', 'Faculty Members', 0],
         ].map(([n, l, s]) => (
           <CountUpStat key={l} targetStr={n} label={l} startFrom={s} />
         ))}
@@ -195,7 +441,7 @@ const About = () => (
   </section>
 );
 
-// ─── FACILITIES HIGHLIGHT (Real Routes from Navbar.jsx) ───────────────────────
+// ─── FACILITIES HIGHLIGHT (Alternating Warm Ivory #FAF7F2) ───────────────────
 const facilities = [
   { label: 'Hostels',       detail: 'Five on-campus hostels with mess, security & Wi-Fi.', link: '/facilities/hostels' },
   { label: 'Libraries',     detail: 'MMV, Central & Cyber Library — 1 lakh+ books & digital access.', link: '/facilities/library/mmvlibrary' },
@@ -208,7 +454,7 @@ const facilities = [
 ];
 
 const Facilities = () => (
-  <section id="facilities" className="bg-[#EAEFF5] py-12 sm:py-16 px-4 sm:px-6 border-y border-slate-200">
+  <section id="facilities" className="bg-[#FAF7F2] py-12 sm:py-16 px-4 sm:px-6 border-y border-slate-200">
     <div className="max-w-5xl mx-auto">
       <div className="text-center mb-8 sm:mb-12">
         <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
@@ -242,12 +488,12 @@ const Facilities = () => (
   </section>
 );
 
-// ─── ACADEMICS FEATURE — Side-by-side on mobile (Plain Text List) ──────────────
+// ─── ACADEMICS FEATURE (Alternating Slate/Blue Shade #EAEFF5) ─────────────────
 const Academics = () => (
-  <section id="academics" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
+  <section id="academics" className="bg-[#EAEFF5] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/academics.png" alt="Academics" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
+        <img src="/bhu/academic2.jpeg" alt="Academics" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
@@ -260,7 +506,7 @@ const Academics = () => (
         <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
         <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
           All academic resources for every department at MMV — semester syllabi,
-          annual schedules, and contact details of section In-charge.
+          annual schedules, and contact details of Incharge.
         </p>
         <ul className="space-y-1.5 sm:space-y-3">
           {[
@@ -283,12 +529,12 @@ const Academics = () => (
   </section>
 );
 
-// ─── ADMINISTRATION FEATURE — Side-by-side on mobile (Plain Text List) ────────
+// ─── ADMINISTRATION FEATURE (Alternating Warm Ivory #FAF7F2) ──────────────────
 const Administration = () => (
-  <section id="administration" className="bg-[#EAEFF5] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
+  <section id="administration" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row-reverse gap-3 sm:gap-8 items-center">
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/admin.png" alt="Administration" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
+        <img src="/bhu/administration2.jpg" alt="Administration" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
@@ -328,48 +574,7 @@ const Administration = () => (
   </section>
 );
 
-// ─── NOTICES FEATURE — Side-by-side on mobile (Plain Text List) ───────────────
-const Notices = () => (
-  <section id="notices" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
-    <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
-      <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/notice.png" alt="Notices" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
-      </div>
-
-      <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
-        <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
-          Notices
-        </p>
-        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
-          Announcements & Circulars
-        </h2>
-        <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
-        <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
-          The official communication board of MMV — exam notifications,
-          event schedules, fee deadlines, and urgent circulars.
-        </p>
-        <ul className="space-y-1.5 sm:space-y-3">
-          {[
-            ['Urgent Notices', 'Time-sensitive exam & fee updates.'],
-            ['Examination',    'Schedule notifications & results.'],
-            ['Circulars',      'Official orders from BHU & MMV.'],
-          ].map(([label, detail]) => (
-            <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
-              <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
-              <div className="font-lato text-slate-800">
-                <span className="font-bold text-[#0f3358]">{label}: </span>
-                <span className="hidden sm:inline">{detail}</span>
-                <span className="sm:hidden text-[11px]">{detail}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  </section>
-);
-
-// ─── AI ASSISTANT ─────────────────────────────────────────────────────────────
+// ─── AI ASSISTANT (Alternating Slate/Blue Shade #EAEFF5) ──────────────────────
 const AIAssistant = () => (
   <section id="ai-assistant" className="bg-[#EAEFF5] py-12 sm:py-20 px-4 sm:px-6">
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
@@ -416,8 +621,8 @@ const AIAssistant = () => (
                 onError={(e) => { e.target.style.display='none'; e.target.parentNode.innerText='🤖'; }} />
             </div>
             <div>
-              <div className="font-lato text-sm sm:text-base font-bold text-white leading-none">MMVerse</div>
-              <div className="font-lato text-2xs sm:text-xs text-[#E3B94F] mt-0.5 font-semibold">AI Campus Assistant</div>
+              <div className="font-lato text-sm sm:text-base font-bold text-[#E3B94F] leading-none">MMVerse</div>
+              <div className="font-lato text-2xs sm:text-xs text-white mt-0.5 font-semibold">AI Campus Assistant</div>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
@@ -463,11 +668,11 @@ const AIAssistant = () => (
 const Home = () => (
   <div className="font-lato">
     <Hero />
+    <NoticesAndNews />
     <About />
     <Facilities />
     <Academics />
     <Administration />
-    <Notices />
     <AIAssistant />
   </div>
 );

@@ -30,6 +30,48 @@ class Notice(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
+# --news --
+class News(Base):
+    __tablename__ = "news"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    content = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    photos = relationship(
+        "NewsPhoto",
+        back_populates="news",
+        cascade="all, delete-orphan"
+    )
+    pdfs = relationship(
+        "NewsPdf",
+        back_populates="news",
+        cascade="all, delete-orphan"
+    )
+
+
+class NewsPhoto(Base):
+    __tablename__ = "news_photos"
+
+    id = Column(Integer, primary_key=True)
+    news_id = Column(Integer, ForeignKey("news.id"))
+    photo_name = Column(String)
+    photo_url = Column(String)
+
+    news = relationship("News", back_populates="photos")
+
+
+class NewsPdf(Base):
+    __tablename__ = "news_pdfs"
+
+    id = Column(Integer, primary_key=True)
+    news_id = Column(Integer, ForeignKey("news.id"))
+    pdf_name = Column(String)
+    pdf_url = Column(String)
+
+    news = relationship("News", back_populates="pdfs")
+
 # ── COLLEGE INFO CARDS ──
 class CollegeInfoItem(Base):
     __tablename__ = "college_info_items"

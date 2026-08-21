@@ -161,9 +161,13 @@ const GenericContentPage = ({
   const [editTableHeading, setEditTableHeading] = useState('');
   const [savingHeading,    setSavingHeading]    = useState(false);
 
-  // inline row edit state
+   // inline row edit state
   const [editingRowIdx,  setEditingRowIdx]  = useState(null);
   const [editingRowData, setEditingRowData] = useState({});
+
+  // column rename state
+  const [editingColName,  setEditingColName]  = useState(null);
+  const [editColNameValue, setEditColNameValue] = useState('');
 
   // profile state
   const [profile,          setProfile]          = useState(blankProfile);
@@ -444,6 +448,51 @@ const GenericContentPage = ({
     setColumns(updatedCols);
     setRows(updatedRows);
     saveTable(updatedCols, updatedRows);
+  };
+
+  const handleStartEditColName = (col) => {
+    setEditingColName(col);
+    setEditColNameValue(col);
+  };
+
+  const handleCancelEditColName = () => {
+    setEditingColName(null);
+    setEditColNameValue('');
+  };
+
+  const handleSaveColName = () => {
+    const trimmed = editColNameValue.trim();
+    if (!trimmed || trimmed === editingColName) {
+      handleCancelEditColName();
+      return;
+    }
+    if (columns.includes(trimmed)) {
+      alert('A column with that name already exists.');
+      return;
+    }
+    const updatedCols = columns.map(c => (c === editingColName ? trimmed : c));
+    const updatedRows = rows.map(r => {
+      const nr = { ...r };
+      if (editingColName in nr) {
+        nr[trimmed] = nr[editingColName];
+        delete nr[editingColName];
+      }
+      return nr;
+    });
+    setColumns(updatedCols);
+    setRows(updatedRows);
+    saveTable(updatedCols, updatedRows);
+    handleCancelEditColName();
+  };
+
+  const handleMoveColumn = (col, direction) => {
+    const idx = columns.indexOf(col);
+    const targetIdx = direction === 'left' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= columns.length) return;
+    const updated = [...columns];
+    [updated[idx], updated[targetIdx]] = [updated[targetIdx], updated[idx]];
+    setColumns(updated);
+    saveTable(updated, rows);
   };
 
   const handleImageUpload = async (e) => {
@@ -1254,8 +1303,10 @@ const GenericContentPage = ({
                                   const cardKey = `grid-${gridId}-card-${cardIdx}`;
                                   const isExpanded = !!openGridCards[cardKey];
 
-                                  const cardContentElements = [];
+                                                                   const cardContentElements = [];
                                   let cardBullets = [];
+                                  let cardNoteBuffer = [];
+                                  let inCardNote = false;
 
                                   const flushCardBullets = () => {
                                     if (cardBullets.length > 0) {
@@ -1273,13 +1324,98 @@ const GenericContentPage = ({
                                     }
                                   };
 
+                                  const flushCardNote = () => {
+                                    if (cardNoteBuffer.length > 0) {
+                                      const noteElements = [];
+                                      let cardNoteBulletBuffer = [];
+
+                                      const flushCardNoteBullets = () => {
+                                        if (cardNoteBulletBuffer.length > 0) {
+                                          noteElements.push(
+                                            <ul key={`card-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
+                                              {cardNoteBulletBuffer.map((b, i) => (
+                                                <li key={i}>{renderInlineFormatting(b)}</li>
+                                              ))}
+                                            </ul>
+                                          );
+                                          cardNoteBulletBuffer = [];
+                                        }
+                                      };
+
+                                      cardNoteBuffer.forEach((lineText, i) => {
+                                        if (lineText.startsWith('### ')) {
+                                          flushCardNoteBullets();
+                                          noteElements.push(
+                                            <h4 key={`card-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm">
+                                              <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                                              <span>{renderInlineFormatting(lineText.slice(4))}</span>
+                                            </h4>
+                                          );
+                                        } else if (lineText.startsWith('## ')) {
+                                          flushCardNoteBullets();
+                                          noteElements.push(
+                                            <h3 key={`card-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base">
+                                              <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                                              <span>{renderInlineFormatting(lineText.slice(3))}</span>
+                                            </h3>
+                                          );
+                                        } else if (lineText === '---') {
+                                          flushCardNoteBullets();
+                                          noteElements.push(<hr key={`card-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />);
+                                        } else if (lineText.startsWith('- ')) {
+                                          cardNoteBulletBuffer.push(lineText.slice(2));
+                                        } else {
+                                          flushCardNoteBullets();
+                                          noteElements.push(
+                                            <div key={`card-note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
+                                          );
+                                        }
+                                      });
+                                      flushCardNoteBullets();
+
+                                      cardContentElements.push(
+                                        <div key={`card-note-${cardContentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-2 text-xs sm:text-sm leading-relaxed">
+                                          {noteElements}
+                                        </div>
+                                      );
+                                    }
+                                    cardNoteBuffer = [];
+                                    inCardNote = false;
+                                  };
+
                                   card.lines.forEach((lineText, li) => {
                                     const trimmedLine = lineText.trim();
+
+                                    if (inCardNote) {
+                                      let lineContent = trimmedLine.startsWith('> ') ? trimmedLine.slice(2) : trimmedLine;
+                                      if (lineContent.endsWith('<')) {
+                                        cardNoteBuffer.push(lineContent.slice(0, -1).trim());
+                                        flushCardNote();
+                                      } else {
+                                        cardNoteBuffer.push(lineContent);
+                                      }
+                                      return;
+                                    }
+
                                     if (trimmedLine === '') {
                                       flushCardBullets();
                                       cardContentElements.push(<div key={`card-sp-${li}`} className="h-1" />);
                                       return;
                                     }
+
+                                    if (trimmedLine.startsWith('> ') || trimmedLine === '>') {
+                                      flushCardBullets();
+                                      let content = trimmedLine.startsWith('> ') ? trimmedLine.slice(2) : '';
+                                      if (content.endsWith('<')) {
+                                        cardNoteBuffer.push(content.slice(0, -1).trim());
+                                        flushCardNote();
+                                      } else {
+                                        inCardNote = true;
+                                        cardNoteBuffer.push(content);
+                                      }
+                                      return;
+                                    }
+
                                     if (trimmedLine.startsWith('- ')) {
                                       cardBullets.push(trimmedLine.slice(2));
                                       return;
@@ -1292,6 +1428,7 @@ const GenericContentPage = ({
                                     );
                                   });
                                   flushCardBullets();
+                                  flushCardNote();
 
                                   return (
                                     <div
@@ -1714,7 +1851,7 @@ const GenericContentPage = ({
       {galleryPdfs.length > 0 && (
         <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="bg-[#174873] px-4 sm:px-6 py-4">
-            <h2 className="text-lg font-semibold text-white">📄 Documents</h2>
+            <h2 className="text-lg font-semibold text-white">📄 Downloads</h2>
           </div>
 
           <div className="divide-y divide-gray-200">
@@ -1919,16 +2056,57 @@ const GenericContentPage = ({
                 <div className="w-full overflow-x-auto">
                   <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
                     <thead>
-                      <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
-                        {columns.map((col) => (
+                                            <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                        {columns.map((col, colIdx) => (
                           <th
                             key={col}
                             className="px-1 sm:px-3 py-1.5 sm:py-2.5 text-left font-cinzel font-bold text-[10px] sm:text-xs md:text-sm text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
                           >
-                            {col}
-                            {isAdmin && (
-                              <button onClick={() => handleDeleteColumn(col)}
-                                className="ml-1 text-red-300 hover:text-white text-xs">×</button>
+                            {isAdmin && editingColName === col ? (
+                              <div className="flex items-center gap-1 normal-case font-sans font-normal">
+                                <input
+                                  value={editColNameValue}
+                                  onChange={e => setEditColNameValue(e.target.value)}
+                                  onKeyDown={e => {
+                                    if (e.key === 'Enter') handleSaveColName();
+                                    if (e.key === 'Escape') handleCancelEditColName();
+                                  }}
+                                  autoFocus
+                                  className="px-1.5 py-0.5 text-black rounded text-[10px] sm:text-xs w-16 sm:w-24"
+                                />
+                                <button onClick={handleSaveColName} title="Save"
+                                  className="text-green-300 hover:text-white text-xs font-bold">✓</button>
+                                <button onClick={handleCancelEditColName} title="Cancel"
+                                  className="text-gray-300 hover:text-white text-xs">✕</button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1">
+                                <span className="truncate">{col}</span>
+                                <span className="flex items-center gap-0.5 ml-1 shrink-0">
+                                  <button
+                                    onClick={() => handleMoveColumn(col, 'left')}
+                                    disabled={colIdx === 0}
+                                    title="Shift column left"
+                                    className={`text-[10px] sm:text-xs ${colIdx === 0 ? 'text-slate-500 cursor-not-allowed' : 'text-blue-200 hover:text-white'}`}
+                                  >◄</button>
+                                  <button
+                                    onClick={() => handleMoveColumn(col, 'right')}
+                                    disabled={colIdx === columns.length - 1}
+                                    title="Shift column right"
+                                    className={`text-[10px] sm:text-xs ${colIdx === columns.length - 1 ? 'text-slate-500 cursor-not-allowed' : 'text-blue-200 hover:text-white'}`}
+                                  >►</button>
+                                  <button
+                                    onClick={() => handleStartEditColName(col)}
+                                    title="Rename column"
+                                    className="text-blue-200 hover:text-white text-[10px] sm:text-xs"
+                                  >✎</button>
+                                  <button
+                                    onClick={() => handleDeleteColumn(col)}
+                                    title="Delete column"
+                                    className="text-red-300 hover:text-white text-xs"
+                                  >×</button>
+                                </span>
+                              </div>
                             )}
                           </th>
                         ))}
