@@ -40,9 +40,9 @@ const academicsItems = [
   { label: "Electives", path: "/academics/electives" },
   { label: "SWAYAM Courses", path: "/academics/swayam" },
   { label: "Incharge", children: [
-    { label: "Science", path: "/academics/incharge/science"},
-    { label: "Social Science", path: "/academics/incharge/socialscience"},
-    { label: "Arts", path: "/academics/incharge/arts"}
+    { label: "Science", path: "/academics/section-incharge/science"},
+    { label: "Social Science", path: "/academics/section-incharge/socialscience"},
+    { label: "Arts", path: "/academics/section-incharge/arts"}
   ]},
   { label: "Academic Calendar", path: "/academics/calendar" },
   { label: "Holiday List", path: "/academics/holidays" },

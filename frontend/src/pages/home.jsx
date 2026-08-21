@@ -432,7 +432,7 @@ const About = () => (
           ['1929', 'Year Established', 1900],
           ['30+',  'Departments', 0],
           ['2,500+', 'Students Enrolled', 1000],
-          ['100+', 'Faculty Members', 0],
+          ['120+', 'Faculty Members', 0],
         ].map(([n, l, s]) => (
           <CountUpStat key={l} targetStr={n} label={l} startFrom={s} />
         ))}
