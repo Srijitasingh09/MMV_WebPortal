@@ -79,7 +79,7 @@ const pages = {
     photoAlign: 'center'
   },
   'sports/gym': {
-    title: 'Open-Gym & Indoor-Gym',
+    title: 'Gym',
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },

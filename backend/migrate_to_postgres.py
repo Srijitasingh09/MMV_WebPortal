@@ -26,6 +26,7 @@ from sqlalchemy.orm import sessionmaker
 from models import (
     User,
     Notice,
+    News,
     CollegeInfoItem,
     AdministrationSection,
     AcademicNEP,
@@ -67,6 +68,7 @@ postgres_db = PostgresSession()
 MODELS_IN_ORDER = [
     User,
     Notice,
+    News,
     CollegeInfoItem,
     AdministrationSection,
     AcademicNEP,
