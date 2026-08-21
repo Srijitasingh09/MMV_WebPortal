@@ -409,7 +409,7 @@ const Navbar = () => {
   // page) brings the full banner back down.
   const [headerVisible, setHeaderVisible] = useState(true);
 
-  const isHomePage = location.pathname === '/';
+  
   const autoHideTimerRef = useRef(null);
   const hoverTimerRef = useRef(null);
 
