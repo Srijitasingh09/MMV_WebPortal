@@ -386,6 +386,28 @@ def delete_notice(
     background_tasks.add_task(delete_chunks_for, "notices", notice_id)
     return {"message": "Notice deleted"}
 
+@app.put("/admin/notice/{notice_id}")
+def update_notice(
+    notice_id: int,
+    payload: dict,
+    background_tasks: BackgroundTasks,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    ensure_admin(user)
+    notice = db.query(models.Notice).filter(models.Notice.id == notice_id).first()
+    if not notice:
+        raise HTTPException(status_code=404, detail="Notice not found")
+
+    for field in ["title", "content", "category"]:
+        if field in payload:
+            setattr(notice, field, payload[field])
+
+    db.commit()
+    db.refresh(notice)
+    background_tasks.add_task(sync_notice_by_id, notice.id)
+    return notice
+
 # ================emergency contact=======================
 
 @app.get("/emergency-contacts")

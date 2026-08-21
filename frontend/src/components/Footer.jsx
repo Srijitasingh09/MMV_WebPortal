@@ -22,58 +22,59 @@ const Footer = () => {
 
   return (
     <footer className="bg-[#0f3358] text-slate-200 border-t-2 border-[#d4af37]">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+      {/* Grid: 2 columns on mobile, 3 columns on tablet/desktop */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
 
-        {/* Col 1 — College blurb */}
-        <div>
-          <h3 className="text-lg font-bold font-cinzel text-white mb-3 tracking-wide">
+        {/* Col 1 — College blurb (Spans full width on mobile) */}
+        <div className="col-span-2 md:col-span-1">
+          <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">
             Mahila Maha Vidyalaya
           </h3>
-          <p className="text-slate-300 text-sm leading-relaxed font-sans-official">
+          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans-official">
             Women's College, Banaras Hindu University.
             Established in 1929 by Pandit Madan Mohan Malaviya.
           </p>
         </div>
 
-        {/* Col 2 — Quick Links */}
-        <div>
-          <h3 className="text-lg font-bold font-cinzel text-white mb-3 tracking-wide">Quick Links</h3>
-          <ul className="space-y-2 font-sans-official">
-            <li><Link to="/about" className="text-slate-300 text-sm hover:text-[#d4af37] transition-colors">About MMV</Link></li>
-            <li><Link to="/notices" className="text-slate-300 text-sm hover:text-[#d4af37] transition-colors">Notices &amp; Circulars</Link></li>
-            <li><Link to="/ai-assistant" className="text-slate-300 text-sm hover:text-[#d4af37] transition-colors">AI Assistant</Link></li>
-            <li><Link to="/contact" className="text-slate-300 text-sm hover:text-[#d4af37] transition-colors">Contact Us</Link></li>
+        {/* Col 2 — Quick Links (Side-by-side with Contact Us on mobile) */}
+        <div className="col-span-1">
+          <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">Quick Links</h3>
+          <ul className="space-y-1.5 sm:space-y-2 font-sans-official">
+            <li><Link to="/about" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">About MMV</Link></li>
+            <li><Link to="/notices" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">Notices &amp; Circulars</Link></li>
+            <li><Link to="/ai-assistant" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">AI Assistant</Link></li>
+            <li><Link to="/contact" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">Contact Us</Link></li>
           </ul>
         </div>
 
-        {/* Col 3 — Live contact info from API */}
-        <div>
-          <h3 className="text-lg font-bold font-cinzel text-white mb-3 tracking-wide">Contact Us</h3>
+        {/* Col 3 — Contact Us (Side-by-side with Quick Links on mobile) */}
+        <div className="col-span-1">
+          <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">Contact Us</h3>
           {contactInfo ? (
-            <ul className="space-y-2.5 text-slate-300 text-sm font-sans-official">
+            <ul className="space-y-2 sm:space-y-2.5 text-slate-300 text-xs sm:text-sm font-sans-official">
               {contactInfo.address && (
-                <li className="flex items-start gap-2.5">
-                  <span className="text-[#d4af37] mt-0.5">📍</span>
-                  <span>{contactInfo.address}</span>
+                <li className="flex items-start gap-1.5 sm:gap-2.5">
+                  <span className="text-[#d4af37] mt-0.5 shrink-0">📍</span>
+                  <span className="break-words">{contactInfo.address}</span>
                 </li>
               )}
               {contactInfo.phone && (
-                <li className="flex items-center gap-2.5">
-                  <span className="text-[#d4af37]">📞</span>
+                <li className="flex items-center gap-1.5 sm:gap-2.5">
+                  <span className="text-[#d4af37] shrink-0">📞</span>
                   <a
                     href={`tel:${contactInfo.phone.replace(/\s+/g, "")}`}
-                    className="hover:text-[#d4af37] transition-colors"
+                    className="hover:text-[#d4af37] transition-colors break-all"
                   >
                     {contactInfo.phone}
                   </a>
                 </li>
               )}
               {contactInfo.email && (
-                <li className="flex items-center gap-2.5">
-                  <span className="text-[#d4af37]">✉️</span>
+                <li className="flex items-center gap-1.5 sm:gap-2.5">
+                  <span className="text-[#d4af37] shrink-0">✉️</span>
                   <a
                     href={`mailto:${contactInfo.email}`}
-                    className="hover:text-[#d4af37] transition-colors"
+                    className="hover:text-[#d4af37] transition-colors break-all"
                   >
                     {contactInfo.email}
                   </a>
@@ -84,7 +85,7 @@ const Footer = () => {
               )}
             </ul>
           ) : (
-            <ul className="space-y-2 text-slate-400 text-sm opacity-50 font-sans-official">
+            <ul className="space-y-2 text-slate-400 text-xs sm:text-sm opacity-50 font-sans-official">
               <li>📍 —</li>
               <li>📞 —</li>
               <li>✉️ —</li>

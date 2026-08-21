@@ -70,7 +70,7 @@ const AdminDashboard = () => {
         formData.append('attachment', noticeAttachment);
       }
 
-      await axios.post('/notices', formData, {
+      await axios.post('/admin/notice', formData, {
         headers: {
           ...authHeader(),
           'Content-Type': 'multipart/form-data'
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.post('/contact-info', contactInfoForm, { headers: authHeader() });
+      await axios.put('/admin/contact-info', contactInfoForm, { headers: authHeader() });
       showSuccess('Contact info updated successfully!');
     } catch (err) {
       alert('Error updating contact info.');

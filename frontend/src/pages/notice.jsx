@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const CATEGORIES = ['All', 'Exam', 'Holiday', 'Admission', 'Event', 'General'];
+const EDITABLE_CATEGORIES = CATEGORIES.filter((c) => c !== 'All');
 
 const CATEGORY_STYLES = {
   Exam:      { bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-500' },
@@ -90,9 +92,18 @@ const AttachmentLink = ({ notice }) => {
 };
 
 // ============================================
-// MODAL — full notice view
+// MODAL — full notice view (+ admin edit)
 // ============================================
-const NoticeModal = ({ notice, onClose }) => {
+const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: notice.title || '',
+    content: notice.content || '',
+    category: notice.category || 'General',
+  });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   // Close on Escape key
   useEffect(() => {
     const handleKey = (e) => {
@@ -107,6 +118,28 @@ const NoticeModal = ({ notice, onClose }) => {
       document.body.style.overflow = prevOverflow;
     };
   }, [onClose]);
+
+  const handleSave = async () => {
+    if (!editForm.title.trim() || !editForm.content.trim()) return;
+    setSaving(true);
+    try {
+      await onSave(notice.id, editForm);
+      setIsEditing(false);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Delete this notice? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await onDelete(notice.id);
+      onClose();
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div
@@ -139,24 +172,102 @@ const NoticeModal = ({ notice, onClose }) => {
         </button>
 
         <div className="p-6 sm:p-8">
-          <MetaRow notice={notice} />
+          {isEditing ? (
+            <div className="space-y-4 pr-8">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Category</label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[#174873]"
+                >
+                  {EDITABLE_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              </div>
 
-          <h3
-            id="notice-modal-title"
-            className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-4 leading-snug pr-8"
-            style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
-          >
-            {notice.title}
-          </h3>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Title</label>
+                <input
+                  value={editForm.title}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-[#0f3358] outline-none focus:ring-2 focus:ring-[#174873]"
+                  placeholder="Notice title"
+                />
+              </div>
 
-          <p
-            className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            {notice.content}
-          </p>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Content</label>
+                <textarea
+                  value={editForm.content}
+                  onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
+                  rows={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[#174873] resize-y"
+                  placeholder="Notice content"
+                />
+              </div>
 
-          <AttachmentLink notice={notice} />
+              <div className="flex gap-3 justify-end pt-2 border-t">
+                <button
+                  onClick={() => {
+                    setEditForm({ title: notice.title || '', content: notice.content || '', category: notice.category || 'General' });
+                    setIsEditing(false);
+                  }}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3358] disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <MetaRow notice={notice} />
+                {isAdmin && (
+                  <div className="flex gap-2 shrink-0 -mt-3">
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-semibold hover:bg-[#174873] hover:text-white transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="px-3 py-1.5 border-2 border-red-500 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50"
+                    >
+                      {deleting ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <h3
+                id="notice-modal-title"
+                className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-4 leading-snug pr-8"
+                style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
+              >
+                {notice.title}
+              </h3>
+
+              <p
+                className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                {notice.content}
+              </p>
+
+              <AttachmentLink notice={notice} />
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -166,7 +277,7 @@ const NoticeModal = ({ notice, onClose }) => {
 // ============================================
 // LIGHT NOTICE ROW (reduced size, matching BHU portal figure)
 // ============================================
-const NoticeRow = ({ notice, onExpand }) => {
+const NoticeRow = ({ notice, isAdmin, onExpand, onDelete }) => {
   // Check if notice was posted recently (e.g., within last 14 days)
   const isNew = (() => {
     if (!notice.created_at) return true;
@@ -175,6 +286,18 @@ const NoticeRow = ({ notice, onExpand }) => {
   })();
 
   const style = getCategoryStyle(notice.category);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = async (e) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this notice? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await onDelete(notice.id);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div
@@ -194,12 +317,35 @@ const NoticeRow = ({ notice, onExpand }) => {
           </h3>
         </div>
 
-        {/* Section / Category badge on top right */}
+        {/* Section / Category badge + admin controls on top right */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${style.bg} ${style.text}`}>
             <span className={`w-1 h-1 rounded-full ${style.dot}`} />
             {notice.category || 'General'}
           </span>
+          {isAdmin && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); onExpand(notice); }}
+                title="Edit notice"
+                className="p-1 rounded text-[#174873] hover:bg-[#174873]/10 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                </svg>
+              </button>
+              <button
+                onClick={handleDeleteClick}
+                disabled={deleting}
+                title="Delete notice"
+                className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
+                </svg>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -235,6 +381,9 @@ const Notices = () => {
   const [visibleCount, setVisibleCount] = useState(20);
 
   const location = useLocation();
+
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const token   = localStorage.getItem('token');
 
   // Reset visible notices count whenever category or search filter changes
   useEffect(() => {
@@ -273,6 +422,31 @@ const Notices = () => {
     }
   }, [location.search, notices]);
 
+  const handleDeleteNotice = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/admin/notice/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotices((prev) => prev.filter((n) => n.id !== id));
+      setActiveNotice((prev) => (prev && prev.id === id ? null : prev));
+    } catch (err) {
+      alert('Delete failed: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleSaveNotice = async (id, updates) => {
+    try {
+      const res = await axios.put(`${API_BASE}/admin/notice/${id}`, updates, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const updated = res.data || { ...updates };
+      setNotices((prev) => prev.map((n) => (n.id === id ? { ...n, ...updated } : n)));
+      setActiveNotice((prev) => (prev && prev.id === id ? { ...prev, ...updated } : prev));
+    } catch (err) {
+      alert('Save failed: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
   const filteredNotices = notices.filter((n) => {
     const matchesCategory = activeCategory === 'All' || n.category === activeCategory;
     const matchesSearch =
@@ -309,6 +483,12 @@ const Notices = () => {
             <span className="text-[#7d311f] font-semibold">Notices</span>
           </div>
         </div>
+
+        {isAdmin && (
+          <div className="mb-6 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl text-xs font-bold text-yellow-700">
+            ADMIN MODE — hover a notice to edit or delete it, or open it for full edit controls.
+          </div>
+        )}
 
         {/* FILTER BAR */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-6">
@@ -385,7 +565,9 @@ const Notices = () => {
                     <NoticeRow
                       key={notice.id}
                       notice={notice}
+                      isAdmin={isAdmin}
                       onExpand={setActiveNotice}
+                      onDelete={handleDeleteNotice}
                     />
                   ))}
                 </div>
@@ -423,7 +605,10 @@ const Notices = () => {
       {activeNotice && (
         <NoticeModal
           notice={activeNotice}
+          isAdmin={isAdmin}
           onClose={() => setActiveNotice(null)}
+          onDelete={handleDeleteNotice}
+          onSave={handleSaveNotice}
         />
       )}
     </div>

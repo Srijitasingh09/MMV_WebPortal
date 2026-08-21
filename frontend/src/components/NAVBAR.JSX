@@ -408,46 +408,35 @@ const Navbar = () => {
   // at the very top. Scrolling UP (or landing back at the top of the
   // page) brings the full banner back down.
   const [headerVisible, setHeaderVisible] = useState(true);
-  const lastScrollY = useRef(0);
 
-  // Start each new page with the full header showing, then let scrolling
-  // take over from there.
+  const isHomePage = location.pathname === '/';
+  const autoHideTimerRef = useRef(null);
+  const hoverTimerRef = useRef(null);
+
+  const clearTimers = () => {
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+  };
+
+  // Auto-hide header after 5 seconds on non-home pages upon page load or navigation
   useEffect(() => {
+    clearTimers();
     setHeaderVisible(true);
-    lastScrollY.current = window.scrollY;
-  }, [location.pathname]);
 
-  useEffect(() => {
-    const SCROLL_THRESHOLD = 6; // ignore tiny/jittery scroll deltas
-    let ticking = false;
+    if (!isHomePage) {
+      autoHideTimerRef.current = setTimeout(() => {
+        setHeaderVisible(false);
+      }, 5000);
+    }
 
-    const handleScroll = () => {
-      if (ticking) return;
-      ticking = true;
-
-      window.requestAnimationFrame(() => {
-        const currentY = window.scrollY;
-        const delta = currentY - lastScrollY.current;
-
-        if (currentY < 10) {
-          // Back at the very top of the page — always show the full header
-          setHeaderVisible(true);
-        } else if (delta > SCROLL_THRESHOLD) {
-          // Scrolling down — collapse the banner, nav bar stays pinned
-          setHeaderVisible(false);
-        } else if (delta < -SCROLL_THRESHOLD) {
-          // Scrolling up — bring the banner back
-          setHeaderVisible(true);
-        }
-
-        lastScrollY.current = currentY;
-        ticking = false;
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    return () => clearTimers();
+  }, [location.pathname, isHomePage]);
 
   useEffect(() => {
     const fetchNotices = async () => {
@@ -472,133 +461,213 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const handleMouseMove = (e) => {
+    if (isHomePage) return;
+
+    // Clear auto-hide timer if active
+    if (autoHideTimerRef.current) {
+      clearTimeout(autoHideTimerRef.current);
+      autoHideTimerRef.current = null;
+    }
+
+    // Check if user is hovering over interactive buttons / links / dropdown items
+    const isOverButton = Boolean(e.target.closest('a, button, [role="button"], input, select'));
+
+    if (isOverButton) {
+      // If hovering over buttons/links, cancel the 3-second reveal timer so header stays hidden
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+    } else {
+      // If hovering over empty background space (not buttons), start 3-second timer to reveal header
+      if (!hoverTimerRef.current && !headerVisible) {
+        hoverTimerRef.current = setTimeout(() => {
+          setHeaderVisible(true);
+        }, 3000);
+      }
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (isHomePage) return;
+
+    // Clear hover timer if mouse leaves
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+
+    // Auto-hide header 5 seconds after mouse leaves
+    if (!autoHideTimerRef.current) {
+      autoHideTimerRef.current = setTimeout(() => {
+        setHeaderVisible(false);
+      }, 5000);
+    }
+  };
+
   return (
-    <>
-      {/* ---- TOP HEADER SECTION (Top Bar + College Banner + Notice Ticker) ---- */}
-      <header className="w-full bg-[#0f3358]">
-        {/* ---- TOP BAR ---- */}
-        <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 flex justify-between items-center border-b border-[#d4af37]/40">
-          <div className="flex items-center gap-3">
-          </div>
-
-          <div>
-            {token && isAdmin ? (
+    <div 
+      onMouseMove={handleMouseMove} 
+      onMouseLeave={handleMouseLeave}
+      className="w-full sticky top-0 z-[990] bg-[#0f3358]"
+    >
+      {/* Collapsible Header Container */}
+      <div 
+        className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
+          headerVisible || isHomePage 
+            ? "grid-rows-[1fr] opacity-100" 
+            : "grid-rows-[0fr] opacity-0 overflow-hidden pointer-events-none"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <header className="w-full bg-[#0f3358]">
+            {/* Top-most view line */}
+            <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 flex justify-between items-center border-b border-[#d4af37]/40">
               <div className="flex items-center gap-3">
-                <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
-                  Admin Panel
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
-                >
-                  Logout
-                </button>
+               <span className="text-[#d4af37] text-xs sm:text-sm font-bold font-cinzel leading-tight tracking-wide whitespace-normal block">
+                 Mahila Mahavidyalaya
+               </span>
               </div>
-            ) : (
-              /* CAMOUFLAGED ADMIN LOGIN - Invisible by default, turns text-white on hover */
-              <a
-                href="/login"
-                className="text-[#0f3358] hover:text-white transition-colors duration-200 text-xs font-medium cursor-default hover:cursor-pointer select-none"
-                title="Admin Login"
-              >
-                Admin Login
-              </a>
-            )}
-          </div>
-        </div>
 
-        {/* ---- COLLEGE HEADER (BLUE BACKGROUND #0f3358) ---- */}
-        <div className="bg-white px-3 sm:px-8 py-3 flex items-center justify-between gap-2 sm:gap-3 border-b border-[#d4af37]/40 shadow-sm">
-         
-          {/* BHU Logo */}
-          <img
-            src="/bhu/logo_bhu.png"
-            alt="BHU Logo"
-            className="h-10 sm:h-14 md:h-16 rounded-2xl object-contain flex-shrink-0"
-          />
+              <div>
+                {token && isAdmin ? (
+                  <div className="flex items-center gap-3">
+                    <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
+                      Admin Panel
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <a
+                    href="/login"
+                    className="text-[#0f3358] hover:text-white transition-colors duration-200 text-xs font-medium cursor-default hover:cursor-pointer select-none"
+                    title="Admin Login"
+                  >
+                    Admin Login
+                  </a>
+                )}
+              </div>
+            </div>
 
-          {/* CENTER - MMV SAARTHI LOGO (NO BACKGROUND) */}
-          <div className="hidden sm:block flex-shrink-0 bg-transparent">
-            <img 
-              src="/mmv_saarthi_logo.png" 
-              alt="mmv-saarthi-logo"
-              className="w-24 h-9 md:w-40 md:h-14 object-contain rounded-2xl" 
-            />
-          </div>
-        
-          {/* MMV Logo + Name */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="min-w-0 text-right">
-              <h1 className="text-[#353375] text-xs sm:text-lg md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
-                Mahila Maha Vidyalaya
+            {/* Main Branding Header Bar */}
+            <div className="bg-white px-3 sm:px-8 py-3 flex items-center justify-between gap-2 sm:gap-3 border-b border-[#d4af37]/40 shadow-sm">
+              {/* Desktop & Mobile Left: BHU Logo */}
+              <div className="flex-shrink-0">
+                <img
+                  src="/bhu/logo_bhu.png"
+                  alt="BHU Logo"
+                  className="h-9 sm:h-14 md:h-16 rounded-2xl object-contain"
+                />
+              </div>
+
+              {/* Desktop Center: MMV Saarthi Logo (hidden on mobile) */}
+              <div className="hidden md:block flex-shrink-0 bg-transparent">
+                <img 
+                  src="/mmv_saarthi_logo.png" 
+                  alt="mmv-saarthi-logo"
+                  className="w-24 h-9 sm:w-32 sm:h-12 md:w-40 md:h-14 object-contain rounded-2xl" 
+                />
+              </div>
+
+              {/* Desktop Right: MMV Title + MMV Logo (hidden on mobile) */}
+              <div className="hidden md:flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="min-w-0 text-right">
+                   <h1 className="text-[#353375] text-xs sm:text-lg md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
+                Mahila Mahavidyalaya
               </h1>
               <p className="text-[9px] sm:text-xs text-[#353375] font-semibold tracking-wider uppercase whitespace-normal">
                 Varanasi
               </p>
-            </div>
-            <div className="bg-transparent p-0 flex-shrink-0">
-              <img
-                src="/mmvlogo.jpeg"
-                alt="MMV Logo"
-                className="h-9 w-9 sm:h-14 sm:w-14 md:w-16 md:h-16 rounded-2xl object-contain "
-              />
-            </div>
-          </div>
+                </div>
+                <div className="bg-transparent p-0 flex-shrink-0">
+                  <img
+                    src="/mmvlogo.jpeg"
+                    alt="MMV Logo"
+                    className="h-9 w-9 sm:h-14 sm:w-14 md:w-16 md:h-16 rounded-2xl object-contain"
+                  />
+                </div>
+              </div>
 
-          {/* Hamburger — mobile/tablet only */}
+              {/* Mobile Right: MMV Saarthi Logo + Hamburger Button (hidden on desktop) */}
+              <div className="md:hidden flex items-center gap-2 flex-shrink-0">
+                <img 
+                  src="/mmv_saarthi_logo.png" 
+                  alt="mmv-saarthi-logo"
+                  className="w-24 h-9 sm:w-32 object-contain rounded-2xl" 
+                />
+                <button
+                  onClick={() => setMobileOpen(true)}
+                  aria-label="Open menu"
+                  className="p-2 rounded-lg hover:bg-slate-100 text-[#353375] border border-[#353375]/20"
+                >
+                  <span className="block w-6 h-0.5 bg-[#353375] mb-1" />
+                  <span className="block w-6 h-0.5 bg-[#353375] mb-1" />
+                  <span className="block w-6 h-0.5 bg-[#353375]" />
+                </button>
+              </div>
+            </div>
+
+            {/* Announcements Bar */}
+            <div className="bg-[#0f3358] border-t border-b-2 border-[#d4af37] md:border-b md:border-[#d4af37]/40 text-xs sm:text-sm flex items-center shadow-inner overflow-hidden relative z-20">
+              <div className="bg-[#7d311f] text-white px-3 sm:px-4 py-1.5 font-bold uppercase tracking-wider flex items-center gap-2 z-30 shadow-md flex-shrink-0 border-r border-[#d4af37]/50">
+                <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
+                <span className="text-[10px] sm:text-xs font-cinzel text-[#fce8b2]">Announcements</span>
+              </div>
+
+              <div className="overflow-hidden whitespace-nowrap py-1.5 flex-1 relative bg-[#0f3358]">
+                <div className="inline-flex animate-marquee hover:[animation-play-state:paused] items-center">
+                  {notices.length > 0 ? (
+                    [...notices, ...notices].map((n, idx) => (
+                      <Link
+                        key={`${n.id || idx}-${idx}`}
+                        to={`/notices?id=${n.id}`}
+                        className="inline-flex items-center gap-2 mx-6 text-slate-100 hover:text-[#d4af37] transition-colors font-medium cursor-pointer"
+                      >
+                        <span className="bg-[#174873] text-[#d4af37] px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#d4af37]/30 shadow-xs">
+                          {n.category || 'Notice'}
+                        </span>
+                        <span className="hover:underline">{n.title}</span>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="inline-flex items-center gap-4 px-6 text-slate-200 font-medium">
+                      <span className="text-[#d4af37] font-semibold">Welcome to Mahila Maha Vidyalaya (MMV) Portal — Banaras Hindu University</span>
+                      <span className="text-[#d4af37]">•</span>
+                      <span>Visit the Notices section for real-time examination schedules and official notifications.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </header>
+        </div>
+      </div>
+
+      {/* ── Navigation Bar (Stays visible at top) ── */}
+      <nav className="bg-[#0f3358] px-4 border-b-2 border-[#d4af37] shadow-lg">
+        {/* Mobile Navigation Row */}
+        <div className="md:hidden flex items-center justify-between py-2 px-1">
+          <Link to="/" className="flex items-center gap-2">
+            <span className="text-[#d4af37] font-bold font-cinzel text-sm tracking-wide">MMV BHU</span>
+          </Link>
           <button
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
-            className="md:hidden flex-shrink-0 ml-1 p-2 rounded-lg hover:bg-white/10 text-white border border-white/20"
+            className="p-1.5 rounded-lg hover:bg-slate-700 text-white border border-[#d4af37]/40 flex items-center gap-1.5 text-xs font-semibold"
           >
-            <span className="block w-6 h-0.5 bg-[#353375] mb-1" />
-            <span className="block w-6 h-0.5 bg-[#353375] mb-1" />
-            <span className="block w-6 h-0.5 bg-[#353375]" />
+            <span>Menu</span>
+            <span className="block w-4 h-0.5 bg-[#d4af37] my-0.5"></span>
           </button>
         </div>
 
-        {/* ---- DYNAMIC MOVING NOTICE TICKER STRIP (#0f3358) ---- */}
-        <div className="bg-[#0f3358] border-t border-b-2 border-[#d4af37] md:border-b md:border-[#d4af37]/40 text-xs sm:text-sm flex items-center shadow-inner overflow-hidden relative z-20">
-          {/* Sticky Ticker Badge */}
-          <div className="bg-[#7d311f] text-white px-3 sm:px-4 py-1.5 font-bold uppercase tracking-wider flex items-center gap-2 z-30 shadow-md flex-shrink-0 border-r border-[#d4af37]/50">
-            <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
-            <span className="text-[10px] sm:text-xs font-cinzel text-[#fce8b2]">Announcements</span>
-          </div>
-
-          {/* Scrolling Marquee Container */}
-          <div className="overflow-hidden whitespace-nowrap py-1.5 flex-1 relative bg-[#0f3358]">
-            <div className="inline-flex animate-marquee hover:[animation-play-state:paused] items-center">
-              {notices.length > 0 ? (
-                // Duplicate array twice to create a seamless infinite marquee scroll loop
-                [...notices, ...notices].map((n, idx) => (
-                  <Link
-                    key={`${n.id || idx}-${idx}`}
-                    to={`/notices?id=${n.id}`}
-                    className="inline-flex items-center gap-2 mx-6 text-slate-100 hover:text-[#d4af37] transition-colors font-medium cursor-pointer"
-                  >
-                    <span className="bg-[#174873] text-[#d4af37] px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#d4af37]/30 shadow-xs">
-                      {n.category || 'Notice'}
-                    </span>
-                    <span className="hover:underline">{n.title}</span>
-                    <span className="text-[#d4af37]/70 ml-3">•</span>
-                  </Link>
-                ))
-              ) : (
-                <div className="inline-flex items-center gap-4 px-6 text-slate-200 font-medium">
-                  <span className="text-[#d4af37] font-semibold">Welcome to Mahila Maha Vidyalaya (MMV) Portal — Banaras Hindu University</span>
-                  <span className="text-[#d4af37]">•</span>
-                  <span>Visit the Notices section for real-time examination schedules and official notifications.</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* ---- NAVIGATION BAR (MAIN BLUE BACKGROUND #0f3358) — STICKY AT TOP ON SCROLL ---- */}
-      <nav className="hidden md:block sticky top-0 z-[999] bg-[#0f3358] px-4 border-b-2 border-[#d4af37] shadow-lg">
-        {/* Desktop Nav Links */}
-        <div className="flex relative justify-center items-center">
+        {/* Desktop Navigation Row */}
+        <div className="hidden md:flex relative justify-end items-center">
           <Link to="/"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
                     hover:bg-[#174873] hover:text-[#d4af37]
@@ -648,7 +717,7 @@ const Navbar = () => {
 
       {/* ---- MOBILE MENU PANEL ---- */}
       <MobileMenu isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-    </>
+    </div>
   );
 };
 
