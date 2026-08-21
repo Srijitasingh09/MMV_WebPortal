@@ -1218,7 +1218,7 @@ def classify_question(question: str) -> str:
     try:
         with provider_slot():
             response = _groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 messages=[{
                     "role": "user",
                     "content": (
@@ -1246,7 +1246,7 @@ def expand_query(question: str) -> list:
     try:
         with provider_slot():
             response = _groq_client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                model="openai/gpt-oss-20b",
                 messages=[{
                     "role": "user",
                     "content": (
@@ -1301,7 +1301,7 @@ def search_best_chunk(queries: list, db, section_filter: str = None, page_url: s
         )
 
     # Build optional section filter clause
-    section_clause = "AND c.content_type NOT IN ('image', 'pdf')"
+    section_clause = "AND c.content_type NOT IN ('image')"
     query_params = {}
     if page_url:
         # Exact page scope only. Accept a legacy trailing slash, but never broaden
@@ -1438,7 +1438,7 @@ INSTRUCTIONS:
 
     with provider_slot():
         response = _groq_client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": prompt}],
         max_tokens=250,
         temperature=0.0,
@@ -1449,7 +1449,7 @@ INSTRUCTIONS:
 # 0.35 is safer than 0.30 — at 0.30 some irrelevant chunks pass through
 # and produce confidently wrong answers. Better to say "I don't know"
 # than return a wrong answer.
-SIMILARITY_THRESHOLD = 0.35
+SIMILARITY_THRESHOLD = 0.25
 
 
 def page_no_content_message(page_url: str | None) -> str:
@@ -1574,15 +1574,30 @@ def chat(payload: dict, request: Request, db: Session = Depends(get_db)):
         cache_set(response_cache_key, result)
         return result
 
-    # Defensive guarantee: legacy PDF/image rows must never reach answer generation.
-    if (row.content_type or '').lower() in {'pdf', 'image'} or (row.asset_type or '').lower() in {'pdf', 'image'}:
+    # Defensive guarantee: image rows must never reach answer generation.
+    if (row.content_type or '').lower() == 'image' or (row.asset_type or '').lower() == 'image':
         return {
             "matched": False,
             "fallback_type": "unsupported_source",
-            "message": "I can answer from the portal's text, profile, and table content, but not from PDF or image files.",
+            "message": "I can answer from the portal's text, profile, and table content, but not from images.",
             "section_title": row.section_title,
             "section_url": row.section_url,
             "page_scoped": bool(page_url),
+        }
+
+    # Interim PDF handling: we don't read PDF content yet, but if the best
+    # match is a PDF's filename chunk, hand back a download link instead of
+    # a generated answer (and instead of the old "unsupported" dead end).
+    if (row.content_type or '').lower() == 'pdf' or (row.asset_type or '').lower() == 'pdf':
+        return {
+            "matched": True,
+            "answer": f"I found this document for {row.section_title}: {row.file_name}. You can download it below.",
+            "chunk_text": row.chunk_text,
+            "section_title": row.section_title,
+            "section_url": row.section_url,
+            "asset": {"asset_type": "pdf", "file_url": row.file_url, "file_name": row.file_name},
+            "page_scoped": bool(page_url),
+            "language": language,
         }
 
     # 5. Generate NLP answer from best matching chunk.
