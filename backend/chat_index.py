@@ -4,12 +4,12 @@ chat_index.py — Stage B (indexing) + Stage D (sync) for the search chatbot.
 WHAT THIS FILE DOES:
 Reads rows from your real content tables (FacilityContent, Notice, etc.) and
 turns each one into searchable "chunks" stored in chat_index_chunk, with the
-real table/pdf/image payload stored in chat_index_asset.
+real table/pdf payload stored in chat_index_asset. Images are deliberately not indexed.
 
 WHAT THIS FILE DOES NOT DO:
 - It does not call any LLM. Pure search only, per your zero-cost decision.
-- It does not read PDF file contents — PDFs are indexed by filename/description
-  only, and returned whole, per your instruction.
+- It does not read, extract, index, retrieve, or answer from PDFs.
+- It deliberately does not index images or run OCR/vision processing.
 
 HOW TO USE:
 - index_all(db) -> run once manually to build the index from everything that
@@ -26,20 +26,23 @@ import os
 import json
 import re
 import time
+from pathlib import Path
+
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
 import voyageai
 
 import models
+from embedding_provider import embed as embed_vectors, VOYAGE_MODEL, PROVIDER as EMBEDDING_PROVIDER
 
 # ── Voyage client ──
 # Reads VOYAGE_API_KEY from the environment automatically.
 voyage_client = voyageai.Client()
-EMBED_MODEL = "voyage-4-lite"
+EMBED_MODEL = VOYAGE_MODEL
 
 # Voyage allows only 3 requests/minute on accounts with no payment method on file.
 # 60 seconds / 3 requests = 20 seconds minimum between requests, +2s buffer to be safe.
-SECONDS_BETWEEN_REQUESTS = 22
+SECONDS_BETWEEN_REQUESTS = 22 if EMBEDDING_PROVIDER == "voyage" else 0
 
 
 # ============================================================
@@ -58,18 +61,33 @@ def embed_text(text_to_embed: str, max_attempts: int = 5):
     for attempt in range(1, max_attempts + 1):
         time.sleep(SECONDS_BETWEEN_REQUESTS)  # respect the 3 RPM limit (no payment method on file)
         try:
-            result = voyage_client.embed(
-                texts=[text_to_embed],
-                model=EMBED_MODEL,
-                input_type="document",
-            )
-            return result.embeddings[0]
+            return embed_vectors([text_to_embed], input_type="document")[0]
         except Exception as e:
             last_error = e
             wait = 10 * attempt  # back off a bit longer each retry: 10s, 20s, 30s...
             print(f"    (embed attempt {attempt}/{max_attempts} failed: {e}. Retrying in {wait}s...)")
             time.sleep(wait)
     raise last_error
+
+
+def purge_image_chunks():
+    """Remove legacy image and PDF chunks so rebuilds remain text/table/profile-only."""
+    from database import SessionLocal
+    fresh_db = SessionLocal()
+    try:
+        fresh_db.execute(text("""
+            DELETE FROM chat_index_chunk
+            WHERE content_type IN ('image', 'pdf')
+               OR id IN (
+                    SELECT c.id
+                    FROM chat_index_chunk c
+                    JOIN chat_index_asset a ON a.chunk_id = c.id
+                    WHERE a.asset_type IN ('image', 'pdf')
+               )
+        """))
+        fresh_db.commit()
+    finally:
+        fresh_db.close()
 
 
 def delete_chunks_for(source_table: str, source_id: int):
@@ -105,8 +123,9 @@ def save_chunk(
 
     asset dict shape:
       {"asset_type": "table", "table_data": {...}}                  for tables
-      {"asset_type": "pdf",   "file_url": "...", "file_name": "..."} for pdfs
-      {"asset_type": "image", "file_url": "...", "file_name": "..."} for images
+      No PDF or image assets are accepted. Tables remain supported.
+
+    Website files are intentionally not passed to the chatbot index.
     """
     if not chunk_text_value or not chunk_text_value.strip():
         return  # nothing to index
@@ -139,8 +158,10 @@ def save_chunk(
         if asset:
             fresh_db.execute(
                 text("""
-                    INSERT INTO chat_index_asset (chunk_id, asset_type, table_data, file_url, file_name)
-                    VALUES (:chunk_id, :asset_type, :table_data, :file_url, :file_name)
+                    INSERT INTO chat_index_asset
+                        (chunk_id, asset_type, table_data, file_url, file_name, page_number)
+                    VALUES
+                        (:chunk_id, :asset_type, :table_data, :file_url, :file_name, :page_number)
                 """),
                 {
                     "chunk_id": chunk_id,
@@ -148,6 +169,7 @@ def save_chunk(
                     "table_data": json.dumps(asset["table_data"]) if asset.get("table_data") else None,
                     "file_url": asset.get("file_url"),
                     "file_name": asset.get("file_name"),
+                    "page_number": asset.get("page_number"),
                 },
             )
 
@@ -190,7 +212,7 @@ def sync_facility_content_by_id(content_id: int):
     try:
         row = (
             fresh_db.query(models.FacilityContent)
-            .options(joinedload(models.FacilityContent.pdfs), joinedload(models.FacilityContent.photos))
+            .options(joinedload(models.FacilityContent.pdfs))
             .filter(models.FacilityContent.id == content_id)
             .first()
         )
@@ -266,9 +288,6 @@ def split_description_into_chunks(description, max_single_chunk_len=600):
 def index_facility_content_row(row: "models.FacilityContent"):
     """FacilityContent is the richest table: text + table JSON + many photos + many pdfs.
     Powers facilities/* and any other GenericContentPage-routed section."""
-
-    pdf_list = [(pdf.pdf_url, pdf.pdf_name) for pdf in row.pdfs]
-    photo_list = [(photo.photo_url, photo.photo_name) for photo in row.photos]
 
     delete_chunks_for("facility_content", row.id)
 
@@ -432,43 +451,8 @@ def index_facility_content_row(row: "models.FacilityContent"):
         except (json.JSONDecodeError, AttributeError):
             pass
 
-    # 3. PDF chunks
-    for pdf_url, pdf_name in pdf_list:
-        readable = _readable_name_from_filename(pdf_name)
-        save_chunk(
-            "facility_content", row.id, "pdf",
-            chunk_text_value=f"{readable}. Available as a PDF document in the {title} section.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": pdf_url, "file_name": pdf_name},
-        )
+    # PDFs remain website assets only; they are intentionally not indexed by the chatbot.
 
-    # 4. Image chunks
-    for photo_url, photo_name in photo_list:
-        readable = _readable_name_from_filename(photo_name)
-        save_chunk(
-            "facility_content", row.id, "image",
-            chunk_text_value=f"Photo of {title}. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": photo_url, "file_name": photo_name},
-        )
-
-    # Legacy single pdf/photo columns
-    if row.pdf_url:
-        readable = _readable_name_from_filename(row.pdf_name or 'attachment')
-        save_chunk(
-            "facility_content", row.id, "pdf",
-            chunk_text_value=f"{readable}. Available as a PDF document in the {title} section.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-        )
-    if row.photo_url:
-        readable = _readable_name_from_filename(row.photo_name or 'photo')
-        save_chunk(
-            "facility_content", row.id, "image",
-            chunk_text_value=f"Photo of {title}. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": row.photo_url, "file_name": row.photo_name},
-        )
 
 
 def sync_notice_by_id(notice_id: int):
@@ -498,14 +482,6 @@ def index_notice_row(row: "models.Notice"):
         section_url=url, section_title=title,
     )
 
-    if row.attachment_url:
-        readable = _readable_name_from_filename(row.attachment_name or 'document')
-        save_chunk(
-            "notices", row.id, "pdf",
-            chunk_text_value=f"Attachment for notice '{title}': {readable}. Download PDF.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": row.attachment_url, "file_name": row.attachment_name},
-        )
 
 
 def index_college_info_item_row(row: "models.CollegeInfoItem"):
@@ -519,14 +495,6 @@ def index_college_info_item_row(row: "models.CollegeInfoItem"):
         section_url=url, section_title=title,
     )
 
-    if row.image_url:
-        readable = _readable_name_from_filename(row.image_name or 'photo')
-        save_chunk(
-            "college_info_items", row.id, "image",
-            chunk_text_value=f"Photo related to {title}. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
-        )
 
 
 def index_administration_section_row(row: "models.AdministrationSection"):
@@ -543,14 +511,6 @@ def index_administration_section_row(row: "models.AdministrationSection"):
             section_url=url, section_title=title,
         )
 
-    if row.image_url:
-        readable = _readable_name_from_filename(row.image_name or 'photo')
-        save_chunk(
-            "administration_sections", row.id, "image",
-            chunk_text_value=f"Photo related to {title} in administration. {readable}.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "image", "file_url": row.image_url, "file_name": row.image_name},
-        )
 
 
 def index_academic_nep_row(row: "models.AcademicNEP"):
@@ -564,14 +524,6 @@ def index_academic_nep_row(row: "models.AcademicNEP"):
             chunk_text_value=row.description,
             section_url=url, section_title=title,
         )
-    if row.pdf_url:
-        readable = _readable_name_from_filename(row.pdf_name or 'NEP document')
-        save_chunk(
-            "academic_nep", row.id, "pdf",
-            chunk_text_value=f"National Education Policy (NEP) document at MMV BHU: {readable}. Download PDF.",
-            section_url=url, section_title=title,
-            asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-        )
 
 
 def index_academic_syllabus_row(row: "models.AcademicSyllabus"):
@@ -579,13 +531,6 @@ def index_academic_syllabus_row(row: "models.AcademicSyllabus"):
     url = f"/academics/syllabus/{row.category}"
     title = f"Syllabus — {row.category}"
 
-    readable = _readable_name_from_filename(row.pdf_name or 'syllabus')
-    save_chunk(
-        "academic_syllabus", row.id, "pdf",
-        chunk_text_value=f"{readable}. Academic syllabus for {row.category} students at MMV BHU. Download PDF.",
-        section_url=url, section_title=title,
-        asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-    )
 
 
 def index_academic_elective_row(row: "models.AcademicElective"):
@@ -593,13 +538,6 @@ def index_academic_elective_row(row: "models.AcademicElective"):
     url = f"/academics/electives/{row.category}"
     title = f"Elective — {row.category}"
 
-    readable = _readable_name_from_filename(row.pdf_name or 'elective')
-    save_chunk(
-        "academic_electives", row.id, "pdf",
-        chunk_text_value=f"{readable}. Elective course document for {row.category} at MMV BHU. Download PDF.",
-        section_url=url, section_title=title,
-        asset={"asset_type": "pdf", "file_url": row.pdf_url, "file_name": row.pdf_name},
-    )
 
 
 def index_academic_section_incharge_row(row: "models.AcademicSectionIncharge"):
@@ -667,17 +605,20 @@ def index_all(db: Session):
     Stage D's per-row hooks keep things up to date incrementally —
     you should not need to call this again in normal operation.
 
-    IMPORTANT: all rows (including related pdfs/photos) are fetched up front,
+    IMPORTANT: all rows (including related website media; PDFs are not read or indexed) are fetched up front,
     in one quick burst, before any slow Voyage embedding calls happen. The
     `db` connection passed in is only used for these initial fast reads —
     after that, this function never touches it again. This avoids Supabase's
     pooler silently dropping a connection that's been sitting open across
     many minutes of deliberately slow embedding calls."""
 
+    print("Removing legacy image chunks (images are not indexed)...")
+    purge_image_chunks()
+
     print("Reading all content from the database (fast)...")
     facility_rows = (
         db.query(models.FacilityContent)
-        .options(joinedload(models.FacilityContent.pdfs), joinedload(models.FacilityContent.photos))
+        .options(joinedload(models.FacilityContent.pdfs))
         .all()
     )
     notice_rows = db.query(models.Notice).all()

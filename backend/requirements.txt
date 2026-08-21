@@ -1,5 +1,6 @@
 fastapi
 uvicorn
+gunicorn
 sqlalchemy
 psycopg2-binary
 python-jose[cryptography]
@@ -15,3 +16,6 @@ python-dotenv
 cors
 voyageai
 groq
+redis
+sentence-transformers
+faster-whisper
