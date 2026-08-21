@@ -8,7 +8,7 @@ real table/pdf payload stored in chat_index_asset. Images are deliberately not i
 
 WHAT THIS FILE DOES NOT DO:
 - It does not call any LLM. Pure search only, per your zero-cost decision.
-- It does read text-based PDF contents page by page and stores chunked text.
+- It does not read, extract, index, retrieve, or answer from PDFs.
 - It deliberately does not index images or run OCR/vision processing.
 
 HOW TO USE:
@@ -28,27 +28,21 @@ import re
 import time
 from pathlib import Path
 
-try:
-    import pymupdf as fitz  # PyMuPDF
-except ImportError:  # pragma: no cover - compatibility with older installations
-    try:
-        import fitz  # type: ignore
-    except ImportError:
-        fitz = None
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import text
 import voyageai
 
 import models
+from embedding_provider import embed as embed_vectors, VOYAGE_MODEL, PROVIDER as EMBEDDING_PROVIDER
 
 # ── Voyage client ──
 # Reads VOYAGE_API_KEY from the environment automatically.
 voyage_client = voyageai.Client()
-EMBED_MODEL = "voyage-4-lite"
+EMBED_MODEL = VOYAGE_MODEL
 
 # Voyage allows only 3 requests/minute on accounts with no payment method on file.
 # 60 seconds / 3 requests = 20 seconds minimum between requests, +2s buffer to be safe.
-SECONDS_BETWEEN_REQUESTS = 22
+SECONDS_BETWEEN_REQUESTS = 22 if EMBEDDING_PROVIDER == "voyage" else 0
 
 
 # ============================================================
@@ -67,12 +61,7 @@ def embed_text(text_to_embed: str, max_attempts: int = 5):
     for attempt in range(1, max_attempts + 1):
         time.sleep(SECONDS_BETWEEN_REQUESTS)  # respect the 3 RPM limit (no payment method on file)
         try:
-            result = voyage_client.embed(
-                texts=[text_to_embed],
-                model=EMBED_MODEL,
-                input_type="document",
-            )
-            return result.embeddings[0]
+            return embed_vectors([text_to_embed], input_type="document")[0]
         except Exception as e:
             last_error = e
             wait = 10 * attempt  # back off a bit longer each retry: 10s, 20s, 30s...
@@ -82,18 +71,18 @@ def embed_text(text_to_embed: str, max_attempts: int = 5):
 
 
 def purge_image_chunks():
-    """Remove legacy image chunks so rebuilds remain strictly text/PDF-only."""
+    """Remove legacy image and PDF chunks so rebuilds remain text/table/profile-only."""
     from database import SessionLocal
     fresh_db = SessionLocal()
     try:
         fresh_db.execute(text("""
             DELETE FROM chat_index_chunk
-            WHERE content_type = 'image'
+            WHERE content_type IN ('image', 'pdf')
                OR id IN (
                     SELECT c.id
                     FROM chat_index_chunk c
                     JOIN chat_index_asset a ON a.chunk_id = c.id
-                    WHERE a.asset_type = 'image'
+                    WHERE a.asset_type IN ('image', 'pdf')
                )
         """))
         fresh_db.commit()
@@ -134,9 +123,9 @@ def save_chunk(
 
     asset dict shape:
       {"asset_type": "table", "table_data": {...}}                  for tables
-      {"asset_type": "pdf",   "file_url": "...", "file_name": "...", "page_number": 2} for PDFs
+      No PDF or image assets are accepted. Tables remain supported.
 
-    Image assets are intentionally unsupported and are never passed here.
+    Website files are intentionally not passed to the chatbot index.
     """
     if not chunk_text_value or not chunk_text_value.strip():
         return  # nothing to index
@@ -189,115 +178,6 @@ def save_chunk(
         fresh_db.close()
 
 
-PDF_CHUNK_CHARS = 1800
-PDF_CHUNK_OVERLAP = 250
-
-
-def _local_upload_path(file_url: str):
-    """Resolve a stored relative /uploads URL to the backend upload file."""
-    if not file_url:
-        return None
-    filename = Path(str(file_url).split("?", 1)[0]).name
-    if not filename:
-        return None
-    return Path(__file__).resolve().parent / "uploads" / filename
-
-
-def _split_pdf_text(text_value: str, max_chars: int = PDF_CHUNK_CHARS, overlap: int = PDF_CHUNK_OVERLAP):
-    """Create bounded, overlapping chunks while preserving paragraph boundaries."""
-    normalized = re.sub(r"[ \t]+", " ", text_value or "")
-    normalized = re.sub(r"\n{3,}", "\n\n", normalized).strip()
-    if not normalized:
-        return []
-    paragraphs = [p.strip() for p in re.split(r"\n\s*\n", normalized) if p.strip()]
-    chunks = []
-    current = ""
-    for paragraph in paragraphs:
-        if len(paragraph) > max_chars:
-            if current:
-                chunks.append(current)
-                current = ""
-            start = 0
-            while start < len(paragraph):
-                end = min(start + max_chars, len(paragraph))
-                chunks.append(paragraph[start:end].strip())
-                if end >= len(paragraph):
-                    break
-                start = max(0, end - overlap)
-            continue
-        candidate = f"{current}\n\n{paragraph}".strip() if current else paragraph
-        if len(candidate) <= max_chars:
-            current = candidate
-        else:
-            if current:
-                chunks.append(current)
-            tail = current[-overlap:] if current else ""
-            current = f"{tail}\n\n{paragraph}".strip()
-            if len(current) > max_chars:
-                current = current[-max_chars:]
-    if current:
-        chunks.append(current)
-    return chunks
-
-
-def extract_pdf_pages(file_url: str):
-    """Extract readable PDF text by page; return [] for missing/scanned PDFs.
-
-    OCR and image understanding are intentionally excluded. A PDF with no
-    extractable text still receives a metadata-only document chunk through
-    index_pdf_asset so the frontend can link to it.
-    """
-    if fitz is None:
-        print("    PyMuPDF is unavailable; skipping PDF text extraction.")
-        return []
-    path = _local_upload_path(file_url)
-    if not path or not path.exists():
-        return []
-    try:
-        with fitz.open(str(path)) as document:
-            pages = []
-            for page_number, page in enumerate(document, start=1):
-                page_text = page.get_text("text") or ""
-                chunks = _split_pdf_text(page_text)
-                for chunk in chunks:
-                    pages.append((page_number, chunk))
-            return pages
-    except Exception as exc:
-        print(f"    PDF extraction failed for {path.name}: {exc}")
-        return []
-
-
-def index_pdf_asset(source_table, source_id, section_url, section_title, file_url, file_name):
-    """Index actual readable PDF text; fall back to metadata without OCR."""
-    readable = _readable_name_from_filename(file_name or "document")
-    extracted_pages = extract_pdf_pages(file_url)
-    if extracted_pages:
-        for page_number, chunk in extracted_pages:
-            save_chunk(
-                source_table, source_id, "pdf",
-                chunk_text_value=f"{readable} — PDF page {page_number}.\n{chunk}",
-                section_url=section_url, section_title=section_title,
-                asset={
-                    "asset_type": "pdf",
-                    "file_url": file_url,
-                    "file_name": file_name,
-                    "page_number": page_number,
-                },
-            )
-    else:
-        save_chunk(
-            source_table, source_id, "pdf",
-            chunk_text_value=f"{readable}. A readable text layer was not available; the PDF is available in the {section_title} section.",
-            section_url=section_url, section_title=section_title,
-            asset={
-                "asset_type": "pdf",
-                "file_url": file_url,
-                "file_name": file_name,
-                "page_number": None,
-            },
-        )
-
-
 # ============================================================
 # PER-TABLE INDEXERS
 # Each one: (1) deletes old chunks for this row, (2) builds new ones.
@@ -332,7 +212,7 @@ def sync_facility_content_by_id(content_id: int):
     try:
         row = (
             fresh_db.query(models.FacilityContent)
-            .options(joinedload(models.FacilityContent.pdfs), joinedload(models.FacilityContent.photos))
+            .options(joinedload(models.FacilityContent.pdfs))
             .filter(models.FacilityContent.id == content_id)
             .first()
         )
@@ -408,8 +288,6 @@ def split_description_into_chunks(description, max_single_chunk_len=600):
 def index_facility_content_row(row: "models.FacilityContent"):
     """FacilityContent is the richest table: text + table JSON + many photos + many pdfs.
     Powers facilities/* and any other GenericContentPage-routed section."""
-
-    pdf_list = [(pdf.pdf_url, pdf.pdf_name) for pdf in row.pdfs]
 
     delete_chunks_for("facility_content", row.id)
 
@@ -573,13 +451,8 @@ def index_facility_content_row(row: "models.FacilityContent"):
         except (json.JSONDecodeError, AttributeError):
             pass
 
-    # 3. PDF chunks: extract actual readable text; never index images.
-    for pdf_url, pdf_name in pdf_list:
-        index_pdf_asset("facility_content", row.id, url, title, pdf_url, pdf_name)
+    # PDFs remain website assets only; they are intentionally not indexed by the chatbot.
 
-    # Legacy single PDF column.
-    if row.pdf_url:
-        index_pdf_asset("facility_content", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def sync_notice_by_id(notice_id: int):
@@ -609,8 +482,6 @@ def index_notice_row(row: "models.Notice"):
         section_url=url, section_title=title,
     )
 
-    if row.attachment_url:
-        index_pdf_asset("notices", row.id, url, title, row.attachment_url, row.attachment_name)
 
 
 def index_college_info_item_row(row: "models.CollegeInfoItem"):
@@ -653,8 +524,6 @@ def index_academic_nep_row(row: "models.AcademicNEP"):
             chunk_text_value=row.description,
             section_url=url, section_title=title,
         )
-    if row.pdf_url:
-        index_pdf_asset("academic_nep", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def index_academic_syllabus_row(row: "models.AcademicSyllabus"):
@@ -662,7 +531,6 @@ def index_academic_syllabus_row(row: "models.AcademicSyllabus"):
     url = f"/academics/syllabus/{row.category}"
     title = f"Syllabus — {row.category}"
 
-    index_pdf_asset("academic_syllabus", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def index_academic_elective_row(row: "models.AcademicElective"):
@@ -670,7 +538,6 @@ def index_academic_elective_row(row: "models.AcademicElective"):
     url = f"/academics/electives/{row.category}"
     title = f"Elective — {row.category}"
 
-    index_pdf_asset("academic_electives", row.id, url, title, row.pdf_url, row.pdf_name)
 
 
 def index_academic_section_incharge_row(row: "models.AcademicSectionIncharge"):
@@ -738,7 +605,7 @@ def index_all(db: Session):
     Stage D's per-row hooks keep things up to date incrementally —
     you should not need to call this again in normal operation.
 
-    IMPORTANT: all rows (including related pdfs/photos) are fetched up front,
+    IMPORTANT: all rows (including related website media; PDFs are not read or indexed) are fetched up front,
     in one quick burst, before any slow Voyage embedding calls happen. The
     `db` connection passed in is only used for these initial fast reads —
     after that, this function never touches it again. This avoids Supabase's
@@ -751,7 +618,7 @@ def index_all(db: Session):
     print("Reading all content from the database (fast)...")
     facility_rows = (
         db.query(models.FacilityContent)
-        .options(joinedload(models.FacilityContent.pdfs), joinedload(models.FacilityContent.photos))
+        .options(joinedload(models.FacilityContent.pdfs))
         .all()
     )
     notice_rows = db.query(models.Notice).all()

@@ -74,11 +74,23 @@ const renderInlineBold = (str, keyPrefix) => {
 // divider row — it carries no information for the reader, so drop it.
 const isTableDividerLine = (line) => /^[\s|:-]+$/.test(line) && line.includes("-");
 
+const cleanAnswerText = (value) => String(value || "")
+  .replace(/<[^>]*>/g, "")
+  .replace(/```(?:markdown|text|html|plain)?/gi, "")
+  .replace(/```/g, "")
+  .replace(/^\s*#{1,6}\s*/gm, "")
+  .replace(/^\s*[<>]+\s?/gm, "")
+  .replace(/^\s*\+{3,}\s*$/gm, "")
+  .replace(/^\s*(?:answer|response|retrieved information)\s*:\s*/gim, "")
+  .replace(/\n{3,}/g, "\n\n")
+  .trim();
+
 const AnswerText = ({ text }) => {
-  if (!text) return null;
+  const safeText = cleanAnswerText(text);
+  if (!safeText) return null;
   return (
     <div className="space-y-2">
-      {text.split("\n").map((line, i) => {
+      {safeText.split("\n").map((line, i) => {
         let trimmed = line.trim();
         if (!trimmed) return null;
         if (isTableDividerLine(trimmed)) return null;
@@ -136,6 +148,12 @@ const BotAvatar = () => (
 );
 
 // ── Typing indicator ───────────────────────────────────────────────────────
+const VoiceIcon = ({ listening }) => (
+  <svg className={`h-5 w-5 ${listening ? "animate-pulse text-red-600" : "text-[#0D1F3C]"}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {listening ? <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none" /> : <><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><path d="M12 19v3" /><path d="M8 22h8" /></>}
+  </svg>
+);
+
 const TypingIndicator = () => (
   <div className="flex items-end gap-2.5">
     <BotAvatar />
@@ -261,26 +279,7 @@ const BotMessage = ({ msg }) => (
 
       {msg.asset?.asset_type === "table" && <TableAsset tableData={msg.asset.table_data} />}
 
-      {msg.asset?.asset_type === "pdf" && msg.asset.file_url && (
-        <a
-          href={msg.asset.file_url.startsWith("http") ? msg.asset.file_url : `${API_BASE}${msg.asset.file_url}`}
-          target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 bg-white border-2 border-[#E3B94F] text-[#0D1F3C] text-[15px] font-semibold px-3.5 py-2.5 rounded-lg hover:bg-[#FBF1DA] transition-colors"
-        >
-          <span>📄</span><span>{msg.asset.file_name || "Download PDF"}{msg.asset.page_number ? ` — page ${msg.asset.page_number}` : ""}</span>
-        </a>
-      )}
-
-      {msg.asset?.asset_type === "image" && msg.asset.file_url && (
-        <img
-          src={msg.asset.file_url.startsWith("http") ? msg.asset.file_url : `${API_BASE}${msg.asset.file_url}`}
-          alt={msg.asset.file_name || "Related image"}
-          className="rounded-xl max-h-56 object-cover border-2 border-[#73614E]"
-          onError={(e) => { e.target.style.display = "none"; }}
-        />
-      )}
-
-      {msg.section_url && (
+      {msg.section_url && msg.section_url.startsWith("/") && !msg.section_url.startsWith("/uploads/") && !/\.pdf(?:$|\?)/i.test(msg.section_url) && (
         <Link to={msg.section_url}
           className="inline-flex items-center gap-1.5 text-[15px] text-[#0D1F3C] hover:text-[#C4561A] font-semibold underline decoration-[#E3B94F] decoration-2 underline-offset-2 transition-colors">
           🔗 View full section{msg.section_title ? ` — ${msg.section_title}` : ""}
@@ -313,10 +312,10 @@ const FallbackMessage = ({ msg }) => {
           {isOffTopic && <span className="block text-sm font-bold mb-1 text-[#3d3d8f] tracking-wide uppercase">Out of scope</span>}
           <AnswerText text={msg.text} />
         </div>
-        {!isOffTopic && msg.section_url && (
+        {!isOffTopic && msg.matched && msg.section_url && msg.section_url.startsWith("/") && !msg.section_url.startsWith("/uploads/") && !/\.pdf(?:$|\?)/i.test(msg.section_url) && (
           <Link to={msg.section_url}
             className="inline-flex items-center gap-1.5 text-[15px] text-[#0D1F3C] font-semibold underline decoration-[#E3B94F] decoration-2 underline-offset-2">
-            🔗 {msg.section_title ? `Browse: ${msg.section_title}` : "Browse closest section"}
+            🔗 {msg.section_title ? `View: ${msg.section_title}` : "View source section"}
           </Link>
         )}
       </div>
@@ -343,8 +342,11 @@ export default function MMVerse() {
   const [activeSection, setActiveSection] = useState(null); // currently selected section
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [listening, setListening] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const recorderRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -373,7 +375,11 @@ export default function MMVerse() {
       const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: q, section: activeSection ? activeSection.value : null }),
+        body: JSON.stringify({
+          question: q,
+          section: activeSection ? activeSection.value : null,
+          page_url: null,
+        }),
       });
       if (!res.ok) {
         // Server responded but with an error status — treat as fallback, not connection error
@@ -409,6 +415,7 @@ export default function MMVerse() {
             section_url: data.section_url,
             section_title: data.section_title,
             fallback_type: data.fallback_type || "no_content",
+            matched: Boolean(data.matched),
           },
           { type: "section-menu" }, // show menu again after fallback too
         ]);
@@ -432,7 +439,67 @@ export default function MMVerse() {
     }
   };
 
-  // const showInput = !!activeSection && !loading;
+  const startVoice = async () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      if (listening) {
+        recognitionRef.current?.stop();
+        return;
+      }
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-IN";
+      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.onstart = () => setListening(true);
+      recognition.onend = () => setListening(false);
+      recognition.onerror = () => setListening(false);
+      recognition.onresult = (event) => {
+        const transcript = event.results[0]?.[0]?.transcript || "";
+        setInput((current) => `${current} ${transcript}`.trim());
+      };
+      recognitionRef.current = recognition;
+      recognition.start();
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+      setItems((prev) => [...prev, { type: "fallback", text: "Voice input is not supported in this browser. Please type your question.", fallback_type: "no_content" }]);
+      return;
+    }
+    if (recorderRef.current) {
+      recorderRef.current.stop();
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+      recorder.ondataavailable = (event) => chunks.push(event.data);
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        recorderRef.current = null;
+        setListening(false);
+        const form = new FormData();
+        form.append("audio", new Blob(chunks, { type: recorder.mimeType || "audio/webm" }), "voice.webm");
+        try {
+          const response = await fetch(`${API_BASE}/transcribe?language=en`, { method: "POST", body: form });
+          if (!response.ok) throw new Error("transcription failed");
+          const data = await response.json();
+          setInput((current) => `${current} ${data.text || ""}`.trim());
+        } catch {
+          setItems((prev) => [...prev, { type: "fallback", text: "Voice transcription is temporarily unavailable. Please type your question.", fallback_type: "no_content" }]);
+        }
+      };
+      recorderRef.current = recorder;
+      setListening(true);
+      recorder.start();
+      window.setTimeout(() => recorderRef.current?.stop(), 8000);
+    } catch {
+      setListening(false);
+      setItems((prev) => [...prev, { type: "fallback", text: "Microphone access was not available. Please type your question.", fallback_type: "no_content" }]);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
@@ -546,6 +613,16 @@ export default function MMVerse() {
                 disabled={loading}
                 className="flex-1 min-w-0 bg-white rounded-xl px-3.5 sm:px-4 py-3 sm:py-3.5 text-[15px] sm:text-[16px] text-black border-2 border-[#0D1F3C]/50 placeholder-[#0D1F3C]/40 focus:outline-none focus:border-[#C4561A] transition-colors disabled:opacity-50"
               />
+              <button
+                type="button"
+                onClick={startVoice}
+                disabled={loading}
+                className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center border-2 transition-colors flex-shrink-0 ${listening ? "border-red-500 bg-red-50" : "border-[#0D1F3C]/50 bg-white hover:bg-[#FBF1DA]"}`}
+                aria-label={listening ? "Stop voice input" : "Start English voice input"}
+                title={listening ? "Stop voice input" : "Speak in English or Hinglish"}
+              >
+                <VoiceIcon listening={listening} />
+              </button>
               <button
                 type="submit"
                 disabled={loading || !input.trim()}

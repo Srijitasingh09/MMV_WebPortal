@@ -15,6 +15,7 @@ import time
 from contextlib import contextmanager
 
 
+CHAT_CACHE_VERSION = "text-only-page-scoped-v2"
 CACHE_TTL_SECONDS = 300
 MAX_CACHE_ITEMS = 2048
 RATE_LIMIT_WINDOW_SECONDS = 60
@@ -59,6 +60,8 @@ def clean_answer(value: str) -> str:
     text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
     text = re.sub(r"(?m)^\s*(?:answer|response|retrieved information)\s*:\s*", "", text, flags=re.I)
     text = re.sub(r"(?m)^\s*#{1,6}\s*", "", text)
+    text = re.sub(r"(?m)^\s*[<>]+\s*", "", text)
+    text = re.sub(r"(?m)^\s*\+{3,}\s*$", "", text)
     text = re.sub(r"(?m)^\s*\|?\s*[-:| ]{3,}\s*\|?\s*$", "", text)
     text = re.sub(r"/uploads/[^\s)]+", "the linked document", text)
     text = re.sub(r"\n{3,}", "\n\n", text)
@@ -146,4 +149,4 @@ def cache_set(key: str, value):
 
 
 def cache_key(question: str, section: str | None, page_url: str | None, language: str) -> str:
-    return "|".join((language, section or "", page_url or "", re.sub(r"\s+", " ", question.lower()).strip()))
+    return "|".join((CHAT_CACHE_VERSION, language, section or "", page_url or "", re.sub(r"\s+", " ", question.lower()).strip()))

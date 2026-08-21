@@ -4,6 +4,26 @@ import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
+// ---------------------------------------------------------------------------
+// Your own icon: drop your image file into /public (e.g. /public/mmverse-icon.png)
+// and point this at it. Works with .png, .svg, .webp, etc.
+// ---------------------------------------------------------------------------
+const AVATAR_ICON_SRC = "/bhu/AI-icon.png";
+
+// ---------------------------------------------------------------------------
+// Custom per-page heading — edit this map instead of relying on the page's
+// <h1> / document.title. Key = route path (or prefix), value = heading text.
+// "default" is used for any path not listed below.
+// ---------------------------------------------------------------------------
+const PAGE_HEADINGS = {
+  default: "Mahila Maha Vidyalaya",
+  "/": "Mahila Maha Vidyalaya",
+  "/administration": "Administration",
+  "/academics": "Academics",
+  "/facilities": "Facilities",
+  "/notices": "Notices",
+};
+
 // Standardized copy — single source of truth for all widget text
 const COPY = {
   assistantName: "MMVerse Assistant",
@@ -27,33 +47,30 @@ const COPY = {
 };
 
 const suggestions = [
-  "What information is available on this page?",
-  "Who should I contact for help?",
-  "Are there any documents or notices here?",
+  "Tell me about hostel facilities available in MMV",
+  "Whom to contact in case of medical emergency?",
+  "What is the schedule for semester exams?",
 ];
 
-// Fallback path formatter if no <h1> or document.title is present
-const titleFromPath = (pathname) => {
-  if (!pathname || pathname === "/") return "MMV Home";
-  const last = pathname.split("/").filter(Boolean).pop() || "MMV";
-  return last.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-};
-
-// Extracts actual Page Heading (H1 element) or Document Title
+// Looks up the custom heading for a route from PAGE_HEADINGS.
+// Matches the exact path first, then the longest matching prefix, then falls
+// back to "default". No DOM scraping — just the config map above.
 const getPageHeading = (pathname) => {
-  if (typeof document !== "undefined") {
-    const h1 = document.querySelector("h1");
-    if (h1 && h1.textContent?.trim()) {
-      return h1.textContent.trim();
-    }
-    if (document.title && document.title.trim()) {
-      const cleanTitle = document.title.replace(/\s*[-|–—].*$/, "").trim();
-      if (cleanTitle && cleanTitle.toLowerCase() !== "react app") {
-        return cleanTitle;
-      }
-    }
+  if (PAGE_HEADINGS[pathname]) return PAGE_HEADINGS[pathname];
+
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length > 1) {
+    const last = decodeURIComponent(parts[parts.length - 1]);
+    return last
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (character) => character.toUpperCase());
   }
-  return titleFromPath(pathname);
+
+  const prefixMatch = Object.keys(PAGE_HEADINGS)
+    .filter((key) => key !== "default" && key !== "/" && pathname.startsWith(key))
+    .sort((a, b) => b.length - a.length)[0];
+
+  return prefixMatch ? PAGE_HEADINGS[prefixMatch] : PAGE_HEADINGS.default;
 };
 
 const sectionFromPath = (pathname) => {
@@ -63,135 +80,46 @@ const sectionFromPath = (pathname) => {
 
 const cleanText = (value) =>
   String(value || "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/```(?:markdown|text|html|plain)?/gi, "")
+    .replace(/```/g, "")
     .replace(/\*\*/g, "")
-    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/^\s*#{1,6}\s*/gm, "")
+    .replace(/^\s*[<>]+\s?/gm, "")
+    .replace(/^\s*\+{3,}\s*$/gm, "")
+    .replace(/^\s*(?:answer|response|retrieved information)\s*:\s*/gim, "")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 
 // ---------------------------------------------------------------------------
-// 3D White & Blue Robot Avatar — matching uploaded robot design
+// Assistant Avatar — renders your own icon (see AVATAR_ICON_SRC above).
+// Falls back to a simple gold "M" monogram if the image fails to load.
 // ---------------------------------------------------------------------------
-const RoboAvatar = ({ size = 64, listening = false }) => (
-  <div style={{ width: size, height: size }} className="relative shrink-0 select-none">
-    <style>{`
-      @keyframes mmv-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-      @keyframes mmv-blink { 0%,90%,100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
-      @keyframes mmv-glow { 0%,100% { opacity: 0.6; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
-      @keyframes mmv-ear-pulse { 0%,100% { filter: drop-shadow(0 0 2px #0099ff); } 50% { filter: drop-shadow(0 0 6px #00d2ff); } }
-      .mmv-bot-group { animation: mmv-float 3s ease-in-out infinite; transform-origin: center; }
-      .mmv-bot-eye { animation: mmv-blink 4s ease-in-out infinite; transform-origin: center; }
-      .mmv-bot-aura { animation: mmv-glow 2s ease-in-out infinite; transform-origin: center; }
-      .mmv-bot-ear { animation: mmv-ear-pulse 2s ease-in-out infinite; }
-    `}</style>
-    <svg
-      viewBox="0 0 100 100"
-      className="h-full w-full overflow-visible"
-      role="img"
-      aria-label="MMVerse assistant robot"
+const RoboAvatar = ({ size = 64, listening = false }) => {
+  const [errored, setErrored] = useState(false);
+
+  return (
+    <div
+      style={{ width: size, height: size }}
+      className={`relative shrink-0 select-none overflow-hidden rounded-full ring-2 ${
+        listening ? "ring-[#B5451D] animate-pulse" : "ring-[#E3B94F]"
+      }`}
     >
-      <defs>
-        {/* Helmet Outer Gradient */}
-        <linearGradient id="helmetGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="70%" stopColor="#E2E8F0" />
-          <stop offset="100%" stopColor="#CBD5E1" />
-        </linearGradient>
-
-        {/* Glossy Head Highlight */}
-        <linearGradient id="glossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.8" />
-          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
-        </linearGradient>
-
-        {/* Visor Screen Gradient */}
-        <linearGradient id="visorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#0B1320" />
-          <stop offset="100%" stopColor="#1E293B" />
-        </linearGradient>
-
-        {/* Blue Metallic Ear Pods & Antenna */}
-        <linearGradient id="blueAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38BDF8" />
-          <stop offset="50%" stopColor="#0284C7" />
-          <stop offset="100%" stopColor="#0369A1" />
-        </linearGradient>
-
-        {/* Body Gradient */}
-        <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="85%" stopColor="#E2E8F0" />
-          <stop offset="100%" stopColor="#94A3B8" />
-        </linearGradient>
-
-        {/* Cyan Eye Glow Filter */}
-        <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="1.5" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
-
-      {/* Blue Shadow Hover Aura Underneath Feet */}
-      <ellipse cx="50" cy="94" rx="22" ry="4" fill="#00D2FF" className="mmv-bot-aura" opacity="0.4" />
-
-      <g className="mmv-bot-group">
-        {/* Top-Left Antenna */}
-        <line x1="34" y1="18" x2="24" y2="7" stroke="url(#blueAccentGrad)" strokeWidth="3" strokeLinecap="round" />
-        <circle cx="23" cy="6" r="4.5" fill="url(#blueAccentGrad)" className="mmv-bot-ear" />
-
-        {/* Side Blue Ear Muffs/Pods */}
-        <rect x="13" y="27" width="7" height="18" rx="3.5" fill="url(#blueAccentGrad)" className="mmv-bot-ear" />
-        <rect x="80" y="27" width="7" height="18" rx="3.5" fill="url(#blueAccentGrad)" className="mmv-bot-ear" />
-
-        {/* White Glossy Helmet/Head */}
-        <rect x="18" y="14" width="64" height="46" rx="23" fill="url(#helmetGrad)" stroke="#CBD5E1" strokeWidth="0.8" />
-        {/* Head Top Gloss */}
-        <path d="M 26 17 Q 50 14 74 17 Q 66 24 34 24 Z" fill="url(#glossGrad)" />
-
-        {/* Visor Screen */}
-        <rect x="25" y="21" width="50" height="32" rx="14" fill="url(#visorGrad)" stroke="#334155" strokeWidth="1.2" />
-
-        {/* Visor Eyes & Face expression */}
-        {listening ? (
-          /* Gear / Wave Face when Listening */
-          <g filter="url(#cyanGlow)">
-            <circle cx="39" cy="35" r="7" stroke="#00D2FF" strokeWidth="2" fill="none" strokeDasharray="3 2" />
-            <circle cx="61" cy="35" r="7" stroke="#00D2FF" strokeWidth="2" fill="none" strokeDasharray="3 2" />
-            <path d="M 44 44 Q 50 49 56 44" stroke="#00D2FF" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-          </g>
-        ) : (
-          /* Friendly Glowing Cyan Eyes & Smile */
-          <g className="mmv-bot-eye" filter="url(#cyanGlow)">
-            <circle cx="38" cy="35" r="6" fill="#00D2FF" />
-            <circle cx="40" cy="33" r="2" fill="#FFFFFF" />
-            <circle cx="62" cy="35" r="6" fill="#00D2FF" />
-            <circle cx="64" cy="33" r="2" fill="#FFFFFF" />
-            {/* Cute Cyan Smile */}
-            <path d="M 44 43 Q 50 48 56 43" stroke="#00D2FF" strokeWidth="2" fill="none" strokeLinecap="round" />
-          </g>
-        )}
-
-        {/* Neck Joiner */}
-        <rect x="42" y="58" width="16" height="5" rx="2.5" fill="#334155" />
-
-        {/* White Glossy Torso / Body */}
-        <rect x="28" y="61" width="44" height="26" rx="13" fill="url(#bodyGrad)" stroke="#CBD5E1" strokeWidth="0.8" />
-        {/* Chest Plate Detail */}
-        <path d="M 38 65 L 62 65 L 58 72 L 42 72 Z" fill="#E2E8F0" opacity="0.6" />
-
-        {/* Left Arm & Hand */}
-        <path d="M 28 66 Q 20 72 22 80" stroke="url(#helmetGrad)" strokeWidth="5.5" strokeLinecap="round" fill="none" />
-        <circle cx="22" cy="81" r="3" fill="#334155" />
-
-        {/* Right Arm & Hand */}
-        <path d="M 72 66 Q 80 72 78 80" stroke="url(#helmetGrad)" strokeWidth="5.5" strokeLinecap="round" fill="none" />
-        <circle cx="78" cy="81" r="3" fill="#334155" />
-
-        {/* Feet */}
-        <rect x="36" y="86" width="10" height="6" rx="3" fill="url(#helmetGrad)" stroke="#94A3B8" strokeWidth="0.5" />
-        <rect x="54" y="86" width="10" height="6" rx="3" fill="url(#helmetGrad)" stroke="#94A3B8" strokeWidth="0.5" />
-      </g>
-    </svg>
-  </div>
-);
+      {!errored ? (
+        <img
+          src={AVATAR_ICON_SRC}
+          alt="MMVerse assistant icon"
+          onError={() => setErrored(true)}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-[#0D1F3C] text-[#E3B94F] font-bold">
+          <span style={{ fontSize: size * 0.42 }}>M</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // Sleek SVG Mic Icon component
@@ -215,20 +143,6 @@ const MicIcon = ({ recording }) => {
 
 const WidgetAsset = ({ asset }) => {
   if (!asset) return null;
-  if (asset.asset_type === "pdf" && asset.file_url) {
-    const href = asset.file_url.startsWith("http") ? asset.file_url : `${API_BASE}${asset.file_url}`;
-    return (
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-[#D4A72C] bg-[#FFF8E8] px-3 py-2 text-xs font-semibold text-[#0D1F3C] hover:bg-[#FDF0D0] transition-colors"
-      >
-        <span>📄 PDF Document</span>
-        {asset.page_number && <span className="opacity-80">— page {asset.page_number}</span>}
-      </a>
-    );
-  }
   if (asset.asset_type === "table" && asset.table_data?.columns) {
     const { columns, rows = [] } = asset.table_data;
     return (
@@ -266,32 +180,12 @@ export default function ChatWidget() {
   const [suggestionIndex, setSuggestionIndex] = useState(0);
   const [listening, setListening] = useState(false);
 
-  // Dynamic Page Heading State (H1 element text, fallback to document.title / path)
-  const [pageHeading, setPageHeading] = useState(() => getPageHeading(location.pathname));
+  // Custom page heading, looked up from PAGE_HEADINGS for the current route
+  const pageHeading = useMemo(() => getPageHeading(location.pathname), [location.pathname]);
 
   const recognitionRef = useRef(null);
   const recorderRef = useRef(null);
   const section = useMemo(() => sectionFromPath(location.pathname), [location.pathname]);
-
-  // Keep page heading synchronized on mount, route change, or dynamic DOM updates
-  useEffect(() => {
-    const updateHeading = () => {
-      setPageHeading(getPageHeading(location.pathname));
-    };
-
-    updateHeading();
-    const t1 = setTimeout(updateHeading, 150);
-    const t2 = setTimeout(updateHeading, 500);
-
-    const observer = new MutationObserver(updateHeading);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      observer.disconnect();
-    };
-  }, [location.pathname]);
 
   // Cycle launcher suggestions
   useEffect(() => {
@@ -442,11 +336,11 @@ export default function ChatWidget() {
             className="fixed inset-y-0 right-0 z-[1200] flex w-full flex-col bg-[#FAF6EE] shadow-2xl sm:w-[390px] sm:max-w-[390px]"
             aria-label={COPY.assistantName}
           >
-            {/* Darker blue separation bar on the panel's left edge (#0F2C59) */}
-            <div className="absolute inset-y-0 left-0 w-[4px] bg-[#0F2C59]" aria-hidden="true" />
+            {/* Terracotta separation bar on the panel's left edge */}
+            <div className="absolute inset-y-0 left-0 w-[4px] bg-[#B5451D]" aria-hidden="true" />
 
-            {/* Header with dynamic Page Heading */}
-            <header className="flex items-start justify-between gap-3 bg-[#0D1F3C] px-4 py-4 text-white pl-5">
+            {/* Header with custom page heading + gold underline */}
+            <header className="flex items-start justify-between gap-3 border-b-2 border-[#E3B94F] bg-[#0D1F3C] px-4 py-4 text-white pl-5">
               <div className="flex items-start gap-3">
                 <RoboAvatar size={44} />
                 <div>
@@ -474,7 +368,7 @@ export default function ChatWidget() {
             {/* Chat Body */}
             <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pl-5">
               {messages.length === 0 && (
-                <div className="rounded-xl border border-[#E3B94F]/60 bg-[#FFF8E8] p-3.5 text-sm text-[#0D1F3C] shadow-sm">
+                <div className="rounded-xl border border-[#E3B94F] bg-[#FFF8E8] p-3.5 text-sm text-black shadow-sm">
                   <p className="font-semibold text-xs text-[#A6541B] uppercase tracking-wider mb-1">💡 Assistant Ready</p>
                   <p className="text-xs leading-relaxed">{COPY.emptyState}</p>
                 </div>
@@ -486,12 +380,12 @@ export default function ChatWidget() {
                   className={
                     message.role === "user"
                       ? "ml-6 rounded-2xl bg-[#0D1F3C] px-3.5 py-2.5 text-sm text-white shadow-sm sm:ml-8"
-                      : "mr-2 rounded-2xl border border-[#D9CDBA] bg-white px-3.5 py-2.5 text-sm text-[#1D1D1D] shadow-sm sm:mr-4"
+                      : "mr-2 rounded-2xl border border-[#E3B94F]/50 bg-[#F3E4C4] px-3.5 py-2.5 text-sm text-[#1D1D1D] shadow-sm sm:mr-4"
                   }
                 >
                   <p className="whitespace-pre-wrap leading-relaxed">{message.text}</p>
                   <WidgetAsset asset={message.asset} />
-                  {message.sectionUrl && (
+                  {message.sectionUrl && message.sectionUrl.startsWith("/") && !message.sectionUrl.startsWith("/uploads/") && !/\.pdf(?:$|\?)/i.test(message.sectionUrl) && (
                     <Link
                       to={message.sectionUrl}
                       className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#A6541B] underline hover:text-[#833e10]"
@@ -514,7 +408,7 @@ export default function ChatWidget() {
             <div className="border-t border-[#D9CDBA] bg-white p-3 pl-5 space-y-2.5">
               {/* Formatted "Try asking" Suggestion Chips */}
               <div className="space-y-1">
-                <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">
+                <p className="text-[11px] font-bold text-black uppercase tracking-wider">
                   {COPY.tryLabel}:
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -523,7 +417,7 @@ export default function ChatWidget() {
                       key={idx}
                       onClick={() => ask(item)}
                       disabled={loading}
-                      className="rounded-full border border-[#CBD5E1] bg-[#F8FAFC] px-2.5 py-1 text-left text-xs font-medium text-[#334155] hover:border-[#0D1F3C] hover:bg-[#F1F5F9] transition-all disabled:opacity-50"
+                      className="rounded-full border border-blue bg-[#F8FAFC] px-2.5 py-1 text-left text-xs font-medium text-blue hover:border-[#0D1F3C] hover:bg-[#F1F5F9] transition-all disabled:opacity-50"
                     >
                       ✨ {item}
                     </button>
@@ -544,14 +438,14 @@ export default function ChatWidget() {
                   }}
                   placeholder={COPY.inputPlaceholder}
                   rows={2}
-                  className="min-w-0 flex-1 resize-none rounded-xl border border-[#CBD5E1] px-3 py-2 text-sm text-[#0F172A] outline-none transition-colors focus:border-[#0D1F3C] focus:ring-1 focus:ring-[#0D1F3C]"
+                  className="min-w-0 flex-1 resize-none rounded-xl border border-blue px-3 py-2 text-sm text-[#0F172A] outline-none transition-colors focus:border-[#0D1F3C] focus:ring-1 focus:ring-[#0D1F3C]"
                 />
                 <button
                   onClick={startVoice}
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
                     listening
                       ? "border-red-300 bg-red-50 text-red-600"
-                      : "border-[#CBD5E1] bg-[#F8FAFC] hover:bg-[#E2E8F0]"
+                      : "border-blue bg-[#F8FAFC] hover:bg-[#E2E8F0]"
                   }`}
                   aria-label={listening ? COPY.micStop : COPY.micStart}
                   title={listening ? COPY.micStop : COPY.micStart}

@@ -1279,10 +1279,13 @@ def search_best_chunk(queries: list, db, section_filter: str = None, page_url: s
         )
 
     # Build optional section filter clause
-    section_clause = "AND c.content_type <> 'image'"
+    section_clause = "AND c.content_type NOT IN ('image', 'pdf')"
+    query_params = {}
     if page_url:
-        safe_page_url = page_url.replace("'", "''")
-        section_clause += f" AND c.section_url = '{safe_page_url}'"
+        # Exact page scope only. Accept a legacy trailing slash, but never broaden
+        # to the whole section when a page URL is supplied.
+        section_clause += " AND LOWER(c.section_url) IN (LOWER(:page_url), LOWER(:page_url || '/'))"
+        query_params["page_url"] = page_url
     elif section_filter:
         # Match source_table containing section name, or section_url starting with /section
         safe_section = section_filter.replace("'", "''")
@@ -1322,6 +1325,11 @@ def search_best_chunk(queries: list, db, section_filter: str = None, page_url: s
                 ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
             (["auditorium"], "auditorium",
                 ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
+            (["who is principal", "principal of mmv", "mmv principal", "principal"], "administration/principal", ["administration/staff"]),
+            (["staff", "office staff", "staff directory"], "administration/staff", ["administration/principal"]),
+            (["mmv library", "mmv library timing", "mmv library timings", "mahila maha vidyalaya library"], "facilities/library/mmvlibrary", ["facilities/library/central", "facilities/library/cyber"]),
+            (["central library"], "facilities/library/central", ["facilities/library/mmvlibrary", "facilities/library/cyber"]),
+            (["cyber library"], "facilities/library/cyber", ["facilities/library/mmvlibrary", "facilities/library/central"]),
             (["vishwanath temple"], "/vt",
                 ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
             (["postgraduate", " pg "], "syllabus/pg", ["syllabus/ug"]),
@@ -1333,8 +1341,8 @@ def search_best_chunk(queries: list, db, section_filter: str = None, page_url: s
                 conflict_check = " OR ".join(f"c.section_url ILIKE '%{frag}%'" for frag in conflicting)
                 lexical_adjustment += f"""
                     + CASE
-                        WHEN c.section_url ILIKE '%{preferred}%' THEN -0.05
-                        WHEN ({conflict_check}) THEN 0.05
+                        WHEN c.section_url ILIKE '%{preferred}%' THEN -0.25
+                        WHEN ({conflict_check}) THEN 0.25
                         ELSE 0
                       END"""
 
@@ -1361,8 +1369,7 @@ def search_best_chunk(queries: list, db, section_filter: str = None, page_url: s
                     + CASE WHEN c.content_type IN ('pdf', 'image') THEN 0.10 ELSE 0 END
                     {lexical_adjustment}
                 LIMIT 1
-            """)
-        ).fetchone()
+            """), query_params).fetchone()
 
         if row and float(row.similarity) > best_similarity:
             best_similarity = float(row.similarity)
@@ -1378,12 +1385,8 @@ def generate_answer(question: str, chunk_text: str, section_title: str, content_
     # Give the LLM a hint about what kind of data it's working with
     if content_type == "table":
         data_hint = "The information below is tabular data. Find the specific row(s) relevant to the question and extract the exact values."
-    elif content_type == "pdf":
-        data_hint = "The information below refers to a document/PDF. Describe what the document contains and how to access it."
-    elif content_type == "image":
-        data_hint = "The information below refers to an image or photo."
     else:
-        data_hint = "The information below is descriptive text from the college portal."
+        data_hint = "The information below is text, profile, or table data from the college portal. PDFs and images are not chatbot sources."
 
     prompt = f"""You are MMVerse, the official AI assistant for Mahila Maha Vidyalaya (MMV), Banaras Hindu University (BHU).
 A student asked you: "{question}"
@@ -1427,13 +1430,24 @@ INSTRUCTIONS:
 SIMILARITY_THRESHOLD = 0.35
 
 
+def page_no_content_message(page_url: str | None) -> str:
+    normalized = (page_url or "").lower()
+    if "/academics/syllabus/pg/" in normalized:
+        return (
+            "This PG syllabus page currently provides its syllabus as a document. "
+            "I do not read document files, so I cannot answer syllabus details from it. "
+            "Please open the syllabus link shown on the page."
+        )
+    return f"I couldn't find non-document information for {page_title_from_url(page_url)} on this page."
+
+
 def related_pages(db: Session, page_url: str | None, section_filter: str | None):
     """Return safe internal links from the same section for fallback guidance."""
     prefix = (page_url or (f"/{section_filter}" if section_filter else "/")).rstrip("/")
     rows = db.execute(text("""
         SELECT section_url, MAX(section_title) AS section_title
         FROM chat_index_chunk
-        WHERE content_type <> 'image'
+        WHERE content_type NOT IN ('image', 'pdf')
           AND section_url LIKE :prefix
         GROUP BY section_url
         ORDER BY section_url
@@ -1509,7 +1523,7 @@ def chat(payload: dict, request: Request, db: Session = Depends(get_db)):
         result = {
             "matched": False,
             "fallback_type": "no_content",
-            "message": f"No information is available on {page_title_from_url(page_url)}. Try the main MMVerse assistant for a broader search.",
+            "message": page_no_content_message(page_url) if page_url else "I couldn't find a specific answer in the MMV portal.",
             "section_title": page_title_from_url(page_url) if page_url else None,
             "section_url": page_url,
             "page_scoped": bool(page_url),
@@ -1525,13 +1539,12 @@ def chat(payload: dict, request: Request, db: Session = Depends(get_db)):
             "matched": False,
             "fallback_type": "no_content",
             "message": (
-                f"No information is available on {page_title_from_url(page_url)}. "
-                "Try the main MMVerse assistant for a broader search."
+                page_no_content_message(page_url)
                 if page_url else
                 "This looks like an MMV-related question, but I don't have specific information about it yet."
             ),
-            "section_title": row.section_title,
-            "section_url": row.section_url,
+            "section_title": page_title_from_url(page_url) if page_url else row.section_title,
+            "section_url": page_url if page_url else row.section_url,
             "page_scoped": bool(page_url),
             "language": language,
             "related_pages": related_pages(db, page_url, section_filter),
@@ -1539,34 +1552,37 @@ def chat(payload: dict, request: Request, db: Session = Depends(get_db)):
         cache_set(response_cache_key, result)
         return result
 
+    # Defensive guarantee: legacy PDF/image rows must never reach answer generation.
+    if (row.content_type or '').lower() in {'pdf', 'image'} or (row.asset_type or '').lower() in {'pdf', 'image'}:
+        return {
+            "matched": False,
+            "fallback_type": "unsupported_source",
+            "message": "I can answer from the portal's text, profile, and table content, but not from PDF or image files.",
+            "section_title": row.section_title,
+            "section_url": row.section_url,
+            "page_scoped": bool(page_url),
+        }
+
     # 5. Generate NLP answer from best matching chunk.
     try:
         answer = generate_answer(question, row.chunk_text, row.section_title, row.content_type or "text", language=language)
     except Exception:
-        answer = row.chunk_text
+        answer = clean_answer(row.chunk_text)
 
-    # 6. Build asset payload.
-    # file_url stored as relative path e.g. /uploads/file.pdf
+    # 6. Build table-only asset payload. Website PDF/image files are not chatbot assets.
+    # file_url handling remains available for non-chat website APIs.
     # Return as-is — frontend uses API_BASE + file_url to build full URL.
     # For section_url (internal page links), return as-is for React Router.
     asset = None
-    if row.asset_type:
-        asset = {"asset_type": row.asset_type}
-        if row.asset_type == "table" and row.table_data:
-            asset["table_data"] = (
+    if row.asset_type == "table" and row.table_data:
+        asset = {
+            "asset_type": "table",
+            "table_data": (
                 json.loads(row.table_data)
                 if isinstance(row.table_data, str)
                 else row.table_data
-            )
-        else:
-            # Ensure file_url starts with / so frontend can prefix API_BASE
-            file_url = row.file_url or ""
-            if file_url and not file_url.startswith("/"):
-                file_url = "/" + file_url
-            asset["file_url"] = file_url
-            asset["file_name"] = row.file_name
-            if row.page_number is not None:
-                asset["page_number"] = row.page_number
+            ),
+        }
 
     result = {
         "matched": True,

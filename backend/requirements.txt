@@ -16,7 +16,6 @@ python-dotenv
 cors
 voyageai
 groq
-PyMuPDF
 redis
 sentence-transformers
 faster-whisper
