@@ -413,6 +413,20 @@ const Navbar = () => {
   const autoHideTimerRef = useRef(null);
   const hoverTimerRef = useRef(null);
 
+  // Header collapse/hover-reveal only applies on desktop (md and up).
+  // On mobile the header always stays visible so the hamburger is never lost.
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+    const handleChange = (e) => setIsMobile(e.matches);
+    setIsMobile(mql.matches);
+    mql.addEventListener('change', handleChange);
+    return () => mql.removeEventListener('change', handleChange);
+  }, []);
+
   const clearTimers = () => {
     if (autoHideTimerRef.current) {
       clearTimeout(autoHideTimerRef.current);
@@ -425,18 +439,19 @@ const Navbar = () => {
   };
 
   // Auto-hide header after 5 seconds on non-home pages upon page load or navigation
+  // (desktop only — mobile keeps the header always visible)
   useEffect(() => {
     clearTimers();
     setHeaderVisible(true);
 
-    if (!isHomePage) {
+    if (!isHomePage && !isMobile) {
       autoHideTimerRef.current = setTimeout(() => {
         setHeaderVisible(false);
       }, 5000);
     }
 
     return () => clearTimers();
-  }, [location.pathname, isHomePage]);
+  }, [location.pathname, isHomePage, isMobile]);
 
   useEffect(() => {
     const fetchNotices = async () => {
@@ -462,7 +477,7 @@ const Navbar = () => {
   };
 
   const handleMouseMove = (e) => {
-    if (isHomePage) return;
+    if (isHomePage || isMobile) return;
 
     // Clear auto-hide timer if active
     if (autoHideTimerRef.current) {
@@ -474,23 +489,23 @@ const Navbar = () => {
     const isOverButton = Boolean(e.target.closest('a, button, [role="button"], input, select'));
 
     if (isOverButton) {
-      // If hovering over buttons/links, cancel the 3-second reveal timer so header stays hidden
+      // If hovering over buttons/links, cancel the reveal timer so header stays hidden
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
         hoverTimerRef.current = null;
       }
     } else {
-      // If hovering over empty background space (not buttons), start 3-second timer to reveal header
+      // If hovering over empty background space (not buttons), start timer to reveal header
       if (!hoverTimerRef.current && !headerVisible) {
         hoverTimerRef.current = setTimeout(() => {
           setHeaderVisible(true);
-        }, 3000);
+        }, 2000); // reduced from 3000ms to 2000ms
       }
     }
   };
 
   const handleMouseLeave = () => {
-    if (isHomePage) return;
+    if (isHomePage || isMobile) return;
 
     // Clear hover timer if mouse leaves
     if (hoverTimerRef.current) {
@@ -515,7 +530,7 @@ const Navbar = () => {
       {/* Collapsible Header Container */}
       <div 
         className={`grid transition-[grid-template-rows,opacity] duration-500 ease-in-out ${
-          headerVisible || isHomePage 
+          headerVisible || isHomePage || isMobile
             ? "grid-rows-[1fr] opacity-100" 
             : "grid-rows-[0fr] opacity-0 overflow-hidden pointer-events-none"
         }`}
@@ -523,12 +538,15 @@ const Navbar = () => {
         <div className="overflow-hidden">
           <header className="w-full bg-[#0f3358]">
             {/* Top-most view line */}
-            <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 flex justify-between items-center border-b border-[#d4af37]/40">
-              <div className="flex items-center gap-3">
-               <span className="text-[#d4af37] text-xs sm:text-sm font-bold font-cinzel leading-tight tracking-wide whitespace-normal block">
-                 Mahila Mahavidyalaya
-               </span>
-              </div>
+           <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 flex justify-between items-center border-b border-[#d4af37]/40">
+  <div className="flex items-center gap-3">
+    <span className="text-[#d4af37] text-xs sm:text-xs font-bold font-cinzel leading-tight tracking-wide whitespace-normal block">
+      {/* Mobile view (hidden on sm screens and above) */}
+      <span className="sm:hidden">Mahila Mahavidyalaya</span>
+      {/* Desktop view (hidden on mobile, shown on sm screens and above) */}
+      <span className="hidden sm:inline">Banaras Hindu University | Mahila Mahavidyalaya</span>
+    </span>
+  </div>
 
               <div>
                 {token && isAdmin ? (
@@ -637,7 +655,7 @@ const Navbar = () => {
                     ))
                   ) : (
                     <div className="inline-flex items-center gap-4 px-6 text-slate-200 font-medium">
-                      <span className="text-[#d4af37] font-semibold">Welcome to Mahila Maha Vidyalaya (MMV) Portal — Banaras Hindu University</span>
+                      <span className="text-[#d4af37] font-semibold">Welcome to Mahila Mahavidyalaya (MMV) Portal — Banaras Hindu University</span>
                       <span className="text-[#d4af37]">•</span>
                       <span>Visit the Notices section for real-time examination schedules and official notifications.</span>
                     </div>
@@ -651,20 +669,7 @@ const Navbar = () => {
 
       {/* ── Navigation Bar (Stays visible at top) ── */}
       <nav className="bg-[#0f3358] px-4 border-b-2 border-[#d4af37] shadow-lg">
-        {/* Mobile Navigation Row */}
-        <div className="md:hidden flex items-center justify-between py-2 px-1">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-[#d4af37] font-bold font-cinzel text-sm tracking-wide">MMV BHU</span>
-          </Link>
-          <button
-            onClick={() => setMobileOpen(true)}
-            aria-label="Open menu"
-            className="p-1.5 rounded-lg hover:bg-slate-700 text-white border border-[#d4af37]/40 flex items-center gap-1.5 text-xs font-semibold"
-          >
-            <span>Menu</span>
-            <span className="block w-4 h-0.5 bg-[#d4af37] my-0.5"></span>
-          </button>
-        </div>
+        
 
         {/* Desktop Navigation Row */}
         <div className="hidden md:flex relative justify-end items-center">

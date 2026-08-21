@@ -451,7 +451,26 @@ def index_facility_content_row(row: "models.FacilityContent"):
         except (json.JSONDecodeError, AttributeError):
             pass
 
-    # PDFs remain website assets only; they are intentionally not indexed by the chatbot.
+    # 3. PDFs — interim handling: index filename only (not PDF content) so a
+    # matching question returns a download link instead of no answer at all.
+    # Full PDF text extraction/reading is a separate, not-yet-built feature.
+    index_facility_content_pdfs(row)
+
+
+def index_facility_content_pdfs(row: "models.FacilityContent"):
+    """Interim PDF handling: index each PDF's filename only (not its content)
+    so a matching question returns a download link instead of no answer."""
+    base = row.section if row.section else "facilities"
+    url = f"/{base}/{row.category}" if row.category else f"/{base}"
+    title = row.name or row.category or base
+    for pdf in (row.pdfs or []):
+        readable = _readable_name_from_filename(pdf.pdf_name)
+        save_chunk(
+            "facility_content_pdf", pdf.id, "pdf",
+            chunk_text_value=f"{title} — {readable} document (PDF)",
+            section_url=url, section_title=title,
+            asset={"asset_type": "pdf", "file_url": pdf.pdf_url, "file_name": pdf.pdf_name},
+        )
 
 
 
