@@ -60,8 +60,9 @@ const ScrollArrow = ({ direction, onClick }) => (
   </button>
 );
 
+    {/* Main Top/Middle Info Section */}
 const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
-  <div className="relative w-full max-w-[350px] h-full bg-white border-2 border-slate-300 rounded-2xl sm:rounded-3xl shadow-md overflow-hidden flex flex-col items-center justify-between pt-6 xs:pt-8 pb-6 xs:pb-7 px-4 xs:px-6 sm:px-7 text-center mx-auto transition-shadow hover:shadow-lg">
+  <div className="relative w-full max-w-[350px] h-full bg-white border-2 border-slate-300 rounded-2xl sm:rounded-3xl shadow-md overflow-hidden flex flex-col items-center pt-6 xs:pt-8 pb-6 xs:pb-7 px-4 xs:px-6 sm:px-7 text-center mx-auto transition-shadow hover:shadow-lg">
     {isAdmin && (
       <div className="absolute top-3 right-3 flex gap-1.5 sm:gap-2 z-10">
         <button
@@ -81,8 +82,8 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
       </div>
     )}
 
-    {/* Main Top/Middle Info Section */}
-    <div className="flex flex-col items-center w-full flex-1">
+    {/* TOP SECTION: Photo, Name, Line, Designation */}
+    <div className="flex flex-col items-center w-full">
       {/* photo */}
       <div className="relative mb-4 xs:mb-5 shrink-0">
         <div className="w-28 h-28 xs:w-36 xs:h-36 sm:w-40 sm:h-40 rounded-full border-3 sm:border-4 border-[#0f3358] overflow-hidden bg-slate-100 flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105">
@@ -109,11 +110,16 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
       <div className="w-10 sm:w-12 h-[3px] bg-[#d4af37] my-2 xs:my-2.5 rounded-full shrink-0" />
       
       {card.designation && (
-        <p className="text-[#7d311f] text-base xs:text-lg sm:text-xl font-bold mb-2 xs:mb-2.5 text-center leading-snug break-words [overflow-wrap:anywhere] w-full px-1">
+        <p className="text-[#7d311f] text-base xs:text-lg sm:text-xl font-bold mb-2 text-center leading-snug break-words [overflow-wrap:anywhere] w-full px-1">
           {card.designation}
         </p>
       )}
-      
+    </div>
+
+    {/* ── GAP WILL HAPPEN HERE ── */}
+
+    {/* BOTTOM SECTION (pushed to bottom by mt-auto): Badge, University, Phone, Email */}
+    <div className="w-full flex flex-col items-center mt-auto pt-3">
       {card.badge && (
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 bg-[#EAEFF5] text-[#0f3358] text-xs xs:text-sm sm:text-base font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl mb-2 xs:mb-2.5 shadow-xs max-w-full text-center break-words [overflow-wrap:anywhere] leading-tight">
           <IconBuilding />
@@ -122,31 +128,30 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
       )}
       
       {card.university && (
-        <p className="text-slate-600 text-xs xs:text-sm sm:text-base font-semibold text-center mb-3.5 sm:mb-4 break-words [overflow-wrap:anywhere] w-full px-1">
+        <p className="text-slate-600 text-xs xs:text-sm sm:text-base font-semibold text-center mb-3 sm:mb-4 break-words [overflow-wrap:anywhere] w-full px-1">
           {card.university}
         </p>
       )}
-    </div>
 
-    {/* Contact Details Section */}
-    {(card.phone || card.email) && (
-      <div className="w-full border-t border-slate-200 pt-3.5 sm:pt-4 mt-auto">
-        <div className="w-full max-w-full space-y-2.5 sm:space-y-3 text-left">
-          {card.phone && (
-            <div className="flex items-center gap-2.5 sm:gap-3 text-xs xs:text-sm sm:text-base font-semibold text-slate-800 w-full min-w-0">
-              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconPhone /></span>
-              <span className="break-all [overflow-wrap:anywhere] min-w-0 flex-1">{card.phone}</span>
-            </div>
-          )}
-          {card.email && (
-            <div className="flex items-center gap-2.5 sm:gap-3 text-xs xs:text-sm sm:text-base font-semibold text-slate-800 w-full min-w-0">
-              <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconMail /></span>
-              <span className="break-all [overflow-wrap:anywhere] min-w-0 flex-1">{card.email}</span>
-            </div>
-          )}
+      {(card.phone || card.email) && (
+        <div className="w-full border-t border-slate-200 pt-3.5 sm:pt-4">
+          <div className="w-full max-w-full space-y-2.5 sm:space-y-3 text-left">
+            {card.phone && (
+              <div className="flex items-center gap-2.5 sm:gap-3 text-xs xs:text-sm sm:text-base font-semibold text-slate-800 w-full min-w-0">
+                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconPhone /></span>
+                <span className="break-all [overflow-wrap:anywhere] min-w-0 flex-1">{card.phone}</span>
+              </div>
+            )}
+            {card.email && (
+              <div className="flex items-center gap-2.5 sm:gap-3 text-xs xs:text-sm sm:text-base font-semibold text-slate-800 w-full min-w-0">
+                <span className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#EAEFF5] text-[#174873] flex items-center justify-center shrink-0 shadow-xs"><IconMail /></span>
+                <span className="break-all [overflow-wrap:anywhere] min-w-0 flex-1">{card.email}</span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    )}
+      )}
+    </div>
 
     <div className="absolute bottom-0 left-0 right-0 h-1.5 sm:h-2 bg-[#0f3358]" />
   </div>

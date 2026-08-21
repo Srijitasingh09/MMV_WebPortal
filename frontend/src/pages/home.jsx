@@ -172,25 +172,6 @@ const NoticesAndNews = () => {
   const [news, setNews] = useState([]);
   const [loadingNews, setLoadingNews] = useState(true);
 
-  const fallbackNotices = [
-    { id: '1', title: 'Operating of Shops, Gumaties etc. within the premises of Rajiv Gandhi South Campus, B...', date: 'Fri, 21 Aug 2026', isNew: true },
-    { id: '2', title: 'Notification of Conference/Seminar/Symposium/Workshop etc.-reg', date: 'Mon, 17 Aug 2026', isNew: true },
-    { id: '3', title: 'Application forms for M.Pharma (Ay) and B.Pharma (Ay) Entrance Test 2026 (Self Finance)', date: 'Thu, 13 Aug 2026', isNew: true },
-    { id: '4', title: 'Operating of Shops, Gumaties etc. within the premises of BHU', date: 'Wed, 12 Aug 2026', isNew: true },
-    { id: '5', title: 'Diploma in Yoga Training Programme', date: 'Mon, 10 Aug 2026', isNew: false },
-    { id: '6', title: 'Theater Performance - Satya Harishchandra', date: 'Mon, 10 Aug 2026', isNew: false },
-    { id: '7', title: 'Revised Schedule for BA / BSc Semester III Examination', date: 'Fri, 07 Aug 2026', isNew: false },
-  ];
-
-  const fallbackNews = [
-    { id: 'n1', title: 'National Workshop on "Application of (AI) Artificial Intelligence on Scientific Research" (AAISR-2026)', date: 'Thu, 01 Sep 2026', isNew: true },
-    { id: 'n2', title: '8th Drosophila Training Workshop organized by Department of Zoology', date: 'Tue, 02 Sep 2026', isNew: true },
-    { id: 'n3', title: 'National Workshop on "Emerging Trends and Application of Rules in Athletics" (ETARA-2026)', date: 'Sun, 07 Sep 2026', isNew: true },
-    { id: 'n4', title: 'Summer School on Innovative Technologies for Breeding Nutrient-Dense & Stress-Resilient Crops', date: 'Wed, 07 Sep 2026', isNew: false },
-    { id: 'n5', title: 'Special Lecture Series on Molecular Biology & Biotechnology Techniques', date: 'Mon, 10 Sep 2026', isNew: false },
-    { id: 'n6', title: 'MMV Annual Fine Arts & Heritage Painting Exhibition 2026', date: 'Fri, 14 Sep 2026', isNew: false },
-  ];
-
   useEffect(() => {
     const fetchNotices = async () => {
       try {
@@ -198,29 +179,32 @@ const NoticesAndNews = () => {
         const res = await fetch(`${API_BASE}/notices`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const formatted = data.map(n => ({
-              id: n.id,
-              title: n.title,
-              date: n.created_at
-                ? new Date(n.created_at).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
-                : 'Fri, 21 Aug 2026',
-              isNew: (() => {
-                if (!n.created_at) return true;
-                const diffDays = (new Date() - new Date(n.created_at)) / (1000 * 60 * 60 * 24);
-                return diffDays <= 14;
-              })()
-            }));
+          if (Array.isArray(data)) {
+            const formatted = data.map((n) => {
+              const rawDate = n.created_at || n.date || n.published_at;
+              const dateObj = rawDate ? new Date(rawDate) : null;
+              const isValid = dateObj && !isNaN(dateObj.getTime());
+              return {
+                id: n.id,
+                title: n.title,
+                date: isValid
+                  ? dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                  : 'Recent',
+                isNew: isValid
+                  ? (new Date() - dateObj) / (1000 * 60 * 60 * 24) <= 14
+                  : false
+              };
+            });
             setNotices(formatted);
           } else {
-            setNotices(fallbackNotices);
+            setNotices([]);
           }
         } else {
-          setNotices(fallbackNotices);
+          setNotices([]);
         }
       } catch (err) {
         console.error('Failed to fetch notices:', err);
-        setNotices(fallbackNotices);
+        setNotices([]);
       } finally {
         setLoadingNotices(false);
       }
@@ -232,30 +216,32 @@ const NoticesAndNews = () => {
         const res = await fetch(`${API_BASE}/news`);
         if (res.ok) {
           const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            const formatted = data.map(n => ({
-              id: n.id,
-              title: n.title,
-              date: n.created_at || n.date
-                ? new Date(n.created_at || n.date).toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
-                : 'Thu, 01 Sep 2026',
-              isNew: (() => {
-                const dateVal = n.created_at || n.date;
-                if (!dateVal) return true;
-                const diffDays = (new Date() - new Date(dateVal)) / (1000 * 60 * 60 * 24);
-                return diffDays <= 14;
-              })()
-            }));
+          if (Array.isArray(data)) {
+            const formatted = data.map((n) => {
+              const rawDate = n.created_at || n.date || n.published_at;
+              const dateObj = rawDate ? new Date(rawDate) : null;
+              const isValid = dateObj && !isNaN(dateObj.getTime());
+              return {
+                id: n.id,
+                title: n.title,
+                date: isValid
+                  ? dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                  : 'Recent',
+                isNew: isValid
+                  ? (new Date() - dateObj) / (1000 * 60 * 60 * 24) <= 14
+                  : false
+              };
+            });
             setNews(formatted);
           } else {
-            setNews(fallbackNews);
+            setNews([]);
           }
         } else {
-          setNews(fallbackNews);
+          setNews([]);
         }
       } catch (err) {
         console.error('Failed to fetch news:', err);
-        setNews(fallbackNews);
+        setNews([]);
       } finally {
         setLoadingNews(false);
       }
@@ -264,9 +250,6 @@ const NoticesAndNews = () => {
     fetchNotices();
     fetchNews();
   }, []);
-
-  const displayNotices = notices.length > 0 ? notices : fallbackNotices;
-  const displayNews = news.length > 0 ? news : fallbackNews;
 
   return (
     <section id="live-notices-news" className="bg-[#FAF7F2] pt-8 sm:pt-12 pb-6 sm:pb-8 px-4 sm:px-6 md:px-8 border-b border-slate-200">
@@ -301,11 +284,11 @@ const NoticesAndNews = () => {
                     <div className="w-7 h-7 border-3 border-[#0f3358] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                     <p className="font-lato text-xs text-slate-500 font-medium">Loading Notices...</p>
                   </div>
-                ) : (
-                  displayNotices.map((n) => (
+                ) : notices.length > 0 ? (
+                  notices.map((n) => (
                     <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
                       <Link
-                        to={`/Notices?id=${n.id}`}
+                        to={`/notices?id=${n.id}`}
                         className="font-lato text-xs sm:text-sm font-semibold text-[#0f3358] hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
                       >
                         {n.title}
@@ -320,7 +303,7 @@ const NoticesAndNews = () => {
                           )}
                         </div>
                         <Link
-                          to={`/Notices?id=${n.id}`}
+                          to={`/notices?id=${n.id}`}
                           className="text-[#7d311f] font-bold text-xs hover:underline"
                         >
                           Read More →
@@ -328,6 +311,10 @@ const NoticesAndNews = () => {
                       </div>
                     </div>
                   ))
+                ) : (
+                  <div className="py-8 text-center text-slate-500 font-lato text-xs">
+                    No notices available at present.
+                  </div>
                 )}
               </div>
             </div>
@@ -335,7 +322,7 @@ const NoticesAndNews = () => {
             {/* Single Read More Footer */}
             <div className="mt-3 pt-3 border-t border-slate-100 text-right">
               <Link
-                to="/Notices"
+                to="/notices"
                 className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-[#0f3358] hover:text-[#7d311f] transition-colors"
               >
                 <span>Read More Notices</span>
@@ -359,8 +346,8 @@ const NoticesAndNews = () => {
                     <div className="w-7 h-7 border-3 border-[#0f3358] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                     <p className="font-lato text-xs text-slate-500 font-medium">Loading News...</p>
                   </div>
-                ) : (
-                  displayNews.map((n) => (
+                ) : news.length > 0 ? (
+                  news.map((n) => (
                     <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
                       <Link
                         to={`/news?id=${n.id}`}
@@ -386,6 +373,10 @@ const NoticesAndNews = () => {
                       </div>
                     </div>
                   ))
+                ) : (
+                  <div className="py-8 text-center text-slate-500 font-lato text-xs">
+                    No news updates available at present.
+                  </div>
                 )}
               </div>
             </div>
