@@ -95,15 +95,19 @@ const cleanText = (value) =>
 // Assistant Avatar — renders your own icon (see AVATAR_ICON_SRC above).
 // Falls back to a simple gold "M" monogram if the image fails to load.
 // ---------------------------------------------------------------------------
-const RoboAvatar = ({ size = 64, listening = false }) => {
+const RoboAvatar = ({ size = 64, listening = false, glowBorder = false }) => {
   const [errored, setErrored] = useState(false);
+
+  const borderClasses = listening
+    ? "ring-2 ring-[#B5451D] animate-pulse"
+    : glowBorder
+      ? "border-2 mmv-color-cycle mmv-glow"
+      : "ring-2 ring-[#E3B94F]";
 
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative shrink-0 select-none overflow-hidden rounded-full ring-2 ${
-        listening ? "ring-[#B5451D] animate-pulse" : "ring-[#E3B94F]"
-      }`}
+      className={`relative shrink-0 select-none overflow-hidden rounded-full ${borderClasses}`}
     >
       {!errored ? (
         <img
@@ -298,33 +302,61 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* ---------------- Closed state: speech bubble + 3D robot launcher ---------------- */}
+      {/* Continuous luminous glow used by the launcher button and the suggestion box */}
+      <style>{`
+        @keyframes mmv-glow-pulse {
+          0%, 100% {
+            box-shadow: 0 0 12px 3px rgba(227,185,79,0.6), 0 0 26px 9px rgba(37,99,235,0.35);
+          }
+          50% {
+            box-shadow: 0 0 22px 7px rgba(37,99,235,0.85), 0 0 42px 15px rgba(227,185,79,0.55);
+          }
+        }
+        .mmv-glow {
+          animation: mmv-glow-pulse 2.2s ease-in-out infinite;
+        }
+        @keyframes mmv-color-cycle {
+          0%, 100% {
+            border-color: #D4A72C;
+            background-color: #D4A72C;
+          }
+          50% {
+            border-color: #2563EB;
+            background-color: #2563EB;
+          }
+        }
+        .mmv-color-cycle {
+          animation: mmv-color-cycle 2.2s ease-in-out infinite;
+        }
+      `}</style>
+
+      {/* ---------------- Closed state: square suggestion box + glowing launcher ---------------- */}
       {!open && (
-        <div className="fixed bottom-4 right-4 z-[1200] flex flex-col items-end gap-2 sm:bottom-6 sm:right-6">
-          {/* Formatted speech bubble hint */}
+        <div className="fixed bottom-4 right-4 z-[1200] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+          {/* Square-ish suggestion box */}
           <div
             onClick={() => setOpen(true)}
-            className="group relative max-w-[240px] cursor-pointer rounded-2xl border border-[#D4A72C] bg-[#FFF8E8] px-3.5 py-2.5 shadow-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl sm:max-w-[280px]"
+            className="group relative flex min-h-[110px] w-[140px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-[#D4A72C] bg-[#FFF8E8] px-3 py-3 text-center shadow-xl transition-all duration-300 ease-out sm:w-[150px]"
             role="button"
             aria-label={`${COPY.tryLabel}: ${suggestions[suggestionIndex]}`}
           >
-            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#A6541B]">
+            <div className="flex items-center justify-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest text-[#A6541B]">
               <span>✨</span>
               <span>{COPY.tryLabel}</span>
             </div>
-            <p className="mt-0.5 text-xs font-semibold text-[#0D1F3C] leading-snug">
+            <p className="text-xs font-bold leading-snug text-[#0D1F3C]">
               {suggestions[suggestionIndex]}
             </p>
             {/* Tail pointing down to robot avatar */}
-            <div className="absolute -bottom-2 right-6 h-3 w-3 rotate-45 border-b border-r border-[#D4A72C] bg-[#FFF8E8]" />
+            <div className="absolute -bottom-2 right-6 h-3 w-3 rotate-45 border-b-2 border-r-2 border-[#D4A72C] bg-[#FFF8E8]" />
           </div>
 
           <button
             onClick={() => setOpen(true)}
-            className="group relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#E2E8F0] bg-gradient-to-b from-white to-[#FAF6EE] shadow-2xl transition-transform duration-300 hover:scale-110 active:scale-95"
+            className="mmv-glow mmv-color-cycle group relative flex h-22 w-22 items-center justify-center rounded-full border-[5px] shadow-2xl transition-transform duration-300 hover:scale-110 active:scale-95"
             aria-label={COPY.openLabel}
           >
-            <RoboAvatar size={52} />
+            <RoboAvatar size={70} glowBorder />
           </button>
         </div>
       )}
