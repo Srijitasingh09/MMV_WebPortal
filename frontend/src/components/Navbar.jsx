@@ -106,7 +106,11 @@ const facilitiesItems = [
   ]},
 ];
 
-// Mobile menu structure with valid top-level routes
+// Mobile menu structure with valid top-level routes.
+// `highlight: true` marks an item that should get the same special
+// "AI Assistant" amber-pill treatment it has in the desktop nav — see
+// MobileMenuItem below, which reads this flag instead of the normal
+// depth-based color styles.
 const mobileNavItems = [
   { label: "Home", path: "/" },
   { label: "About MMV", path: "/about" },
@@ -115,7 +119,7 @@ const mobileNavItems = [
   { label: "Facilities", path: "/facilities", children: facilitiesItems },
   { label: "Notices", path: "/notices" },
   { label: "News", path: "/news" },
-  { label: "AI Assistant", path: "/ai-assistant" },
+  { label: "AI Assistant", path: "/ai-assistant", highlight: true },
   { label: "Contact", path: "/contact" },
   { label: "Feedback", path: "/feedback" },
 ];
@@ -270,10 +274,20 @@ const depthStyles = [
   },
 ];
 
+// Same amber-pill treatment the desktop "AI Assistant" link gets, reused here
+// so highlighted mobile items (see `highlight: true` in mobileNavItems) match
+// the desktop styling instead of falling back to the plain depth colors.
+const highlightStyle = {
+  bg: "bg-amber-300",
+  text: "text-[#0f3358]",
+  weight: "font-bold",
+  hover: "hover:bg-amber-400",
+};
+
 const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
   const [open, setOpen] = useState(false);
 
-  const style = depthStyles[Math.min(depth, depthStyles.length - 1)];
+  const style = item.highlight ? highlightStyle : depthStyles[Math.min(depth, depthStyles.length - 1)];
   const indentPad = 16 + depth * 14;
 
   if (item.children) {
@@ -354,11 +368,11 @@ const MobileMenu = ({ isOpen, onClose }) => {
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[998] transition-opacity duration-200 md:hidden
+        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[1299] transition-opacity duration-200 md:hidden
           ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-[#081a2f] z-[999] shadow-2xl
+        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-[#081a2f] z-[1300] shadow-2xl
           overflow-y-auto transition-transform duration-300 md:hidden border-l-2 border-[#d4af37]
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
@@ -681,12 +695,13 @@ const Navbar = () => {
             News
           </Link>
 
-          <Link to="/ai-assistant"
-            className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
-                    rounded-full bg-[#FFD700] 
-                    transition-all duration-200 whitespace-nowrap shadow-sm">
-            AI Assistant
-          </Link>
+         <Link 
+  to="/ai-assistant"
+  className="flex items-center gap-1.5 px-4 py-2 text-xs lg:text-sm font-bold text-[#0f3358] bg-amber-300 hover:bg-amber-400 rounded-tl-2xl rounded-br-2xl shadow-sm transition-all duration-200 whitespace-nowrap"
+>
+  
+  <span>AI Assistant</span>
+</Link>
 
           <Link to="/contact"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
