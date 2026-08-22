@@ -131,7 +131,7 @@ When editing any page's description in the admin controls, use this simple short
 | Blank line                 | Vertical spacing |
 | `[link text](url)`         | Clickable link (URL itself stays hidden) |
 | Anything else              | Normal left-aligned paragraph |
-.\.venv\Scripts\Activate.ps1
+
 Example:
 
 ```
@@ -165,7 +165,7 @@ From the project root:
 
 ```powershell
 python -m venv .venv
-
+.\.venv\Scripts\Activate.ps1
 pip install -r backend/requirements.txt
 ```
 
