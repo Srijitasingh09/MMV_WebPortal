@@ -139,7 +139,7 @@ const Hero = () => (
             to="/ai-assistant"
             className="font-lato text-xs sm:text-sm font-bold bg-[#7D311F] text-white px-6 py-3 rounded-full hover:bg-[#963b25] border border-[#D4AF37]/50 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
           >
-            <span>🤖</span> Ask MMVerse AI Assistant
+            <span>➤</span> Ask MMVerse AI Assistant
           </Link>
           <a
             href="https://bhu.samarth.edu.in/index.php/site/login"
@@ -147,7 +147,7 @@ const Hero = () => (
             rel="noopener noreferrer"
             className="font-lato text-xs sm:text-sm font-bold bg-[#7D311F] text-white px-6 py-3 rounded-full hover:bg-[#963b25] border border-[#D4AF37]/50 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
           >
-            <span>🎓</span> Samarth Portal
+            <span>➤</span> Samarth Portal
           </a>
         </div>
 
