@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import WelcomeSplash from '../components/WelcomeSplash';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 // Navy   #0D1F3C / #0F3358 — institution authority, headings, dark surfaces
@@ -658,6 +659,7 @@ const AIAssistant = () => (
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const Home = () => (
   <div className="font-lato">
+    <WelcomeSplash />
     <Hero />
     <NoticesAndNews />
     <About />
