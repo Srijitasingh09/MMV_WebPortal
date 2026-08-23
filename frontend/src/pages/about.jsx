@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';    
 
 const slides = [
   {
-    image: '/officegate.jpeg',
+    image: '/officegate.png',
     fit: 'cover',
-    position: '50% 40%',
+    position: 'center center',
     alt: 'mmv campus',
     title: 'Knowledge. Grace. Purpose.',
     subtitle: 'A Tradition of Excellence'
   },
   {
-    image: '/innerbuild.jpeg',
+    image: '/innerbuild.png',
     fit: 'cover',
     position: 'center center',
     alt: 'inner building',
@@ -18,12 +18,20 @@ const slides = [
     subtitle: 'Est. under Banaras Hindu University'
   },
   {
-    image: '/inner2.jpeg',
+    image: '/inner2.png',
     fit: 'cover',
     position: 'center center',
     alt: 'inner building view from library',
     title: 'A Legacy of Learning',
     subtitle: 'Inspiring Future Leaders'
+  },
+  {
+    image: '/officegateLeft.png',
+    fit: 'cover',
+    position: 'center 90%',
+    alt: 'inner building view from library',
+    title: 'More Than a Campus',
+    subtitle: 'IA Journey of Knowledge, Courage, and Dreams'
   },
 ];
 
