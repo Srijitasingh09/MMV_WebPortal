@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from sqlalchemy import text, func, inspect
 from typing import Optional, List
 from datetime import datetime
 import os
@@ -77,28 +77,17 @@ def serialize_news(n: "models.News"):
 
 
 def ensure_notice_attachment_columns():
-    with engine.connect() as conn:
-        column_rows = conn.execute(text(
-            "SELECT column_name FROM information_schema.columns WHERE table_name = 'notices'"
-        )).fetchall()
-        columns = {row[0] for row in column_rows}
-        if "attachment_url" not in columns:
+    # Uses SQLAlchemy's Inspector instead of raw information_schema SQL so this
+    # works on both Postgres (Supabase) and SQLite (local dev fallback) —
+    # information_schema.columns is Postgres-specific and breaks/no-ops on SQLite.
+    inspector = inspect(engine)
+    existing_columns = {col["name"] for col in inspector.get_columns("notices")}
+
+    with engine.begin() as conn:
+        if "attachment_url" not in existing_columns:
             conn.execute(text("ALTER TABLE notices ADD COLUMN attachment_url VARCHAR"))
-        if "attachment_name" not in columns:
+        if "attachment_name" not in existing_columns:
             conn.execute(text("ALTER TABLE notices ADD COLUMN attachment_name VARCHAR"))
-        conn.commit()
-
-
-def ensure_college_info_columns():
-    with engine.connect() as conn:
-        column_rows = conn.execute(text(
-            "SELECT column_name FROM information_schema.columns WHERE table_name = 'college_info_items'"
-        )).fetchall()
-        columns = {row[0] for row in column_rows}
-        if "display_order" not in columns:
-            conn.execute(text("ALTER TABLE college_info_items ADD COLUMN display_order INTEGER DEFAULT 0"))
-        conn.execute(text("UPDATE college_info_items SET display_order = id WHERE display_order IS NULL OR display_order = 0"))
-        conn.commit()
 
 
 def ensure_facility_content_table():
@@ -136,7 +125,6 @@ def ensure_feedback_table():
 
 ensure_emergency_contacts_table() 
 ensure_notice_attachment_columns()
-ensure_college_info_columns()
 ensure_facility_content_table()
 ensure_news_table()
 ensure_profile_cards_table()
@@ -216,12 +204,29 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         user.hashed_password = auth.get_password_hash(form_data.password)
         db.commit()
 
-    access_token = auth.create_access_token(data={"sub": user.email})
+    # is_admin is embedded directly in the signed token so the role can't be
+    # tampered with client-side independently of a valid token (it used to be
+    # tracked only via a separate, freely-editable localStorage flag).
+    access_token = auth.create_access_token(data={"sub": user.email, "is_admin": user.is_admin})
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "is_admin": user.is_admin,
         "full_name": user.full_name,
+    }
+
+
+@app.get("/user/me")
+def get_current_user_info(user: models.User = Depends(get_current_user)):
+    """
+    Lets the frontend re-verify the caller's role/identity against the
+    database on demand (e.g. right before rendering the admin dashboard),
+    instead of trusting a client-stored flag indefinitely.
+    """
+    return {
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_admin": user.is_admin,
     }
 
 # ====================contacts=======================
@@ -293,7 +298,7 @@ async def add_notice(
     attachment_url = None
     attachment_name = None
     if attachment and attachment.filename:
-        await validate_upload(attachment, ALLOWED_PDF_TYPES)
+        await validate_upload(attachment, ALLOWED_PDF_TYPES | ALLOWED_IMAGE_TYPES)
         safe_name = attachment.filename.replace(" ", "_")
         unique_name = f"{uuid.uuid4().hex}_{safe_name}"
         file_path = os.path.join(UPLOADS_DIR, unique_name)

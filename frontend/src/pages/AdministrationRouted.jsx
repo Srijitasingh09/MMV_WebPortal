@@ -7,20 +7,20 @@ const pages = {
     title: 'Administration', 
     pageType: 'description' 
   },
-  'vc': { 
-    title: 'Vice Chancellor', 
-    pageType: 'profile-description' 
-  },  
+  // 'vc': { 
+  //   title: 'Vice Chancellor', 
+  //   pageType: 'profile-description' 
+  // },  
 
-  'principal': { 
-    title: 'MMV Principal',                                 
-    pageType: 'profile-description'
-  },
+  // 'principal': { 
+  //   title: 'MMV Principal',                                 
+  //   pageType: 'profile-description'
+  // },
 
-  'dean': { 
-    title: 'Dean of Students',                              
-    pageType: 'profile-description' 
-  },
+  // 'dean': { 
+  //   title: 'Dean of Students',                              
+  //   pageType: 'profile-description' 
+  // },
 
   'advisor': { 
     title: 'Student Advisor',                               
@@ -35,24 +35,24 @@ const pages = {
 
   
 
-  'proctorial/chief': { 
-    title: 'Chief Proctor', 
-    pageType: 'profile-description'
-  },
+  // 'proctorial/chief': { 
+  //   title: 'Chief Proctor', 
+  //   pageType: 'profile-description'
+  // },
 
-  'proctorial/uniboard': { 
-    title: 'University Proctorial Board',           
-    pageType: 'table-description',
-    tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
-  },
+  // 'proctorial/uniboard': { 
+  //   title: 'University Proctorial Board',           
+  //   pageType: 'table-description',
+  //   tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
+  // },
 
 
 
-  'examination/universityexam': {  
-    title: 'Controller of Examination — University', 
-    pageType: 'description' 
+  // 'examination/universityexam': {  
+  //   title: 'Controller of Examination — University', 
+  //   pageType: 'description' 
     
-  },
+  // },
   
   'examination/mmvexam': { 
     title: 'Controller of Examination — MMV',       
