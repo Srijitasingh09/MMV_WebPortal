@@ -40,9 +40,9 @@ const academicsItems = [
   { label: "Electives", path: "/academics/electives" },
   { label: "SWAYAM Courses", path: "/academics/swayam" },
   { label: "Incharge", children: [
-    { label: "Science", path: "/academics/incharge/science"},
-    { label: "Social Science", path: "/academics/incharge/socialscience"},
-    { label: "Arts", path: "/academics/incharge/arts"}
+    { label: "Science", path: "/academics/section-incharge/science"},
+    { label: "Social Science", path: "/academics/section-incharge/socialscience"},
+    { label: "Arts", path: "/academics/section-incharge/arts"}
   ]},
   { label: "Academic Calendar", path: "/academics/calendar" },
   { label: "Holiday List", path: "/academics/holidays" },
@@ -107,10 +107,6 @@ const facilitiesItems = [
 ];
 
 // Mobile menu structure with valid top-level routes.
-// `highlight: true` marks an item that should get the same special
-// "AI Assistant" amber-pill treatment it has in the desktop nav — see
-// MobileMenuItem below, which reads this flag instead of the normal
-// depth-based color styles.
 const mobileNavItems = [
   { label: "Home", path: "/" },
   { label: "About MMV", path: "/about" },
@@ -119,7 +115,6 @@ const mobileNavItems = [
   { label: "Facilities", path: "/facilities", children: facilitiesItems },
   { label: "Notices", path: "/notices" },
   { label: "News", path: "/news" },
-  { label: "AI Assistant", path: "/ai-assistant", highlight: true },
   { label: "Contact", path: "/contact" },
   { label: "Feedback", path: "/feedback" },
 ];
@@ -274,9 +269,6 @@ const depthStyles = [
   },
 ];
 
-// Same amber-pill treatment the desktop "AI Assistant" link gets, reused here
-// so highlighted mobile items (see `highlight: true` in mobileNavItems) match
-// the desktop styling instead of falling back to the plain depth colors.
 const highlightStyle = {
   bg: "bg-amber-300",
   text: "text-[#0f3358]",
@@ -545,29 +537,19 @@ const Navbar = () => {
                 </span>
               </div>
 
-              <div>
-                {token && isAdmin ? (
-                  <div className="flex items-center gap-3">
-                    <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
-                      Admin Panel
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <a
-                    href="/login"
-                    className="text-[#0f3358] hover:text-white transition-colors duration-200 text-xs font-medium cursor-default hover:cursor-pointer select-none"
-                    title="Admin Login"
+              {token && isAdmin && (
+                <div className="flex items-center gap-3">
+                  <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
+                    Admin Panel
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
                   >
-                    Admin Login
-                  </a>
-                )}
-              </div>
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Main Branding Header Bar */}
@@ -577,14 +559,6 @@ const Navbar = () => {
                   src="/bhu/logo_bhu.png"
                   alt="BHU Logo"
                   className="h-9 sm:h-14 md:h-16 rounded-2xl object-contain"
-                />
-              </div>
-
-              <div className="hidden md:block flex-shrink-0 bg-transparent">
-                <img 
-                  src="/mmv_saarthi_logo.png" 
-                  alt="mmv-saarthi-logo"
-                  className="w-24 h-9 sm:w-32 sm:h-12 md:w-40 md:h-14 object-contain rounded-2xl" 
                 />
               </div>
 
@@ -606,11 +580,20 @@ const Navbar = () => {
                 </div>
               </div>
 
+              {/* Mobile View Right Side: MMV Logo only (no text) + Menu Toggle Button */}
               <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-                <img 
-                  src="/mmv_saarthi_logo.png" 
-                  alt="mmv-saarthi-logo"
-                  className="w-24 h-9 sm:w-32 object-contain rounded-2xl" 
+                <div className="min-w-0 text-right">
+                  <h1 className="text-[#353375] text-xs sm:text-md md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
+                    Mahila Mahavidyalaya
+                  </h1>
+                  <p className="text-[9px] sm:text-xs text-[#353375] font-semibold tracking-wider uppercase whitespace-normal">
+                    Varanasi
+                  </p>
+                </div>
+                <img
+                  src="/mmvlogo.jpeg"
+                  alt="MMV Logo"
+                  className="h-9 w-9 rounded-2xl object-contain"
                 />
                 <button
                   onClick={() => setMobileOpen(true)}
@@ -670,11 +653,11 @@ const Navbar = () => {
                     transition-all duration-200 whitespace-nowrap">
             Home
           </Link>
-          <Link to="/about"
+          <Link to="/OurVision"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
                     hover:bg-[#174873] hover:text-[#d4af37]
                     transition-all duration-200 whitespace-nowrap">
-            About MMV
+            Our Vision
           </Link>
 
           <DropdownMenu title="Administration" path="/administration" items={administrationItems} />
@@ -694,14 +677,6 @@ const Navbar = () => {
                     transition-all duration-200 whitespace-nowrap">
             News
           </Link>
-
-         <Link 
-  to="/ai-assistant"
-  className="flex items-center gap-1.5 px-4 py-2 text-xs lg:text-sm font-bold text-[#0f3358] bg-amber-300 hover:bg-amber-400 rounded-tl-2xl rounded-br-2xl shadow-sm transition-all duration-200 whitespace-nowrap"
->
-  
-  <span>AI Assistant</span>
-</Link>
 
           <Link to="/contact"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold

@@ -14,8 +14,3 @@ pydantic-settings
 pydantic[email]
 python-dotenv
 cors
-voyageai
-groq
-redis
-sentence-transformers
-faster-whisper

@@ -5,7 +5,6 @@ import datetime
 
 
 # ── ADMIN AUTH ──
-# Minimal user table — only used for admin login, no student data stored.
 class User(Base):
     __tablename__ = "users"
 
@@ -86,10 +85,6 @@ class CollegeInfoItem(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
-# ── MMV KNOWLEDGE (used by AdminDashboard's MMV Knowledge tab) ──
-# Note: stored as JSON file (mmv_knowledge.json), not a DB table.
-# Kept here as a reference comment only — no model needed.
-
 
 # ── ADMINISTRATION PAGES (used by AdministrationRouted via GenericContentPage) ──
 class AdministrationSection(Base):
@@ -104,7 +99,7 @@ class AdministrationSection(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
-# ── ACADEMICS PAGES (used by AcademicsRouted via AdminAcademics component) ──
+# ── ACADEMICS PAGES 
 class AcademicNEP(Base):
     __tablename__ = "academic_nep"
     id = Column(Integer, primary_key=True, index=True)
@@ -181,6 +176,12 @@ class FacilityContent(Base):
         back_populates="content",
         cascade="all, delete-orphan"
     )
+    profile_cards = relationship(
+        "ProfileCard",
+        back_populates="content",
+        cascade="all, delete-orphan",
+        order_by="ProfileCard.display_order"
+    )
 
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
@@ -209,6 +210,32 @@ class FacilityContentPdf(Base):
 
     content = relationship("FacilityContent", back_populates="pdfs")
 
+
+class ProfileCard(Base):
+    """One row per profile card (warden, admin-warden, faculty member, etc).
+    Properly joined to FacilityContent via content_id — same relational
+    pattern as FacilityContentPhoto/FacilityContentPdf above. Replaces the
+    old approach of stuffing all cards into FacilityContent.details as one
+    JSON blob, so cards can now be queried/joined/cascaded like everything
+    else instead of being an opaque string."""
+    __tablename__ = "profile_cards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    content_id = Column(Integer, ForeignKey("facility_content.id"))
+    name = Column(String, nullable=False, default="")
+    designation = Column(String, default="")   # e.g. "Warden", "Admin Warden"
+    badge = Column(String, default="")         # e.g. "Sunrise Boys Hostel"
+    university = Column(String, default="")
+    phone = Column(String, default="")
+    email = Column(String, default="")
+    photo_name = Column(String, nullable=True)
+    photo_url = Column(String, nullable=True)
+    display_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    content = relationship("FacilityContent", back_populates="profile_cards")
+
+
 class ContactInfo(Base):
     __tablename__ = "contact_info"
  
@@ -229,4 +256,18 @@ class EmergencyContact(Base):
     group_name    = Column(String, nullable=False)   # e.g. "Helpline Numbers", "Security Control Room"
     display_order = Column(Integer, default=0)
     created_at    = Column(DateTime, default=datetime.datetime.utcnow)
- 
+
+
+# ── FEEDBACK ──
+
+class Feedback(Base):
+    __tablename__ = "feedback"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    name       = Column(String, nullable=False)
+    email      = Column(String, nullable=False)
+    category   = Column(String, default="General")   # General/Facilities/Academics/Hostel/Website Issue/Suggestion
+    message    = Column(Text, nullable=False)
+    page_url   = Column(String, nullable=True)        # path the user was on when they submitted, for context only
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    

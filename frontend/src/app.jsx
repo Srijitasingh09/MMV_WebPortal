@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/home';
-import About from './pages/about';
+import OurVision from './pages/OurVision';
 import AcademicsRouted from './pages/AcademicsRouted';
 import AdministrationRouted from './pages/AdministrationRouted';
 import FacilitiesRouted from './pages/FacilitiesRouted';
@@ -11,7 +11,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import Notices from './pages/notice';
 import Contact from './pages/contact';
-import MMVerse from './pages/MMVerse';
 import AdminContentGuide from './pages/adminreadme'; 
 import Feedback from './pages/Feedback';
 import News from './pages/News';
@@ -32,13 +31,11 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
   return children;
 };
 
-// Layout Wrapper to conditionally show Layout & automatically hide chat widget for logged-in Admins
-const LayoutWrapper = ({ children, hideFooter = false, hideChatWidget = false }) => {
+const LayoutWrapper = ({ children, hideFooter = false}) => {
   const isAdmin = localStorage.getItem('isAdmin') === 'true';
-  const shouldHideChatWidget = hideChatWidget || isAdmin;
 
   return (
-    <Layout hideFooter={hideFooter} hideChatWidget={shouldHideChatWidget}>
+    <Layout hideFooter={hideFooter} >
       {children}
     </Layout>
   );
@@ -53,7 +50,7 @@ function App() {
 
         {/* Student Routes */}
         <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
-        <Route path="/About" element={<LayoutWrapper hideChatWidget><About/></LayoutWrapper>} />
+        <Route path="/OurVision" element={<LayoutWrapper><OurVision/></LayoutWrapper>} />
         <Route path="/facilities" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
         <Route path="/facilities/:sub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
         <Route path="/facilities/:sub/:subsub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
@@ -77,8 +74,6 @@ function App() {
         {/* contact */}
         <Route path="/Contact" element={<LayoutWrapper><Contact/></LayoutWrapper>} />
        
-        {/* Ai Assistant */}
-        <Route path="/ai-assistant" element={<LayoutWrapper hideChatWidget><MMVerse /></LayoutWrapper>} />
 
         {/* feedback */}
         <Route path="/Feedback" element={<LayoutWrapper><Feedback/></LayoutWrapper>} />
@@ -88,7 +83,7 @@ function App() {
           path="/admin" 
           element={
             <ProtectedRoute adminOnly={true}>
-              <LayoutWrapper hideChatWidget><AdminDashboard /></LayoutWrapper>
+              <LayoutWrapper ><AdminDashboard /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />
@@ -97,7 +92,7 @@ function App() {
           path="/admin/content-guide" 
           element={
             <ProtectedRoute adminOnly={true}>
-              <LayoutWrapper hideChatWidget><AdminContentGuide /></LayoutWrapper>
+              <LayoutWrapper ><AdminContentGuide /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />
