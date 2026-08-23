@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -14,26 +14,60 @@ import Contact from './pages/contact';
 import AdminContentGuide from './pages/adminreadme'; 
 import Feedback from './pages/Feedback';
 import News from './pages/News';
+import { getToken, isAdmin as isAdminSession, verifySessionWithServer } from './utils/auth';
 
 // Protected Route Component
+//
+// - token/role now come from utils/auth, which reads sessionStorage
+//   (per-tab, not shared across the whole browser) and decodes the role
+//   out of the signed JWT rather than a separately-editable flag.
+// - For adminOnly routes we additionally re-check with the backend
+//   (/user/me) before rendering, so a token that *looks* admin from its
+//   claims but belongs to a user who was demoted/deactivated since it was
+//   issued still gets bounced. This runs once per visit to an admin
+//   route, not on every click.
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const token = localStorage.getItem('token');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const token = getToken();
+  const claimsAdmin = isAdminSession();
+
+  const [checking, setChecking] = useState(adminOnly);
+  const [serverConfirmsAdmin, setServerConfirmsAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (token && adminOnly) {
+      verifySessionWithServer().then((profile) => {
+        if (!cancelled) {
+          setServerConfirmsAdmin(!!profile?.is_admin);
+          setChecking(false);
+        }
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [token, adminOnly]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />;
+  if (adminOnly) {
+    if (!claimsAdmin) {
+      return <Navigate to="/" replace />;
+    }
+    if (checking) {
+      return null; // brief pause while /user/me confirms the role server-side
+    }
+    if (!serverConfirmsAdmin) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;
 };
 
 const LayoutWrapper = ({ children, hideFooter = false}) => {
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
-
   return (
     <Layout hideFooter={hideFooter} >
       {children}

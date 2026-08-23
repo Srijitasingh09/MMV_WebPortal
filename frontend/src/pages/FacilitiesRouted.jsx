@@ -50,29 +50,35 @@ const pages = {
 
   // ── Library ───────────────────────────────────────────────────────────────
   
-  'library/central': {
-    title: 'Central Library',
-    pageType: 'slideshow-pdf-list-description',
-    photoAlign: 'center'
+   'library': {
+    title: 'Libraries',
+    pageType: 'slideshow-description',
+    
   },
-  'library/cyber': {
-    title: 'Cyber Library',
-    pageType: 'slideshow-pdf-list-description',
-    photoAlign: 'center'
-  },
-  'library/mmvlibrary': {
-    title: 'MMV Library',
-    pageType: 'slideshow-pdf-list-description',
-    photoAlign: 'center'
-  },
+
+  // 'library/central': {
+  //   title: 'Central Library',
+  //   pageType: 'slideshow-pdf-list-description',
+  //   photoAlign: 'center'
+  // },
+  // 'library/cyber': {
+  //   title: 'Cyber Library',
+  //   pageType: 'slideshow-pdf-list-description',
+  //   photoAlign: 'center'
+  // },
+  // 'library/mmvlibrary': {
+  //   title: 'MMV Library',
+  //   pageType: 'slideshow-pdf-list-description',
+  //   photoAlign: 'center'
+  // },
 
   // ── Sports ────────────────────────────────────────────────────────────────
   
-  'sports/universitysports': {
-    title: 'University Sports Board',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
+  // 'sports/universitysports': {
+  //   title: 'University Sports Board',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
   'sports/mmvsports': {
     title: 'MMV Sports Board',
     pageType: 'slideshow-description',
@@ -86,11 +92,11 @@ const pages = {
 
   // ── Well-being ────────────────────────────────────────────────────────────
   
-  'wellbeing/wbsc': {              // key matches navbar: /facilities/wellbeing/wbsc
-    title: 'Well Being Service Cell, BHU',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
+  // 'wellbeing/wbsc': {            
+  //   title: 'Well Being Service Cell, BHU',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
   'wellbeing/mmvwell': {
     title: 'MMV PAHAL',
     pageType: 'slideshow-description',
@@ -99,21 +105,21 @@ const pages = {
 
   // ── Training & Placement ──────────────────────────────────────────────────
  
-  'trainingplacement/universitytraining': {
-    title: 'University Training & Placement Cell',
-    pageType: 'description-pdf-list'
-  },
+  // 'trainingplacement/universitytraining': {
+  //   title: 'University Training & Placement Cell',
+  //   pageType: 'description-pdf-list'
+  // },
   'trainingplacement/mmvtraining': {
     title: 'Training & Placement Cell, MMV',
     pageType: 'description'
   },
 
   // ── CDC / Samarth / Namaste ───────────────────────────────────────────────
-  'cdc': {
-    title: 'Central Discovery Centre',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
+  // 'cdc': {
+  //   title: 'Central Discovery Centre',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
   'samarth': {
     title: 'Samarth Portal',
     pageType: 'description',
@@ -129,32 +135,42 @@ const pages = {
 
   // ── Medical ───────────────────────────────────────────────────────────────
   
-  'medical/ssh': {                 // key must be 'ssh' not 'ssr' — matches navbar
-    title: 'Sir Sundarlal Hospital',
+'medical': {
+    title: 'Medical',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
+    
   },
-  'medical/tc': {
-    title: 'Trauma Centre',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
-  'medical/health': {
-    title: 'Student Health Center',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
+  // 'medical/ssh': {                
+  //   title: 'Sir Sundarlal Hospital',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
+  // 'medical/tc': {
+  //   title: 'Trauma Centre',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
+  // 'medical/health': {
+  //   title: 'Student Health Center',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
 
   // ── Extracurricular ───────────────────────────────────────────────────────
  
-  'extracurricular/ncc': {
-    title: 'National Cadet Corps (NCC)',
-    pageType: 'description'
+  'extracurricular': {
+    title: 'Extra-curricular',
+    pageType: 'description',
+    
   },
-  'extracurricular/nss': {
-    title: 'National Service Scheme (NSS)',
-    pageType: 'description'
-  },
+  // 'extracurricular/ncc': {
+  //   title: 'National Cadet Corps (NCC)',
+  //   pageType: 'description'
+  // },
+  // 'extracurricular/nss': {
+  //   title: 'National Service Scheme (NSS)',
+  //   pageType: 'description'
+  // },
   'extracurricular/nlsc': {
     title: 'Nurturing Life Skills Cell (NLSC)',
     pageType: 'description'
@@ -163,11 +179,11 @@ const pages = {
     title: 'Diploma & Certificate Courses',
     pageType: 'pdf-list-description'
   },
-  'extracurricular/clubs': {
-    title: 'Clubs',
-    pageType: 'description-table',
-    tableColumns: ['Club Name', 'Type', 'Contact Person', 'Meeting Day']
-  },
+  // 'extracurricular/clubs': {
+  //   title: 'Clubs',
+  //   pageType: 'description-table',
+  //   tableColumns: ['Club Name', 'Type', 'Contact Person', 'Meeting Day']
+  // },
 
   // ── Canteen ───────────────────────────────────────────────────────────────
   
@@ -183,22 +199,27 @@ const pages = {
   },
 
   // ── City & Other ──────────────────────────────────────────────────────────
-  'citydelegacy': {
-    title: 'City Delegacy',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
+  // 'citydelegacy': {
+  //   title: 'City Delegacy',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
  
-  'other/vt': {
-    title: 'Vishwanath Temple',
+  'other': {
+    title: 'Other Amenties',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
+    
   },
-  'other/bkb': {
-    title: 'Bharat Kala Bhawan',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
-  },
+  // 'other/vt': {
+  //   title: 'Vishwanath Temple',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
+  // 'other/bkb': {
+  //   title: 'Bharat Kala Bhawan',
+  //   pageType: 'slideshow-description',
+  //   photoAlign: 'center'
+  // },
   'other/transportation': {
     title: 'Transportation',
     pageType: 'photo-description',
@@ -209,11 +230,11 @@ const pages = {
     pageType: 'slideshow-description',
     photoAlign: 'center'
   },
-  'other/guesthouses': {
-    title: 'Guest Houses',
-    pageType: 'slideshow-description-pdf-list',
-    photoAlign: 'center'
-  },
+  // 'other/guesthouses': {
+  //   title: 'Guest Houses',
+  //   pageType: 'slideshow-description-pdf-list',
+  //   photoAlign: 'center'
+  // },
   'other/auditorium': {
     title: 'Auditorium',
     pageType: 'slideshow-description',

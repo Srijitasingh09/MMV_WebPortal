@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
 import ProfileCardsBlock from './ProfileCardsBlock';
+import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 
 const API = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
 
@@ -240,8 +241,8 @@ const GenericContentPage = ({
   slideshowMaxWidth = '100%',
 }) => {
   const navigate  = useNavigate();
-  const isAdmin   = localStorage.getItem('isAdmin') === 'true';
-  const token     = localStorage.getItem('token');
+  const isAdmin   = isAdminSession();
+  const token     = getToken();
   const imageRef  = useRef(null);
   const pdfRef    = useRef(null);
   const profileImageRef = useRef(null);

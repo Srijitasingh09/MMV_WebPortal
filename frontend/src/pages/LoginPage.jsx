@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { User, Lock, ArrowRight, ShieldCheck, GraduationCap } from 'lucide-react';
+import { setSession, isAdmin } from '../utils/auth';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -22,11 +23,13 @@ const LoginPage = () => {
 
       const response = await axios.post('/login', formData);
 
-      localStorage.setItem('token', response.data.access_token);
-      localStorage.setItem('isAdmin', response.data.is_admin);
-      localStorage.setItem('userEmail', email);
+      // Stored per-tab (sessionStorage) instead of browser-wide
+      // (localStorage), so signing in here doesn't affect any other
+      // open tab. The role itself now lives inside the signed token
+      // (see utils/auth.js isAdmin()) rather than a separate flag.
+      setSession(response.data.access_token, email);
 
-      if (response.data.is_admin) {
+      if (isAdmin()) {
         navigate('/admin');
       } else {
         const profile = await axios.get('/user/me', {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 const AboutSection = () => {
   return (
-    <div className="space-y-10 sm:space-y-12">
+    <div className="  space-y-10 sm:space-y-12">
       {/* ── Section 1: About MMV Sarthi ── */}
       <section aria-labelledby="about-heading" className="bg-white rounded-3xl border border-gray-200/80 shadow-md p-6 sm:p-10 lg:p-12 space-y-8 relative overflow-hidden">
         {/* Ambient Decorative Background Glows */}
@@ -142,7 +142,7 @@ const OurVision = () => {
 
   return (
     <main className="min-h-screen bg-[#EAF0F6]">
-      <div className="max-w-5xl mx-auto px-6 py-10 space-y-6">
+      <div className="max-w-6xl mx-auto px-6 py-10 space-y-6">
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex items-end">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
