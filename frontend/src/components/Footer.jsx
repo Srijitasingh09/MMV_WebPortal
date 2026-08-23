@@ -40,9 +40,9 @@ const Footer = () => {
         <div className="col-span-1">
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">Quick Links</h3>
           <ul className="space-y-1.5 sm:space-y-2 font-sans-official">
-            <li><Link to="/about" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">About MMV</Link></li>
+            <li><Link to="/Academics" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">Academics</Link></li>
             <li><Link to="/notices" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">Notices &amp; Circulars</Link></li>
-            <li><Link to="/ai-assistant" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">AI Assistant</Link></li>
+            <li><Link to="/News" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">News</Link></li>
             <li><Link to="/contact" className="text-slate-300 text-xs sm:text-sm hover:text-[#d4af37] transition-colors">Contact Us</Link></li>
           </ul>
         </div>

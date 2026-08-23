@@ -4,7 +4,7 @@ import axios from 'axios';
 import SlideshowBlock from './SlideshowBlock';
 import ProfileCardsBlock from './ProfileCardsBlock';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
 
 // Profile photos are tagged via a filename prefix so they can be told apart
 // from any other photos uploaded on the same page (e.g. via the old
@@ -33,6 +33,116 @@ const BODY_STYLES = {
   subSubheading: 'text-xs sm:text-sm md:text-base leading-relaxed',   // text under the most recent '### ' sub-subheading
 };
 
+// ─── Caret position helper & non-jumping Textarea Resize ────────────────────
+const CARET_MIRROR_PROPS = [
+  'boxSizing', 'width', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+  'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth', 'borderStyle',
+  'fontStyle', 'fontVariant', 'fontWeight', 'fontSize', 'lineHeight', 'fontFamily',
+  'textAlign', 'textTransform', 'textIndent', 'letterSpacing', 'wordSpacing', 'whiteSpace', 'wordWrap',
+];
+
+const getCaretCoordinates = (textareaEl) => {
+  if (!textareaEl) return { top: 0, left: 0 };
+  const computed = window.getComputedStyle(textareaEl);
+  const div = document.createElement('div');
+
+  div.style.position = 'absolute';
+  div.style.top = '0px';
+  div.style.left = '-9999px';
+  div.style.visibility = 'hidden';
+  div.style.whiteSpace = 'pre-wrap';
+  div.style.wordWrap = 'break-word';
+  div.style.pointerEvents = 'none';
+
+  CARET_MIRROR_PROPS.forEach((prop) => { div.style[prop] = computed[prop]; });
+  div.style.width = computed.width;
+
+  document.body.appendChild(div);
+
+  const caretIndex = textareaEl.selectionStart ?? 0;
+  div.textContent = textareaEl.value.substring(0, caretIndex);
+
+  const marker = document.createElement('span');
+  marker.textContent = textareaEl.value.substring(caretIndex) || '.';
+  div.appendChild(marker);
+
+  const coords = {
+    top: marker.offsetTop,
+    left: marker.offsetLeft,
+  };
+  document.body.removeChild(div);
+  return coords;
+};
+
+// Safely adjusts textarea height without collapsing layout or causing window scroll jumps
+const adjustTextareaHeight = (el) => {
+  if (!el) return;
+  const savedScrollY = window.scrollY;
+  const savedScrollX = window.scrollX;
+
+  el.style.height = 'auto';
+  const targetHeight = Math.max(260, el.scrollHeight);
+  el.style.height = `${targetHeight}px`;
+
+  // Instantly restore window scroll position to prevent browser scroll jumps
+  window.scrollTo({ top: savedScrollY, left: savedScrollX, behavior: 'instant' });
+};
+
+const DESC_TOOLBAR_BUTTONS = [
+  {
+    label: 'B',
+    title: 'Bold',
+    apply: (sel) => sel
+      ? { text: `**${sel}**`, cursorOffset: `**${sel}**`.length }
+      : { text: '****', cursorOffset: 2 },
+  },
+  {
+    label: 'I',
+    title: 'Italic',
+    apply: (sel) => sel
+      ? { text: `*${sel}*`, cursorOffset: `*${sel}*`.length }
+      : { text: '**', cursorOffset: 1 },
+  },
+  {
+    label: 'H2',
+    title: 'Subheading',
+    apply: (sel) => ({ text: `## ${sel || 'Subheading'}`, cursorOffset: `## ${sel || 'Subheading'}`.length }),
+  },
+  {
+    label: 'H3',
+    title: 'Sub-subheading',
+    apply: (sel) => ({ text: `### ${sel || 'Sub-subheading'}`, cursorOffset: `### ${sel || 'Sub-subheading'}`.length }),
+  },
+  {
+    label: '• List',
+    title: 'Bullet point',
+    apply: (sel) => ({ text: `- ${sel || 'List item'}`, cursorOffset: `- ${sel || 'List item'}`.length }),
+  },
+  {
+    label: '― Divider',
+    title: 'Horizontal divider',
+    apply: () => ({ text: '---', cursorOffset: 3 }),
+  },
+  {
+    label: '▸ Accordion',
+    title: 'Collapsible accordion section',
+    apply: (sel) => {
+      const body = sel || 'Accordion content goes here.';
+      const text = `+++ Section Title\n${body}\n+++`;
+      return { text, cursorOffset: text.length };
+    },
+  },
+  {
+    label: '❝ Note',
+    title: 'Highlighted note callout',
+    apply: (sel) => {
+      const body = sel || 'Note text';
+      const text = `> ${body} <`;
+      return { text, cursorOffset: text.length };
+    },
+  },
+];
+
 // Defined outside component so it never causes stale closure issues inside useCallback/useEffect
 const blankProfile = {
   name: '', designation: '', university: '', address: '',
@@ -40,9 +150,6 @@ const blankProfile = {
 };
 
 // ─── Shared link / inline-formatting helpers ────────────────────────────────
-// Defined at module scope so both the description parser AND the admin data table's
-// cell viewer can use the exact same logic for turning "[label](url)" / bare "https://…"
-// text into clickable links.
 const splitLinks = (text) => {
   if (typeof text !== 'string') return [{ type: 'text', content: text }];
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)|(https?:\/\/[^\s]+)/g;
@@ -86,7 +193,6 @@ const renderTextWithLinks = (text) =>
       : <React.Fragment key={`txt-${i}`}>{seg.content}</React.Fragment>
   );
 
-// Renders inline bold (**text**), italics (*text* or _text_) + links together.
 const renderInlineFormatting = (text) => {
   if (!text || typeof text !== 'string') return text || '';
   return splitLinks(text).map((seg, i) => {
@@ -140,12 +246,19 @@ const GenericContentPage = ({
   const pdfRef    = useRef(null);
   const profileImageRef = useRef(null);
   const profileCardsRef = useRef(null);
+  const descTextareaRef = useRef(null);
 
   const [data,       setData]       = useState({});
   const [loading,    setLoading]    = useState(true);
   const [isEditing,  setIsEditing]  = useState(false);
   const [editDesc,   setEditDesc]   = useState('');
   const [saving,     setSaving]     = useState(false);
+
+  // floating caret-menu state
+  const [caretPos,      setCaretPos]      = useState({ top: 0, left: 0 });
+  const [caretMenuMode, setCaretMenuMode] = useState(null); // null | 'menu' | 'link'
+  const [linkLabel,     setLinkLabel]     = useState('');
+  const [linkUrl,       setLinkUrl]       = useState('');
 
   const [openSections, setOpenSections] = useState({});
   const [openGridCards, setOpenGridCards] = useState({});
@@ -161,7 +274,7 @@ const GenericContentPage = ({
   const [editTableHeading, setEditTableHeading] = useState('');
   const [savingHeading,    setSavingHeading]    = useState(false);
 
-   // inline row edit state
+  // inline row edit state
   const [editingRowIdx,  setEditingRowIdx]  = useState(null);
   const [editingRowData, setEditingRowData] = useState({});
 
@@ -179,7 +292,7 @@ const GenericContentPage = ({
     cols: photoCols,
     height: photoHeight,
     width: photoWidth,
-    align: photoAlign === 'center' ? 'top' : photoAlign, // 'left' | 'right' | 'top'
+    align: photoAlign === 'center' ? 'top' : photoAlign,
     slideshowHeight: slideshowHeight,
     slideshowMaxWidth: slideshowMaxWidth,
   };
@@ -267,8 +380,75 @@ const GenericContentPage = ({
       );
       await fetchData();
       setIsEditing(false);
+      setCaretMenuMode(null);
     } catch { alert('Save failed'); }
     finally { setSaving(false); }
+  };
+
+  const updateCaretMenuPosition = useCallback(() => {
+    const el = descTextareaRef.current;
+    if (!el) return;
+    const { top, left } = getCaretCoordinates(el);
+    setCaretPos({
+      top: top - el.scrollTop,
+      left: left - el.scrollLeft,
+    });
+  }, []);
+
+  // Applies a toolbar button's formatting without causing scroll jumps or layout shifts
+  const applyDescFormat = useCallback((applyFn) => {
+    const el = descTextareaRef.current;
+    if (!el) return;
+
+    const start = el.selectionStart ?? editDesc.length;
+    const end = el.selectionEnd ?? editDesc.length;
+    const selected = editDesc.slice(start, end);
+    const { text, cursorOffset } = applyFn(selected);
+
+    const nextValue = editDesc.slice(0, start) + text + editDesc.slice(end);
+    const savedScrollY = window.scrollY;
+    const savedScrollX = window.scrollX;
+
+    setEditDesc(nextValue);
+
+    requestAnimationFrame(() => {
+      if (!descTextareaRef.current) return;
+      const tEl = descTextareaRef.current;
+      tEl.focus({ preventScroll: true });
+      const pos = start + cursorOffset;
+      try {
+        tEl.setSelectionRange(pos, pos);
+      } catch (_) {
+        tEl.selectionStart = pos;
+        tEl.selectionEnd = pos;
+      }
+      adjustTextareaHeight(tEl);
+      updateCaretMenuPosition();
+      window.scrollTo({ top: savedScrollY, left: savedScrollX, behavior: 'instant' });
+    });
+  }, [editDesc, updateCaretMenuPosition]);
+
+  const openLinkForm = () => {
+    const el = descTextareaRef.current;
+    if (el) {
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      setLinkLabel(editDesc.slice(start, end));
+    }
+    setLinkUrl('');
+    setCaretMenuMode('link');
+  };
+
+  const insertLink = () => {
+    if (!linkUrl.trim()) return;
+    applyDescFormat(() => {
+      const label = linkLabel.trim() || linkUrl.trim();
+      const text = `[${label}](${linkUrl.trim()})`;
+      return { text, cursorOffset: text.length };
+    });
+    setLinkLabel('');
+    setLinkUrl('');
+    setCaretMenuMode(null);
   };
 
   const displayRows = rows.map((row, origIdx) => ({ row, origIdx }));
@@ -593,22 +773,782 @@ const GenericContentPage = ({
     </div>
   );
 
+  const renderDescriptionContent = (raw) => {
+    if (!raw.trim()) {
+      return (
+        <p className="italic text-black text-center">
+          {isAdmin ? 'No content yet. Click Edit Description.' : 'Content coming soon.'}
+        </p>
+      );
+    }
+
+    const lines = raw.split('\n');
+    const elements = [];
+    let bulletBuffer = [];
+    let firstLine = true;
+    let noteBuffer = [];   
+    let inNote = false;    
+
+    let currentBodyLevel = 'default';
+    let tableBuffer = [];  
+    
+    let accordionBuffer = [];   
+    let accordionTitle = '';
+    let inAccordion = false;
+    let accordionCount = 0;     
+
+    let gridBuffer = [];
+    let inGrid = false;
+    let gridTheme = 'default';
+    let gridCount = 0;
+
+    const GRID_THEMES = {
+      default: {
+        cardBorder: 'border-slate-200/90 hover:border-[#d4af37]',
+        cardBg: 'bg-white hover:bg-[#FAF7F2]/80',
+        headerHoverBg: 'group-hover:bg-[#FAF7F2]',
+        headerText: 'text-[#0f3358] group-hover:text-[#7d311f]',
+        badge: 'bg-[#d4af37] group-hover:bg-[#7d311f]',
+        arrowBg: 'bg-slate-100 group-hover:bg-[#0f3358]',
+        arrowText: 'text-slate-500 group-hover:text-white',
+        dividerBorder: 'border-[#d4af37]/40',
+        bodyBg: 'bg-white',
+      },
+      blue: {
+        cardBorder: 'border-blue-100 hover:border-blue-400',
+        cardBg: 'bg-white hover:bg-blue-50/60',
+        headerHoverBg: 'group-hover:bg-blue-50/50',
+        headerText: 'text-[#174873] group-hover:text-blue-900',
+        badge: 'bg-blue-500 group-hover:bg-[#174873]',
+        arrowBg: 'bg-blue-50 group-hover:bg-[#174873]',
+        arrowText: 'text-blue-500 group-hover:text-white',
+        dividerBorder: 'border-blue-200',
+        bodyBg: 'bg-white',
+      },
+      green: {
+        cardBorder: 'border-emerald-100 hover:border-emerald-500',
+        cardBg: 'bg-white hover:bg-emerald-50/60',
+        headerHoverBg: 'group-hover:bg-emerald-50/50',
+        headerText: 'text-emerald-900 group-hover:text-emerald-950',
+        badge: 'bg-emerald-500 group-hover:bg-emerald-700',
+        arrowBg: 'bg-emerald-50 group-hover:bg-emerald-700',
+        arrowText: 'text-emerald-600 group-hover:text-white',
+        dividerBorder: 'border-emerald-200',
+        bodyBg: 'bg-white',
+      },
+      slate: {
+        cardBorder: 'border-slate-200 hover:border-slate-500',
+        cardBg: 'bg-white hover:bg-slate-100/70',
+        headerHoverBg: 'group-hover:bg-slate-100/50',
+        headerText: 'text-slate-800 group-hover:text-black',
+        badge: 'bg-slate-400 group-hover:bg-slate-700',
+        arrowBg: 'bg-slate-100 group-hover:bg-slate-800',
+        arrowText: 'text-slate-500 group-hover:text-white',
+        dividerBorder: 'border-slate-200',
+        bodyBg: 'bg-white',
+      },
+      crimson: {
+        cardBorder: 'border-rose-100 hover:border-[#7d311f]',
+        cardBg: 'bg-white hover:bg-rose-50/60',
+        headerHoverBg: 'group-hover:bg-rose-50/40',
+        headerText: 'text-[#7d311f] group-hover:text-rose-900',
+        badge: 'bg-[#7d311f] group-hover:bg-rose-700',
+        arrowBg: 'bg-rose-50 group-hover:bg-[#7d311f]',
+        arrowText: 'text-[#7d311f] group-hover:text-white',
+        dividerBorder: 'border-rose-200',
+        bodyBg: 'bg-white',
+      },
+      purple: {
+        cardBorder: 'border-purple-100 hover:border-purple-500',
+        cardBg: 'bg-white hover:bg-purple-50/60',
+        headerHoverBg: 'group-hover:bg-purple-50/40',
+        headerText: 'text-purple-900 group-hover:text-purple-950',
+        badge: 'bg-purple-500 group-hover:bg-purple-700',
+        arrowBg: 'bg-purple-50 group-hover:bg-purple-700',
+        arrowText: 'text-purple-600 group-hover:text-white',
+        dividerBorder: 'border-purple-200',
+        bodyBg: 'bg-white',
+      },
+      amber: {
+        cardBorder: 'border-amber-100 hover:border-amber-500',
+        cardBg: 'bg-white hover:bg-amber-50/60',
+        headerHoverBg: 'group-hover:bg-amber-50/40',
+        headerText: 'text-amber-900 group-hover:text-amber-950',
+        badge: 'bg-amber-500 group-hover:bg-amber-700',
+        arrowBg: 'bg-amber-50 group-hover:bg-amber-700',
+        arrowText: 'text-amber-600 group-hover:text-white',
+        dividerBorder: 'border-amber-200',
+        bodyBg: 'bg-white',
+      },
+    };
+
+    const flushBullets = () => {
+      if (bulletBuffer.length > 0) {
+        elements.push(
+          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#7d311f] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
+            {bulletBuffer.map((b, i) => (
+              <li key={i}>{renderInlineFormatting(b)}</li>
+            ))}
+          </ul>
+        );
+        bulletBuffer = [];
+      }
+    };
+
+    const flushNote = () => {
+      if (noteBuffer.length > 0) {
+        const noteElements = [];
+        let noteBulletBuffer = [];
+
+        const flushNoteBullets = () => {
+          if (noteBulletBuffer.length > 0) {
+            noteElements.push(
+              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
+                {noteBulletBuffer.map((b, i) => (
+                  <li key={i}>{renderInlineFormatting(b)}</li>
+                ))}
+              </ul>
+            );
+            noteBulletBuffer = [];
+          }
+        };
+
+        noteBuffer.forEach((lineText, i) => {
+          if (lineText.startsWith('### ')) {
+            flushNoteBullets();
+            noteElements.push(
+              <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                <span>{renderInlineFormatting(lineText.slice(4))}</span>
+              </h4>
+            );
+          } else if (lineText.startsWith('## ')) {
+            flushNoteBullets();
+            noteElements.push(
+              <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                <span>{renderInlineFormatting(lineText.slice(3))}</span>
+              </h3>
+            );
+          } else if (lineText === '---') {
+            flushNoteBullets();
+            noteElements.push(
+              <hr key={`note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
+            );
+          } else if (lineText.startsWith('- ')) {
+            noteBulletBuffer.push(lineText.slice(2));
+          } else {
+            flushNoteBullets();
+            noteElements.push(
+              <div key={`note-line-${i}`} className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
+            );
+          }
+        });
+        flushNoteBullets();
+        elements.push(
+          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
+            {noteElements}
+          </div>
+        );
+      }
+      noteBuffer = [];
+      inNote = false;
+    };
+
+    const flushGrid = () => {
+      if (gridBuffer.length === 0) {
+        inGrid = false;
+        return;
+      }
+
+      const gridId = gridCount++;
+      const themeKey = gridTheme.toLowerCase();
+      const theme = GRID_THEMES[themeKey] || GRID_THEMES.default;
+      const cards = [];
+      let currentCard = null;
+
+      gridBuffer.forEach((line) => {
+        const t = line.trim();
+        if (t.startsWith('=== ')) {
+          if (currentCard) cards.push(currentCard);
+          currentCard = { title: t.slice(4), lines: [] };
+        } else if (currentCard) {
+          currentCard.lines.push(line);
+        }
+      });
+      if (currentCard) cards.push(currentCard);
+
+      if (cards.length > 0) {
+        const numCols = Math.min(cards.length, 3);
+        const columns = Array.from({ length: numCols }, () => []);
+
+        cards.forEach((card, cardIdx) => {
+          const colIdx = cardIdx % numCols;
+          columns[colIdx].push({ card, cardIdx });
+        });
+
+        const gridColClass =
+          numCols === 1
+            ? 'grid-cols-1'
+            : numCols === 2
+            ? 'grid-cols-1 md:grid-cols-2'
+            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+
+        elements.push(
+          <div key={`grid-${gridId}`} className={`grid items-start ${gridColClass} gap-6 my-6`}>
+            {columns.map((colCards, colIdx) => (
+              <div key={`grid-${gridId}-col-${colIdx}`} className="flex flex-col space-y-6">
+                {colCards.map(({ card, cardIdx }) => {
+                  const cardKey = `grid-${gridId}-card-${cardIdx}`;
+                  const isExpanded = !!openGridCards[cardKey];
+
+                  const cardContentElements = [];
+                  let cardBullets = [];
+                  let cardNoteBuffer = [];
+                  let inCardNote = false;
+
+                  const flushCardBullets = () => {
+                    if (cardBullets.length > 0) {
+                      cardContentElements.push(
+                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm md:text-base text-slate-700 my-2">
+                          {cardBullets.map((b, bi) => (
+                            <li key={bi} className="flex items-start gap-2.5">
+                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
+                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      );
+                      cardBullets = [];
+                    }
+                  };
+
+                  const flushCardNote = () => {
+                    if (cardNoteBuffer.length > 0) {
+                      const noteElements = [];
+                      let cardNoteBulletBuffer = [];
+
+                      const flushCardNoteBullets = () => {
+                        if (cardNoteBulletBuffer.length > 0) {
+                          noteElements.push(
+                            <ul key={`card-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
+                              {cardNoteBulletBuffer.map((b, i) => (
+                                <li key={i}>{renderInlineFormatting(b)}</li>
+                              ))}
+                            </ul>
+                          );
+                          cardNoteBulletBuffer = [];
+                        }
+                      };
+
+                      cardNoteBuffer.forEach((lineText, i) => {
+                        if (lineText.startsWith('### ')) {
+                          flushCardNoteBullets();
+                          noteElements.push(
+                            <h4 key={`card-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm">
+                              <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                              <span>{renderInlineFormatting(lineText.slice(4))}</span>
+                            </h4>
+                          );
+                        } else if (lineText.startsWith('## ')) {
+                          flushCardNoteBullets();
+                          noteElements.push(
+                            <h3 key={`card-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base">
+                              <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                              <span>{renderInlineFormatting(lineText.slice(3))}</span>
+                            </h3>
+                          );
+                        } else if (lineText === '---') {
+                          flushCardNoteBullets();
+                          noteElements.push(<hr key={`card-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />);
+                        } else if (lineText.startsWith('- ')) {
+                          cardNoteBulletBuffer.push(lineText.slice(2));
+                        } else {
+                          flushCardNoteBullets();
+                          noteElements.push(
+                            <div key={`card-note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
+                          );
+                        }
+                      });
+                      flushCardNoteBullets();
+
+                      cardContentElements.push(
+                        <div key={`card-note-${cardContentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-2 text-xs sm:text-sm leading-relaxed">
+                          {noteElements}
+                        </div>
+                      );
+                    }
+                    cardNoteBuffer = [];
+                    inCardNote = false;
+                  };
+
+                  card.lines.forEach((lineText, li) => {
+                    const trimmedLine = lineText.trim();
+
+                    if (inCardNote) {
+                      let lineContent = trimmedLine.startsWith('> ') ? trimmedLine.slice(2) : trimmedLine;
+                      if (lineContent.endsWith('<')) {
+                        cardNoteBuffer.push(lineContent.slice(0, -1).trim());
+                        flushCardNote();
+                      } else {
+                        cardNoteBuffer.push(lineContent);
+                      }
+                      return;
+                    }
+
+                    if (trimmedLine === '') {
+                      flushCardBullets();
+                      cardContentElements.push(<div key={`card-sp-${li}`} className="h-1" />);
+                      return;
+                    }
+
+                    if (trimmedLine.startsWith('> ') || trimmedLine === '>') {
+                      flushCardBullets();
+                      let content = trimmedLine.startsWith('> ') ? trimmedLine.slice(2) : '';
+                      if (content.endsWith('<')) {
+                        cardNoteBuffer.push(content.slice(0, -1).trim());
+                        flushCardNote();
+                      } else {
+                        inCardNote = true;
+                        cardNoteBuffer.push(content);
+                      }
+                      return;
+                    }
+
+                    if (trimmedLine.startsWith('- ')) {
+                      cardBullets.push(trimmedLine.slice(2));
+                      return;
+                    }
+                    flushCardBullets();
+                    cardContentElements.push(
+                      <p key={`card-p-${li}`} className="text-xs sm:text-sm md:text-base text-slate-800 leading-relaxed my-1">
+                        {renderInlineFormatting(trimmedLine)}
+                      </p>
+                    );
+                  });
+                  flushCardBullets();
+                  flushCardNote();
+
+                  return (
+                    <div
+                      key={cardKey}
+                      className={`group rounded-2xl border-2 transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 overflow-hidden ${theme.cardBorder} ${theme.cardBg}`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenGridCards(prev => ({ ...prev, [cardKey]: !prev[cardKey] }))}
+                        className={`w-full flex items-center justify-between gap-4 px-6 py-5 text-left transition-colors cursor-pointer ${theme.headerHoverBg}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`w-3 h-3 rounded-full shrink-0 transition-colors ${theme.badge}`} />
+                          <h3 className={`text-base sm:text-lg font-bold font-serif tracking-wide ${theme.headerText} transition-colors`}>
+                            {renderInlineFormatting(card.title)}
+                          </h3>
+                        </div>
+                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 shrink-0 ${theme.arrowBg} ${theme.arrowText} ${isExpanded ? 'rotate-90' : ''}`}>
+                          ►
+                        </span>
+                      </button>
+
+                      {isExpanded && (
+                        <div className={`px-6 py-5 border-t border-dashed ${theme.dividerBorder} ${theme.bodyBg} text-slate-800 animate-in fade-in duration-200`}>
+                          {cardContentElements.length > 0 ? cardContentElements : (
+                            <p className="text-xs text-slate-500 italic">No details specified.</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      gridBuffer = [];
+      inGrid = false;
+      gridTheme = 'default';
+    };
+
+    const flushAccordion = () => {
+      const index = accordionCount++;
+      const contentElements = [];
+      let localBulletBuffer = [];
+      let localNoteBuffer = [];   
+      let inLocalNote = false;
+
+      const flushLocalBullets = () => {
+        if (localBulletBuffer.length > 0) {
+          contentElements.push(
+            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1.5 text-slate-900 text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
+              {localBulletBuffer.map((b, bi) => (
+                <li key={bi}>{renderInlineFormatting(b)}</li>
+              ))}
+            </ul>
+          );
+          localBulletBuffer = [];
+        }
+      };
+
+      const flushLocalNote = () => {
+        if (localNoteBuffer.length > 0) {
+          const noteElements = [];
+          let localNoteBulletBuffer = [];
+
+          const flushLocalNoteBullets = () => {
+            if (localNoteBulletBuffer.length > 0) {
+              noteElements.push(
+                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
+                  {localNoteBulletBuffer.map((b, i) => (
+                    <li key={i}>{renderInlineFormatting(b)}</li>
+                  ))}
+                </ul>
+              );
+              localNoteBulletBuffer = [];
+            }
+          };
+
+          localNoteBuffer.forEach((lineText, i) => {
+            if (lineText.startsWith('### ')) {
+              flushLocalNoteBullets();
+              noteElements.push(
+                <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                  <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                  <span>{renderInlineFormatting(lineText.slice(4))}</span>
+                </h4>
+              );
+            } else if (lineText.startsWith('## ')) {
+              flushLocalNoteBullets();
+              noteElements.push(
+                <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                  <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                  <span>{renderInlineFormatting(lineText.slice(3))}</span>
+                </h3>
+              );
+            } else if (lineText === '---') {
+              flushLocalNoteBullets();
+              noteElements.push(
+                <hr key={`acc-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
+              );
+            } else if (lineText.startsWith('- ')) {
+              localNoteBulletBuffer.push(lineText.slice(2));
+            } else {
+              flushLocalNoteBullets();
+              noteElements.push(
+                <div key={`acc-note-line-${i}`} className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
+              );
+            }
+          });
+          flushLocalNoteBullets();
+
+          contentElements.push(
+            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
+              {noteElements}
+            </div>
+          );
+        }
+        localNoteBuffer = [];
+        inLocalNote = false;
+      };
+
+      accordionBuffer.forEach((lineText, li) => {
+        const t = lineText.trim();
+
+        if (inLocalNote) {
+          let lineContent = t.startsWith('> ') ? t.slice(2) : t;
+          if (lineContent.endsWith('<')) {
+            localNoteBuffer.push(lineContent.slice(0, -1).trim());
+            flushLocalNote();
+          } else {
+            localNoteBuffer.push(lineContent);
+          }
+          return;
+        }
+
+        if (t === '') {
+          flushLocalBullets();
+          contentElements.push(<div key={`acc-sp-${li}`} className="h-1" />);
+          return;
+        }
+
+        if (t.startsWith('> ') || t === '>') {
+          flushLocalBullets();
+          let content = t.startsWith('> ') ? t.slice(2) : '';
+          if (content.endsWith('<')) {
+            localNoteBuffer.push(content.slice(0, -1).trim());
+            flushLocalNote();
+          } else {
+            inLocalNote = true;
+            localNoteBuffer.push(content);
+          }
+          return;
+        }
+
+        if (t.startsWith('- ')) {
+          localBulletBuffer.push(t.slice(2));
+          return;
+        }
+        flushLocalBullets();
+
+        contentElements.push(
+          <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm md:text-base leading-relaxed">
+            {renderInlineFormatting(t)}
+          </p>
+        );
+      });
+      flushLocalBullets();
+      flushLocalNote();
+      const isOpen = !!openSections[index];
+      elements.push(
+        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">
+          <button
+            type="button"
+            onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
+            className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
+          >
+            <span className="text-sm sm:text-base md:text-lg font-bold text-[#0f3358] font-cinzel tracking-wide">
+              {renderInlineFormatting(accordionTitle)}
+            </span>
+            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
+              ►
+            </span>
+          </button>
+          {isOpen && (
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
+              {contentElements}
+            </div>
+          )}
+        </div>
+      );
+
+      accordionBuffer = [];
+      accordionTitle = '';
+      inAccordion = false;
+    };
+
+    const flushTable = () => {
+      if (tableBuffer.length === 0) return;
+
+      const parseRow = (lineText) =>
+        lineText
+          .replace(/^\|/, '')
+          .replace(/\|$/, '')
+          .split('|')
+          .map(cell => cell.trim());
+
+      const isDividerRow = (cells) =>
+        cells.every(cell => /^:?-+:?$/.test(cell));
+
+      const rowsParsed = tableBuffer.map(parseRow).filter(cells => !isDividerRow(cells));
+
+      if (rowsParsed.length > 0) {
+        const [headerRow, ...rawBodyRows] = rowsParsed;
+        const colCount = headerRow.length;
+
+        const bodyRows = rawBodyRows.map(cells => {
+          const normalized = cells.slice(0, colCount);
+          while (normalized.length < colCount) normalized.push('');
+          return normalized;
+        });
+
+        const colWidthPct = `${(100 / colCount).toFixed(2)}%`;
+
+        elements.push(
+          <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white overflow-hidden">
+            <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
+              <thead>
+                <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                  {headerRow.map((cell, ci) => (
+                    <th
+                      key={ci}
+                      style={{ width: colWidthPct }}
+                      className="px-1 sm:px-3 py-1.5 sm:py-2.5 text-left font-cinzel font-bold text-[10px] sm:text-xs md:text-sm text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                    >
+                      {renderInlineFormatting(cell)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {bodyRows.map((cells, ri) => (
+                  <tr key={ri} className="odd:bg-[#F8FAFC] even:bg-[#EEF2F6] hover:bg-[#E2E8F0] transition-colors">
+                    {cells.map((cell, ci) => (
+                      <td
+                        key={ci}
+                        style={{ width: colWidthPct }}
+                        className="px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs md:text-sm text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
+                      >
+                        {renderInlineFormatting(cell)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
+      tableBuffer = [];
+    };
+
+    lines.forEach((line, idx) => {
+      const trimmed = line.trim();
+
+      if (inGrid) {
+        if (trimmed === ':::') {
+          flushGrid();
+        } else {
+          gridBuffer.push(line);
+        }
+        return;
+      }
+
+      if (inNote) {
+        let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
+        if (lineContent.endsWith('<')) {
+          noteBuffer.push(lineContent.slice(0, -1).trim());
+          flushNote();
+        } else {
+          noteBuffer.push(lineContent);
+        }
+        return;
+      }
+
+      if (inAccordion) {
+        if (trimmed === '+++') {
+          flushAccordion();
+        } else {
+          accordionBuffer.push(line);
+        }
+        return;
+      }
+
+      if (trimmed.startsWith(':::grid')) {
+        flushBullets();
+        flushTable();
+        gridTheme = trimmed.slice(7).trim() || 'default';
+        gridBuffer = [];
+        inGrid = true;
+        return;
+      }
+
+      if (trimmed === '') {
+        flushBullets();
+        flushTable();
+        elements.push(<div key={`sp-${idx}`} className="h-2" />);
+        return;
+      }
+
+      if (firstLine) {
+        firstLine = false;
+        flushBullets();
+        flushTable();
+        elements.push(
+          <div key={idx} className="mb-4 sm:mb-6 text-center">
+            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
+              {trimmed}
+            </h2>
+          </div>
+        );
+        return;
+      }
+
+      if (trimmed.startsWith('## ')) {
+        flushBullets();
+        flushTable();
+        currentBodyLevel = 'subheading';
+        elements.push(
+          <div key={idx} className="mt-5 mb-2.5">
+            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-lg sm:text-xl md:text-2xl tracking-wide leading-snug py-0.5`}>
+              <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
+              <span>{trimmed.slice(3)}</span>
+            </h3>
+          </div>
+        );
+        return;
+      }
+
+      if (trimmed.startsWith('### ')) {
+        flushBullets();
+        flushTable();
+        currentBodyLevel = 'subSubheading';
+        elements.push(
+          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg flex items-center gap-2.5 leading-snug py-0.5`}>
+            <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
+            <span>{trimmed.slice(4)}</span>
+          </h4>
+        );
+        return;
+      }
+
+      if (trimmed.startsWith('> ') || trimmed === '>') {
+        flushBullets();
+        let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
+        if (content.endsWith('<')) {
+          noteBuffer.push(content.slice(0, -1).trim());
+          flushNote();
+        } else {
+          inNote = true;
+          noteBuffer.push(content);
+        }
+        return;
+      }
+
+      if (trimmed.startsWith('+++ ')) {
+        flushBullets();
+        flushTable();
+        accordionTitle = trimmed.slice(4);
+        accordionBuffer = [];
+        inAccordion = true;
+        return;
+      }
+
+      if (trimmed.startsWith('- ')) {
+        bulletBuffer.push(trimmed.slice(2));
+        return;
+      }
+
+      if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
+        flushBullets();
+        tableBuffer.push(trimmed);
+        return;
+      }
+
+      if (trimmed === '---') {
+        flushBullets();
+        elements.push(
+          <hr key={idx} className="border-gray-200 my-2" />
+        );
+        return;
+      }
+
+      flushBullets();
+      elements.push(
+        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify mb-3 ${BODY_STYLES[currentBodyLevel]}`}>
+          {renderInlineFormatting(trimmed)}
+        </p>
+      );
+    });
+
+    flushBullets();
+    flushTable();
+    flushNote();
+    if (inGrid) flushGrid();
+    if (inAccordion) flushAccordion();
+
+    return <div className="space-y-2">{elements}</div>;
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-3.5 sm:px-6 py-4 sm:py-8 space-y-5 sm:space-y-8">
       {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
-      <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4">
-        {/* Left Side: Page Name */}
+      <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex items-end">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
           <h1 className="text-[#0f3358] font-cinzel font-bold text-lg sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-normal sm:leading-tight py-0.5 truncate sm:whitespace-normal">
             {title}
           </h1>
-        </div>
-        {/* Right Side: Section / Page Breadcrumb */}
-        <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
-          <span className="text-slate-400">{section ? section.split(/[-_]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : (backLabel && backLabel !== 'Home' ? backLabel : 'Home')}</span>
-          <span className="text-slate-300">/</span>
-          <span className="text-[#7d311f] font-semibold">{title}</span>
         </div>
       </div>
 
@@ -1045,801 +1985,138 @@ const GenericContentPage = ({
               <div className="bg-white rounded-2xl border-2 border-[#7d311f]/30 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
-                    <textarea
-                      value={editDesc}
-                      onChange={e => {
-                        setEditDesc(e.target.value);
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                      }}
-                      onFocus={e => {
-                        e.target.style.height = 'auto';
-                        e.target.style.height = e.target.scrollHeight + 'px';
-                      }}
-                      rows={8}
-                      className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-y outline-none focus:ring-2 focus:ring-[#174873]/20 overflow-hidden"
-                      style={{ minHeight: '200px' }}
-                      placeholder="Enter description, contact info, about this section..."
-                    />
+                    {/* Formatting toolbar */}
+                    <div className="flex flex-wrap gap-1.5 p-2 bg-gray-50 border border-gray-200 rounded-xl">
+                      {DESC_TOOLBAR_BUTTONS.map((btn) => (
+                        <button
+                          key={btn.label}
+                          type="button"
+                          title={btn.title}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => { e.preventDefault(); applyDescFormat(btn.apply); }}
+                          className="px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-[#174873] bg-white border border-gray-200 rounded-lg hover:bg-[#174873] hover:text-white transition-colors"
+                        >
+                          {btn.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Textarea with floating format icon above the cursor */}
+                    <div className="relative">
+                      <textarea
+                        ref={descTextareaRef}
+                        value={editDesc}
+                        onChange={e => {
+                          setEditDesc(e.target.value);
+                          adjustTextareaHeight(e.target);
+                          updateCaretMenuPosition();
+                        }}
+                        onFocus={e => {
+                          adjustTextareaHeight(e.target);
+                          updateCaretMenuPosition();
+                        }}
+                        onClick={updateCaretMenuPosition}
+                        onKeyUp={updateCaretMenuPosition}
+                        onSelect={updateCaretMenuPosition}
+                        onScroll={updateCaretMenuPosition}
+                        rows={8}
+                        className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-y outline-none focus:ring-2 focus:ring-[#174873]/20 overflow-hidden"
+                        style={{ minHeight: '260px' }}
+                        placeholder="Enter description, contact info, about this section..."
+                      />
+
+                      {/* Floating format icon — sits directly above the cursor. */}
+                      <div
+                        className="absolute z-20"
+                        style={{ top: Math.max(caretPos.top - 34, 0), left: Math.max(caretPos.left - 12, 0) }}
+                      >
+                        <button
+                          type="button"
+                          title="Insert formatting"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={(e) => { e.preventDefault(); setCaretMenuMode(caretMenuMode ? null : 'menu'); }}
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#174873] text-white shadow-md hover:bg-[#0f3358] transition-colors cursor-pointer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                        </button>
+
+                        {caretMenuMode === 'menu' && (
+                          <div className="absolute bottom-full mb-2 left-0 z-30 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5">
+                            {DESC_TOOLBAR_BUTTONS.map((btn) => (
+                              <button
+                                key={btn.label}
+                                type="button"
+                                onMouseDown={(e) => e.preventDefault()}
+                                onClick={(e) => { e.preventDefault(); applyDescFormat(btn.apply); setCaretMenuMode(null); }}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-gray-50 text-left cursor-pointer"
+                              >
+                                <span className="w-5 text-[#174873] font-bold text-center">{btn.label}</span>
+                                <span className="text-slate-500">{btn.title}</span>
+                              </button>
+                            ))}
+                            <div className="my-1 border-t border-gray-100" />
+                            <button
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={(e) => { e.preventDefault(); openLinkForm(); }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-gray-50 text-left cursor-pointer"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#174873]">
+                                <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+                                <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
+                                <line x1="8" y1="12" x2="16" y2="12" />
+                              </svg>
+                              <span>Insert link</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {caretMenuMode === 'link' && (
+                          <div className="absolute bottom-full mb-2 left-0 z-30 w-64 bg-white border border-gray-200 rounded-xl shadow-lg p-3 space-y-2">
+                            <p className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Insert Link</p>
+                            <input
+                              value={linkLabel}
+                              onChange={e => setLinkLabel(e.target.value)}
+                              placeholder="Text to display"
+                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                            />
+                            <input
+                              value={linkUrl}
+                              onChange={e => setLinkUrl(e.target.value)}
+                              placeholder="https://example.com"
+                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                            />
+                            <div className="flex gap-2 justify-end pt-1">
+                              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.preventDefault(); setCaretMenuMode(null); }}
+                                className="px-3 py-1 text-xs text-gray-500">
+                                Cancel
+                              </button>
+                              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.preventDefault(); insertLink(); }} disabled={!linkUrl.trim()}
+                                className="px-3 py-1 text-xs font-medium bg-[#174873] text-white rounded-lg disabled:opacity-50">
+                                Insert
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="flex gap-4">
-                      <button onClick={handleSave} disabled={saving}
+                      <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={handleSave} disabled={saving}
                         className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
                         {saving ? 'Saving...' : 'Save'}
                       </button>
-                      <button onClick={() => setIsEditing(false)}
+                      <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setIsEditing(false); setCaretMenuMode(null); }}
                         className="px-4 py-2 text-gray-500 text-sm">
                           Cancel
                       </button>
                     </div>
                   </div>
                 ) : (
-                  (() => {
-                    const raw = data.description || '';
-                    if (!raw.trim()) {
-                      return (
-                        <p className="italic text-black text-center">
-                          {isAdmin ? 'No content yet. Click Edit Description.' : 'Content coming soon.'}
-                        </p>
-                      );
-                    }
-
-                    const lines = raw.split('\n');
-                    const elements = [];
-                    let bulletBuffer = [];
-                    let firstLine = true;
-                    let noteBuffer = [];   
-                    let inNote = false;    
-
-                    let currentBodyLevel = 'default';
-                    let tableBuffer = [];  
-                    
-                    let accordionBuffer = [];   
-                    let accordionTitle = '';
-                    let inAccordion = false;
-                    let accordionCount = 0;     
-
-                    let gridBuffer = [];
-                    let inGrid = false;
-                    let gridTheme = 'default';
-                    let gridCount = 0;
-
-                    const GRID_THEMES = {
-                      default: {
-                        cardBorder: 'border-slate-200/90 hover:border-[#d4af37]',
-                        cardBg: 'bg-white hover:bg-[#FAF7F2]/80',
-                        headerHoverBg: 'group-hover:bg-[#FAF7F2]',
-                        headerText: 'text-[#0f3358] group-hover:text-[#7d311f]',
-                        badge: 'bg-[#d4af37] group-hover:bg-[#7d311f]',
-                        arrowBg: 'bg-slate-100 group-hover:bg-[#0f3358]',
-                        arrowText: 'text-slate-500 group-hover:text-white',
-                        dividerBorder: 'border-[#d4af37]/40',
-                        bodyBg: 'bg-white',
-                      },
-                      blue: {
-                        cardBorder: 'border-blue-100 hover:border-blue-400',
-                        cardBg: 'bg-white hover:bg-blue-50/60',
-                        headerHoverBg: 'group-hover:bg-blue-50/50',
-                        headerText: 'text-[#174873] group-hover:text-blue-900',
-                        badge: 'bg-blue-500 group-hover:bg-[#174873]',
-                        arrowBg: 'bg-blue-50 group-hover:bg-[#174873]',
-                        arrowText: 'text-blue-500 group-hover:text-white',
-                        dividerBorder: 'border-blue-200',
-                        bodyBg: 'bg-white',
-                      },
-                      green: {
-                        cardBorder: 'border-emerald-100 hover:border-emerald-500',
-                        cardBg: 'bg-white hover:bg-emerald-50/60',
-                        headerHoverBg: 'group-hover:bg-emerald-50/50',
-                        headerText: 'text-emerald-900 group-hover:text-emerald-950',
-                        badge: 'bg-emerald-500 group-hover:bg-emerald-700',
-                        arrowBg: 'bg-emerald-50 group-hover:bg-emerald-700',
-                        arrowText: 'text-emerald-600 group-hover:text-white',
-                        dividerBorder: 'border-emerald-200',
-                        bodyBg: 'bg-white',
-                      },
-                      slate: {
-                        cardBorder: 'border-slate-200 hover:border-slate-500',
-                        cardBg: 'bg-white hover:bg-slate-100/70',
-                        headerHoverBg: 'group-hover:bg-slate-100/50',
-                        headerText: 'text-slate-800 group-hover:text-black',
-                        badge: 'bg-slate-400 group-hover:bg-slate-700',
-                        arrowBg: 'bg-slate-100 group-hover:bg-slate-800',
-                        arrowText: 'text-slate-500 group-hover:text-white',
-                        dividerBorder: 'border-slate-200',
-                        bodyBg: 'bg-white',
-                      },
-                      crimson: {
-                        cardBorder: 'border-rose-100 hover:border-[#7d311f]',
-                        cardBg: 'bg-white hover:bg-rose-50/60',
-                        headerHoverBg: 'group-hover:bg-rose-50/40',
-                        headerText: 'text-[#7d311f] group-hover:text-rose-900',
-                        badge: 'bg-[#7d311f] group-hover:bg-rose-700',
-                        arrowBg: 'bg-rose-50 group-hover:bg-[#7d311f]',
-                        arrowText: 'text-[#7d311f] group-hover:text-white',
-                        dividerBorder: 'border-rose-200',
-                        bodyBg: 'bg-white',
-                      },
-                      purple: {
-                        cardBorder: 'border-purple-100 hover:border-purple-500',
-                        cardBg: 'bg-white hover:bg-purple-50/60',
-                        headerHoverBg: 'group-hover:bg-purple-50/40',
-                        headerText: 'text-purple-900 group-hover:text-purple-950',
-                        badge: 'bg-purple-500 group-hover:bg-purple-700',
-                        arrowBg: 'bg-purple-50 group-hover:bg-purple-700',
-                        arrowText: 'text-purple-600 group-hover:text-white',
-                        dividerBorder: 'border-purple-200',
-                        bodyBg: 'bg-white',
-                      },
-                      amber: {
-                        cardBorder: 'border-amber-100 hover:border-amber-500',
-                        cardBg: 'bg-white hover:bg-amber-50/60',
-                        headerHoverBg: 'group-hover:bg-amber-50/40',
-                        headerText: 'text-amber-900 group-hover:text-amber-950',
-                        badge: 'bg-amber-500 group-hover:bg-amber-700',
-                        arrowBg: 'bg-amber-50 group-hover:bg-amber-700',
-                        arrowText: 'text-amber-600 group-hover:text-white',
-                        dividerBorder: 'border-amber-200',
-                        bodyBg: 'bg-white',
-                      },
-                    };
-
-                    const flushBullets = () => {
-                      if (bulletBuffer.length > 0) {
-                        elements.push(
-                          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#7d311f] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
-                            {bulletBuffer.map((b, i) => (
-                              <li key={i}>{renderInlineFormatting(b)}</li>
-                            ))}
-                          </ul>
-                        );
-                        bulletBuffer = [];
-                      }
-                    };
-
-                    const flushNote = () => {
-                      if (noteBuffer.length > 0) {
-                        const noteElements = [];
-                        let noteBulletBuffer = [];
-
-                        const flushNoteBullets = () => {
-                          if (noteBulletBuffer.length > 0) {
-                            noteElements.push(
-                              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
-                                {noteBulletBuffer.map((b, i) => (
-                                  <li key={i}>{renderInlineFormatting(b)}</li>
-                                ))}
-                              </ul>
-                            );
-                            noteBulletBuffer = [];
-                          }
-                        };
-
-                        noteBuffer.forEach((lineText, i) => {
-                          if (lineText.startsWith('### ')) {
-                            flushNoteBullets();
-                            noteElements.push(
-                              <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
-                                <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
-                                <span>{renderInlineFormatting(lineText.slice(4))}</span>
-                              </h4>
-                            );
-                          } else if (lineText.startsWith('## ')) {
-                            flushNoteBullets();
-                            noteElements.push(
-                              <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
-                                <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
-                                <span>{renderInlineFormatting(lineText.slice(3))}</span>
-                              </h3>
-                            );
-                          } else if (lineText === '---') {
-                            flushNoteBullets();
-                            noteElements.push(
-                              <hr key={`note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
-                            );
-                          } else if (lineText.startsWith('- ')) {
-                            noteBulletBuffer.push(lineText.slice(2));
-                          } else {
-                            flushNoteBullets();
-                            noteElements.push(
-                              <div key={`note-line-${i}`} className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
-                            );
-                          }
-                        });
-                        flushNoteBullets();
-                        elements.push(
-                          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
-                            {noteElements}
-                          </div>
-                        );
-                      }
-                      noteBuffer = [];
-                      inNote = false;
-                    };
-
-                    const flushGrid = () => {
-                      if (gridBuffer.length === 0) {
-                        inGrid = false;
-                        return;
-                      }
-
-                      const gridId = gridCount++;
-                      const themeKey = gridTheme.toLowerCase();
-                      const theme = GRID_THEMES[themeKey] || GRID_THEMES.default;
-                      const cards = [];
-                      let currentCard = null;
-
-                      gridBuffer.forEach((line) => {
-                        const t = line.trim();
-                        if (t.startsWith('=== ')) {
-                          if (currentCard) cards.push(currentCard);
-                          currentCard = { title: t.slice(4), lines: [] };
-                        } else if (currentCard) {
-                          currentCard.lines.push(line);
-                        }
-                      });
-                      if (currentCard) cards.push(currentCard);
-
-                      if (cards.length > 0) {
-                        const numCols = Math.min(cards.length, 3);
-                        const columns = Array.from({ length: numCols }, () => []);
-
-                        cards.forEach((card, cardIdx) => {
-                          const colIdx = cardIdx % numCols;
-                          columns[colIdx].push({ card, cardIdx });
-                        });
-
-                        const gridColClass =
-                          numCols === 1
-                            ? 'grid-cols-1'
-                            : numCols === 2
-                            ? 'grid-cols-1 md:grid-cols-2'
-                            : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-
-                        elements.push(
-                          <div key={`grid-${gridId}`} className={`grid items-start ${gridColClass} gap-6 my-6`}>
-                            {columns.map((colCards, colIdx) => (
-                              <div key={`grid-${gridId}-col-${colIdx}`} className="flex flex-col space-y-6">
-                                {colCards.map(({ card, cardIdx }) => {
-                                  const cardKey = `grid-${gridId}-card-${cardIdx}`;
-                                  const isExpanded = !!openGridCards[cardKey];
-
-                                                                   const cardContentElements = [];
-                                  let cardBullets = [];
-                                  let cardNoteBuffer = [];
-                                  let inCardNote = false;
-
-                                  const flushCardBullets = () => {
-                                    if (cardBullets.length > 0) {
-                                      cardContentElements.push(
-                                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm md:text-base text-slate-700 my-2">
-                                          {cardBullets.map((b, bi) => (
-                                            <li key={bi} className="flex items-start gap-2.5">
-                                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
-                                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
-                                            </li>
-                                          ))}
-                                        </ul>
-                                      );
-                                      cardBullets = [];
-                                    }
-                                  };
-
-                                  const flushCardNote = () => {
-                                    if (cardNoteBuffer.length > 0) {
-                                      const noteElements = [];
-                                      let cardNoteBulletBuffer = [];
-
-                                      const flushCardNoteBullets = () => {
-                                        if (cardNoteBulletBuffer.length > 0) {
-                                          noteElements.push(
-                                            <ul key={`card-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
-                                              {cardNoteBulletBuffer.map((b, i) => (
-                                                <li key={i}>{renderInlineFormatting(b)}</li>
-                                              ))}
-                                            </ul>
-                                          );
-                                          cardNoteBulletBuffer = [];
-                                        }
-                                      };
-
-                                      cardNoteBuffer.forEach((lineText, i) => {
-                                        if (lineText.startsWith('### ')) {
-                                          flushCardNoteBullets();
-                                          noteElements.push(
-                                            <h4 key={`card-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm">
-                                              <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
-                                              <span>{renderInlineFormatting(lineText.slice(4))}</span>
-                                            </h4>
-                                          );
-                                        } else if (lineText.startsWith('## ')) {
-                                          flushCardNoteBullets();
-                                          noteElements.push(
-                                            <h3 key={`card-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base">
-                                              <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
-                                              <span>{renderInlineFormatting(lineText.slice(3))}</span>
-                                            </h3>
-                                          );
-                                        } else if (lineText === '---') {
-                                          flushCardNoteBullets();
-                                          noteElements.push(<hr key={`card-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />);
-                                        } else if (lineText.startsWith('- ')) {
-                                          cardNoteBulletBuffer.push(lineText.slice(2));
-                                        } else {
-                                          flushCardNoteBullets();
-                                          noteElements.push(
-                                            <div key={`card-note-line-${i}`} className="text-xs sm:text-sm leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
-                                          );
-                                        }
-                                      });
-                                      flushCardNoteBullets();
-
-                                      cardContentElements.push(
-                                        <div key={`card-note-${cardContentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-2 text-xs sm:text-sm leading-relaxed">
-                                          {noteElements}
-                                        </div>
-                                      );
-                                    }
-                                    cardNoteBuffer = [];
-                                    inCardNote = false;
-                                  };
-
-                                  card.lines.forEach((lineText, li) => {
-                                    const trimmedLine = lineText.trim();
-
-                                    if (inCardNote) {
-                                      let lineContent = trimmedLine.startsWith('> ') ? trimmedLine.slice(2) : trimmedLine;
-                                      if (lineContent.endsWith('<')) {
-                                        cardNoteBuffer.push(lineContent.slice(0, -1).trim());
-                                        flushCardNote();
-                                      } else {
-                                        cardNoteBuffer.push(lineContent);
-                                      }
-                                      return;
-                                    }
-
-                                    if (trimmedLine === '') {
-                                      flushCardBullets();
-                                      cardContentElements.push(<div key={`card-sp-${li}`} className="h-1" />);
-                                      return;
-                                    }
-
-                                    if (trimmedLine.startsWith('> ') || trimmedLine === '>') {
-                                      flushCardBullets();
-                                      let content = trimmedLine.startsWith('> ') ? trimmedLine.slice(2) : '';
-                                      if (content.endsWith('<')) {
-                                        cardNoteBuffer.push(content.slice(0, -1).trim());
-                                        flushCardNote();
-                                      } else {
-                                        inCardNote = true;
-                                        cardNoteBuffer.push(content);
-                                      }
-                                      return;
-                                    }
-
-                                    if (trimmedLine.startsWith('- ')) {
-                                      cardBullets.push(trimmedLine.slice(2));
-                                      return;
-                                    }
-                                    flushCardBullets();
-                                    cardContentElements.push(
-                                      <p key={`card-p-${li}`} className="text-xs sm:text-sm md:text-base text-slate-800 leading-relaxed my-1">
-                                        {renderInlineFormatting(trimmedLine)}
-                                      </p>
-                                    );
-                                  });
-                                  flushCardBullets();
-                                  flushCardNote();
-
-                                  return (
-                                    <div
-                                      key={cardKey}
-                                      className={`group rounded-2xl border-2 transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 overflow-hidden ${theme.cardBorder} ${theme.cardBg}`}
-                                    >
-                                      <button
-                                        type="button"
-                                        onClick={() => setOpenGridCards(prev => ({ ...prev, [cardKey]: !prev[cardKey] }))}
-                                        className={`w-full flex items-center justify-between gap-4 px-6 py-5 text-left transition-colors cursor-pointer ${theme.headerHoverBg}`}
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <span className={`w-3 h-3 rounded-full shrink-0 transition-colors ${theme.badge}`} />
-                                          <h3 className={`text-base sm:text-lg font-bold font-serif tracking-wide ${theme.headerText} transition-colors`}>
-                                            {renderInlineFormatting(card.title)}
-                                          </h3>
-                                        </div>
-                                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 shrink-0 ${theme.arrowBg} ${theme.arrowText} ${isExpanded ? 'rotate-90' : ''}`}>
-                                          ►
-                                        </span>
-                                      </button>
-
-                                      {isExpanded && (
-                                        <div className={`px-6 py-5 border-t border-dashed ${theme.dividerBorder} ${theme.bodyBg} text-slate-800 animate-in fade-in duration-200`}>
-                                          {cardContentElements.length > 0 ? cardContentElements : (
-                                            <p className="text-xs text-slate-500 italic">No details specified.</p>
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      }
-
-                      gridBuffer = [];
-                      inGrid = false;
-                      gridTheme = 'default';
-                    };
-
-                    const flushAccordion = () => {
-                      const index = accordionCount++;
-                      const contentElements = [];
-                      let localBulletBuffer = [];
-                      let localNoteBuffer = [];   
-                      let inLocalNote = false;
-
-                      const flushLocalBullets = () => {
-                        if (localBulletBuffer.length > 0) {
-                          contentElements.push(
-                            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1.5 text-slate-900 text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
-                              {localBulletBuffer.map((b, bi) => (
-                                <li key={bi}>{renderInlineFormatting(b)}</li>
-                              ))}
-                            </ul>
-                          );
-                          localBulletBuffer = [];
-                        }
-                      };
-
-                      const flushLocalNote = () => {
-                        if (localNoteBuffer.length > 0) {
-                          const noteElements = [];
-                          let localNoteBulletBuffer = [];
-
-                          const flushLocalNoteBullets = () => {
-                            if (localNoteBulletBuffer.length > 0) {
-                              noteElements.push(
-                                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
-                                  {localNoteBulletBuffer.map((b, i) => (
-                                    <li key={i}>{renderInlineFormatting(b)}</li>
-                                  ))}
-                                </ul>
-                              );
-                              localNoteBulletBuffer = [];
-                            }
-                          };
-
-                          localNoteBuffer.forEach((lineText, i) => {
-                            if (lineText.startsWith('### ')) {
-                              flushLocalNoteBullets();
-                              noteElements.push(
-                                <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
-                                  <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
-                                  <span>{renderInlineFormatting(lineText.slice(4))}</span>
-                                </h4>
-                              );
-                            } else if (lineText.startsWith('## ')) {
-                              flushLocalNoteBullets();
-                              noteElements.push(
-                                <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
-                                  <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
-                                  <span>{renderInlineFormatting(lineText.slice(3))}</span>
-                                </h3>
-                              );
-                            } else if (lineText === '---') {
-                              flushLocalNoteBullets();
-                              noteElements.push(
-                                <hr key={`acc-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
-                              );
-                            } else if (lineText.startsWith('- ')) {
-                              localNoteBulletBuffer.push(lineText.slice(2));
-                            } else {
-                              flushLocalNoteBullets();
-                              noteElements.push(
-                                <div key={`acc-note-line-${i}`} className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800">{renderInlineFormatting(lineText)}</div>
-                              );
-                            }
-                          });
-                          flushLocalNoteBullets();
-
-                          contentElements.push(
-                            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
-                              {noteElements}
-                            </div>
-                          );
-                        }
-                        localNoteBuffer = [];
-                        inLocalNote = false;
-                      };
-
-                      accordionBuffer.forEach((lineText, li) => {
-                        const t = lineText.trim();
-
-                        if (inLocalNote) {
-                          let lineContent = t.startsWith('> ') ? t.slice(2) : t;
-                          if (lineContent.endsWith('<')) {
-                            localNoteBuffer.push(lineContent.slice(0, -1).trim());
-                            flushLocalNote();
-                          } else {
-                            localNoteBuffer.push(lineContent);
-                          }
-                          return;
-                        }
-
-                        if (t === '') {
-                          flushLocalBullets();
-                          contentElements.push(<div key={`acc-sp-${li}`} className="h-1" />);
-                          return;
-                        }
-
-                        if (t.startsWith('> ') || t === '>') {
-                          flushLocalBullets();
-                          let content = t.startsWith('> ') ? t.slice(2) : '';
-                          if (content.endsWith('<')) {
-                            localNoteBuffer.push(content.slice(0, -1).trim());
-                            flushLocalNote();
-                          } else {
-                            inLocalNote = true;
-                            localNoteBuffer.push(content);
-                          }
-                          return;
-                        }
-
-                        if (t.startsWith('- ')) {
-                          localBulletBuffer.push(t.slice(2));
-                          return;
-                        }
-                        flushLocalBullets();
-
-                        contentElements.push(
-                          <p key={`acc-line-${li}`} className="text-slate-800 text-xs sm:text-sm md:text-base leading-relaxed">
-                            {renderInlineFormatting(t)}
-                          </p>
-                        );
-                      });
-                      flushLocalBullets();
-                      flushLocalNote();
-                      const isOpen = !!openSections[index];
-                      elements.push(
-                        <div key={`accordion-${index}`} className="border border-slate-200 rounded-xl overflow-hidden shadow-xs my-3">
-                          <button
-                            type="button"
-                            onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
-                            className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
-                          >
-                            <span className="text-sm sm:text-base md:text-lg font-bold text-[#0f3358] font-cinzel tracking-wide">
-                              {renderInlineFormatting(accordionTitle)}
-                            </span>
-                            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
-                              ►
-                            </span>
-                          </button>
-                          {isOpen && (
-                            <div className="px-4 sm:px-5 py-3.5 sm:py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
-                              {contentElements}
-                            </div>
-                          )}
-                        </div>
-                      );
-
-                      accordionBuffer = [];
-                      accordionTitle = '';
-                      inAccordion = false;
-                    };
-
-                    const flushTable = () => {
-                      if (tableBuffer.length === 0) return;
-
-                      const parseRow = (lineText) =>
-                        lineText
-                          .replace(/^\|/, '')
-                          .replace(/\|$/, '')
-                          .split('|')
-                          .map(cell => cell.trim());
-
-                      const isDividerRow = (cells) =>
-                        cells.every(cell => /^:?-+:?$/.test(cell));
-
-                      const rowsParsed = tableBuffer.map(parseRow).filter(cells => !isDividerRow(cells));
-
-                      if (rowsParsed.length > 0) {
-                        const [headerRow, ...rawBodyRows] = rowsParsed;
-                        const colCount = headerRow.length;
-
-                        const bodyRows = rawBodyRows.map(cells => {
-                          const normalized = cells.slice(0, colCount);
-                          while (normalized.length < colCount) normalized.push('');
-                          return normalized;
-                        });
-
-                        const colWidthPct = `${(100 / colCount).toFixed(2)}%`;
-
-                        elements.push(
-                          <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white overflow-hidden">
-                            <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
-                              <thead>
-                                <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
-                                  {headerRow.map((cell, ci) => (
-                                    <th
-                                      key={ci}
-                                      style={{ width: colWidthPct }}
-                                      className="px-1 sm:px-3 py-1.5 sm:py-2.5 text-left font-cinzel font-bold text-[10px] sm:text-xs md:text-sm text-[#fce8b2] tracking-normal sm:tracking-wider uppercase border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
-                                    >
-                                      {renderInlineFormatting(cell)}
-                                    </th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-200">
-                                {bodyRows.map((cells, ri) => (
-                                  <tr key={ri} className="odd:bg-[#F8FAFC] even:bg-[#EEF2F6] hover:bg-[#E2E8F0] transition-colors">
-                                    {cells.map((cell, ci) => (
-                                      <td
-                                        key={ci}
-                                        style={{ width: colWidthPct }}
-                                        className="px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs md:text-sm text-slate-800 font-medium border-r border-slate-300 last:border-r-0 break-words align-middle leading-tight"
-                                      >
-                                        {renderInlineFormatting(cell)}
-                                      </td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        );
-                      }
-                      tableBuffer = [];
-                    };
-
-                    lines.forEach((line, idx) => {
-                      const trimmed = line.trim();
-
-                      if (inGrid) {
-                        if (trimmed === ':::') {
-                          flushGrid();
-                        } else {
-                          gridBuffer.push(line);
-                        }
-                        return;
-                      }
-
-                      if (inNote) {
-                        let lineContent = trimmed.startsWith('> ') ? trimmed.slice(2) : trimmed;
-                        if (lineContent.endsWith('<')) {
-                          noteBuffer.push(lineContent.slice(0, -1).trim());
-                          flushNote();
-                        } else {
-                          noteBuffer.push(lineContent);
-                        }
-                        return;
-                      }
-
-                      if (inAccordion) {
-                        if (trimmed === '+++') {
-                          flushAccordion();
-                        } else {
-                          accordionBuffer.push(line);
-                        }
-                        return;
-                      }
-
-                      if (trimmed.startsWith(':::grid')) {
-                        flushBullets();
-                        flushTable();
-                        gridTheme = trimmed.slice(7).trim() || 'default';
-                        gridBuffer = [];
-                        inGrid = true;
-                        return;
-                      }
-
-                      if (trimmed === '') {
-                        flushBullets();
-                        flushTable();
-                        elements.push(<div key={`sp-${idx}`} className="h-2" />);
-                        return;
-                      }
-
-                      if (firstLine) {
-                        firstLine = false;
-                        flushBullets();
-                        flushTable();
-                        elements.push(
-                          <div key={idx} className="mb-4 sm:mb-6 text-center">
-                            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
-                              {trimmed}
-                            </h2>
-                          </div>
-                        );
-                        return;
-                      }
-
-                      if (trimmed.startsWith('## ')) {
-                        flushBullets();
-                        flushTable();
-                        currentBodyLevel = 'subheading';
-                        elements.push(
-                          <div key={idx} className="mt-5 mb-2.5">
-                            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-lg sm:text-xl md:text-2xl tracking-wide leading-snug py-0.5`}>
-                              <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
-                              <span>{trimmed.slice(3)}</span>
-                            </h3>
-                          </div>
-                        );
-                        return;
-                      }
-
-                      if (trimmed.startsWith('### ')) {
-                        flushBullets();
-                        flushTable();
-                        currentBodyLevel = 'subSubheading';
-                        elements.push(
-                          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg flex items-center gap-2.5 leading-snug py-0.5`}>
-                            <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
-                            <span>{trimmed.slice(4)}</span>
-                          </h4>
-                        );
-                        return;
-                      }
-
-                      if (trimmed.startsWith('> ') || trimmed === '>') {
-                        flushBullets();
-                        let content = trimmed.startsWith('> ') ? trimmed.slice(2) : '';
-                        if (content.endsWith('<')) {
-                          noteBuffer.push(content.slice(0, -1).trim());
-                          flushNote();
-                        } else {
-                          inNote = true;
-                          noteBuffer.push(content);
-                        }
-                        return;
-                      }
-
-                      if (trimmed.startsWith('+++ ')) {
-                        flushBullets();
-                        flushTable();
-                        accordionTitle = trimmed.slice(4);
-                        accordionBuffer = [];
-                        inAccordion = true;
-                        return;
-                      }
-
-                      if (trimmed.startsWith('- ')) {
-                        bulletBuffer.push(trimmed.slice(2));
-                        return;
-                      }
-
-                      if (trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 1) {
-                        flushBullets();
-                        tableBuffer.push(trimmed);
-                        return;
-                      }
-
-                      if (trimmed === '---') {
-                        flushBullets();
-                        elements.push(
-                          <hr key={idx} className="border-gray-200 my-2" />
-                        );
-                        return;
-                      }
-
-                      flushBullets();
-                      elements.push(
-                        <p key={idx} className={`text-[#1F2937] leading-relaxed text-justify mb-3 ${BODY_STYLES[currentBodyLevel]}`}>
-                          {renderInlineFormatting(trimmed)}
-                        </p>
-                      );
-                    });
-
-                    flushBullets();
-                    flushTable();
-                    flushNote();
-                    if (inGrid) flushGrid();
-                    if (inAccordion) flushAccordion();
-
-                    return <div className="space-y-2">{elements}</div>;
-                  })()
+                  renderDescriptionContent(data.description || '')
                 )}
               </div>
             </div>
@@ -2018,6 +2295,7 @@ const GenericContentPage = ({
 
             const IconBtn = ({ onClick, disabled, title, colorClass, children }) => (
               <button
+                type="button"
                 onClick={onClick}
                 disabled={disabled}
                 title={title}
@@ -2056,7 +2334,7 @@ const GenericContentPage = ({
                 <div className="w-full overflow-x-auto">
                   <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
                     <thead>
-                                            <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                      <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
                         {columns.map((col, colIdx) => (
                           <th
                             key={col}
@@ -2082,6 +2360,7 @@ const GenericContentPage = ({
                             ) : (
                               <div className="flex items-center gap-1">
                                 <span className="truncate">{col}</span>
+                                {isAdmin && (
                                 <span className="flex items-center gap-0.5 ml-1 shrink-0">
                                   <button
                                     onClick={() => handleMoveColumn(col, 'left')}
@@ -2106,6 +2385,7 @@ const GenericContentPage = ({
                                     className="text-red-300 hover:text-white text-xs"
                                   >×</button>
                                 </span>
+                                )}
                               </div>
                             )}
                           </th>
@@ -2184,7 +2464,7 @@ const GenericContentPage = ({
                               {isPdfCol(col) ? (
                                 <div className="space-y-1 min-w-[120px]">
                                   {!newRow[col] ? (
-                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
+                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-[#fce8b2] rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
                                       <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                                       </svg>
