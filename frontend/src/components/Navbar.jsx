@@ -69,7 +69,7 @@ const facilitiesItems = [
 //    { label: "Library", children: [
 // -    { label: "Central Library", path: "/facilities/library/central" },
 // -    { label: "Cyber Library", path: "/facilities/library/cyber" },
-  { label: "Library",path : "/facilities/library" },
+  { label: "Libraries",path : "/facilities/library" },
   ,
   { label: "Sports", children: [
     { label: "University Sports Board", path: "https://www.bhu.ac.in/site/UnitHomeTemplate/1_3281_4800_Main-Site-University-Sports-Boards" , target:"_blank" },
@@ -84,7 +84,7 @@ const facilitiesItems = [
     { label: "University T&P", path: "https://www.bhu.ac.in/Site/Page/1_3246_4682_Placement-and-Internship-Cell-Home",target:"_blank" },
     { label: "MMV T&P", path: "/facilities/trainingplacement/mmvtraining" },
   ]},
-  { label: "Central Discovery Centre", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_180_1152_Computer-Centre-Home",target:"_blank" },
+  { label: "Central Discovery Centre", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_3364_6480_Main-Site-CDC",target:"_blank" },
   // { label: "Medical", children: [
   //   { label: "Sir Sundarlal Hospital", path: "/facilities/medical/ssh" },
   //   { label: "Trauma Center", path: "/facilities/medical/tc" },
@@ -670,12 +670,26 @@ const Navbar = () => {
             </div>
 
             {/* Main Branding Header Bar */}
-            <div className="bg-white px-3 sm:px-8 py-3 flex items-center justify-between gap-2 sm:gap-3 border-b border-[#d4af37]/40 shadow-sm">
+            <div className="relative bg-white px-3 sm:px-8 py-3 flex items-center justify-between gap-2 sm:gap-3 border-b border-[#d4af37]/40 shadow-sm">
               <div className="flex-shrink-0">
+                 <a href="https://www.bhu.ac.in"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit BHU Website">
+                  <img
+                    src="/bhu/logo_bhu.png"
+                    alt="BHU Logo"
+                    className="h-9 sm:h-14 md:h-16 rounded-2xl object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                  />
+                </a>
+              </div>
+
+              {/* Sarthi Logo */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="/bhu/logo_bhu.png"
-                  alt="BHU Logo"
-                  className="h-9 sm:h-14 md:h-16 rounded-2xl object-contain"
+                  src="/bhu/MMV SarthiLogo.jpeg"
+                  alt="Center Logo"
+                  className="h-9 sm:h-14 md:h-13 rounded-2xl object-contain scale-150"
                 />
               </div>
 
@@ -689,11 +703,16 @@ const Navbar = () => {
                   </p>
                 </div>
                 <div className="bg-transparent p-0 flex-shrink-0">
+                  <a href="https://www.bhu.ac.in/site/UnitHomeTemplate/1_184_1231_Mahila-Maha-Vidyalaya-Home"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit BHU Website">
                   <img
                     src="/mmvlogo.jpeg"
                     alt="MMV Logo"
                     className="h-9 w-9 sm:h-14 sm:w-14 md:w-16 md:h-16 rounded-2xl object-contain"
                   />
+                  </a>
                 </div>
               </div>
 
@@ -707,11 +726,16 @@ const Navbar = () => {
                     Varanasi
                   </p>
                 </div>
+                 <a href="https://www.bhu.ac.in/site/UnitHomeTemplate/1_184_1231_Mahila-Maha-Vidyalaya-Home"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit BHU Website">
                 <img
                   src="/mmvlogo.jpeg"
                   alt="MMV Logo"
                   className="h-9 w-9 rounded-2xl object-contain"
                 />
+                </a>
                 <button
                   onClick={() => setMobileOpen(true)}
                   aria-label="Open menu"
