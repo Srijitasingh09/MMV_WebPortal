@@ -14,7 +14,7 @@ const EXIT_DURATION_MS = 700;
 const SHOW_ONCE_PER_SESSION = true;
 
 // Place WelcomeSplash.jpeg in frontend/public/ so it's served from "/WelcomeSplash.jpeg"
-const SPLASH_BG_IMAGE = '/bhu/WelcomeSplash.jpeg';
+const SPLASH_BG_IMAGE = '/bhu/MMV SarthiLogo.jpeg';
 
 const WelcomeSplash = () => {
   const alreadyShown =
