@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Phone, Mail, MapPin, Clock, ShieldAlert, Trash2, Plus, Pencil, X, Check } from 'lucide-react';
+import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -325,8 +326,8 @@ const Contact = () => {
   const [editingEntry,     setEditingEntry]     = useState(null);
   const [saving,           setSaving]           = useState(false);
 
-  const isAdmin    = localStorage.getItem('isAdmin') === 'true';
-  const token      = localStorage.getItem('token');
+  const isAdmin    = isAdminSession();
+  const token      = getToken();
   const authHeader = { Authorization: `Bearer ${token}` };
 
   // fetch contact info

@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';    
+import React, { useState, useEffect, useRef } from 'react';
 
 const slides = [
   {
-    image: '/officegate.png',
+    image: '/officegate.jpeg',
     fit: 'cover',
-    position: 'center center',
+    position: '50% 40%',
     alt: 'mmv campus',
     title: 'Knowledge. Grace. Purpose.',
     subtitle: 'A Tradition of Excellence'
   },
   {
-    image: '/innerbuild.png',
+    image: '/innerbuild.jpeg',
     fit: 'cover',
     position: 'center center',
     alt: 'inner building',
@@ -18,20 +18,12 @@ const slides = [
     subtitle: 'Est. under Banaras Hindu University'
   },
   {
-    image: '/inner2.png',
+    image: '/inner2.jpeg',
     fit: 'cover',
     position: 'center center',
     alt: 'inner building view from library',
     title: 'A Legacy of Learning',
     subtitle: 'Inspiring Future Leaders'
-  },
-  {
-    image: '/officegateLeft.png',
-    fit: 'cover',
-    position: 'center 90%',
-    alt: 'inner building view from library',
-    title: 'More Than a Campus',
-    subtitle: 'IA Journey of Knowledge, Courage, and Dreams'
   },
 ];
 
@@ -215,22 +207,7 @@ const IntroSection = () => {
             in the sciences, and a well-stocked specialized library carrying over 54,000 text volumes and hundreds of
             educational journals.
           </p>
-          <p className="text-black text-md sm:text-md leading-relaxed text-justify mt-3">
-            Mahila Mahavidyalaya, its steady
-            growth and the development stands testimony to the
-            spontaneous social revolution that has been brought
-            about the vision of Mahamana. In the times that
-            reverberated with women's silence it offered a
-            precious niché where all the social constructs could
-            be unmade and re-made. The college is well equipped
-            to make its contribution to knowledge and to address
-            the present day connotations of service to the nation.
-            With its glorious tradition of commitment to
-            education and nation building. Mahila
-            Mahavidyalaya successfully continues to take on the
-            challenges posed by the fast changing national and
-            global scenario.
-          </p>
+          
         </div>
 
       </div>

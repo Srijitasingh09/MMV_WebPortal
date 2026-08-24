@@ -3,13 +3,11 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-const CARD_PHOTO_TAG = '__profile_card_';
 const CARDS_VISIBLE = 3;
 const CARD_WIDTH = 350;   // reference width for desktop calculations
 const CARD_GAP = 28;      // reference gap (1.75rem)
 
 const blankCard = () => ({
-  id: crypto.randomUUID(),
   name: '',
   designation: '',   // e.g. "Warden", "Admin Warden"
   badge: '',         // e.g. "Sunrise Boys Hostel" — small pill under designation
@@ -171,12 +169,10 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
-  let details = {};
-  try { details = content?.details ? JSON.parse(content.details) : {}; } catch { details = {}; }
-  const cards = Array.isArray(details.profileCards) ? details.profileCards : [];
-  const photos = content?.photos || [];
-  const photoFor = (cardId) =>
-    photos.find(p => p.photo_name?.startsWith(`${CARD_PHOTO_TAG}${cardId}__`))?.photo_url;
+  // Cards now come straight from the `profile_cards` table via a proper
+  // content_id foreign key (see models.ProfileCard) — no more parsing them
+  // out of a `details` JSON blob, and no more filename-tag hack for photos.
+  const cards = content?.profile_cards || [];
 
   const updateScrollButtons = () => {
     const el = scrollRef.current;
@@ -226,7 +222,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
     setForm({ ...card });
     setIsNew(false);
     setPhotoFile(null);
-    setPhotoPreview(photoFor(card.id) ? `${API}${photoFor(card.id)}` : '');
+    setPhotoPreview(card.photo_url ? `${API}${card.photo_url}` : '');
     setRemovePhoto(false);
     setShowForm(true);
   };
@@ -246,54 +242,39 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const persistDetails = async (newCards) => {
-    const merged = { ...details, profileCards: newCards };
-    const res = await axios.put(`${API}/admin/facility-content`,
-      { section, category: subsection, sub_category: '', details: JSON.stringify(merged) },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    return res.data;
-  };
-
-  const uploadPhotoFor = async (cardId, file) => {
-    const fd = new FormData();
-    fd.append('section', section);
-    fd.append('category', subsection || '');
-    fd.append('sub_category', '');
-    const tagged = new File([file], `${CARD_PHOTO_TAG}${cardId}__${file.name}`, { type: file.type });
-    fd.append('files', tagged);
-    await axios.post(`${API}/admin/facility-content/upload-photo`, fd, {
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
-    });
-  };
-
-  const removePhotoFor = async (cardId) => {
-    const existing = photos.find(p => p.photo_name?.startsWith(`${CARD_PHOTO_TAG}${cardId}__`));
-    if (existing) {
-      await axios.delete(`${API}/admin/facility-content/photo/${existing.id}`,
-        { headers: { Authorization: `Bearer ${token}` } });
-    }
+  const refreshContent = async () => {
+    const res = await axios.get(`${API}/facility-content`, { params: { section, category: subsection } });
+    return (res.data || [])[0] || {};
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) { alert('Name is required.'); return; }
     setSaving(true);
     try {
-      const newCards = isNew
-        ? [...cards, form]
-        : cards.map(c => (c.id === form.id ? form : c));
+      const fd = new FormData();
+      fd.append('name', form.name);
+      fd.append('designation', form.designation || '');
+      fd.append('badge', form.badge || '');
+      fd.append('university', form.university || '');
+      fd.append('phone', form.phone || '');
+      fd.append('email', form.email || '');
+      if (photoFile) fd.append('photo', photoFile);
 
-      await persistDetails(newCards);
-
-      if (photoFile) {
-        if (!isNew) await removePhotoFor(form.id);
-        await uploadPhotoFor(form.id, photoFile);
-      } else if (removePhoto && !isNew) {
-        await removePhotoFor(form.id);
+      if (isNew) {
+        fd.append('section', section);
+        fd.append('category', subsection || '');
+        fd.append('sub_category', '');
+        await axios.post(`${API}/admin/facility-content/profile-card`, fd, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        });
+      } else {
+        if (removePhoto) fd.append('remove_photo', 'true');
+        await axios.put(`${API}/admin/facility-content/profile-card/${form.id}`, fd, {
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+        });
       }
 
-      const res = await axios.get(`${API}/facility-content`, { params: { section, category: subsection } });
-      const fresh = (res.data || [])[0] || {};
+      const fresh = await refreshContent();
       onChanged?.(fresh);
       setShowForm(false);
     } catch {
@@ -306,9 +287,9 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
   const handleDelete = async (card) => {
     if (!window.confirm(`Remove the profile card for "${card.name}"?`)) return;
     try {
-      await removePhotoFor(card.id);
-      const newCards = cards.filter(c => c.id !== card.id);
-      const fresh = await persistDetails(newCards);
+      await axios.delete(`${API}/admin/facility-content/profile-card/${card.id}`,
+        { headers: { Authorization: `Bearer ${token}` } });
+      const fresh = await refreshContent();
       onChanged?.(fresh);
     } catch {
       alert('Could not delete profile card.');
@@ -347,7 +328,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
             >
               <ProfileCard
                 card={card}
-                photoUrl={photoFor(card.id) ? `${API}${photoFor(card.id)}` : null}
+                photoUrl={card.photo_url ? `${API}${card.photo_url}` : null}
                 isAdmin={isAdmin}
                 onEdit={openEdit}
                 onDelete={handleDelete}

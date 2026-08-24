@@ -242,16 +242,7 @@ Content on any of the 57 pages can be edited by visiting that page while logged 
 
 ---
 
-## Planned: AI Assistant / Chatbot
 
-The admin panel already supports managing **MMV Knowledge Base** entries (`/admin/mmv-knowledge`), and `info/mmv_knowledge.json` is reserved for this content — but the chatbot itself is **not built yet**, it's still in planning.
-
-Current direction:
-- Stateless — no per-message chat history will be saved to the database
-- Answers will be generated using AI-based (semantic) matching against the knowledge base, rather than exact keyword search
-- Given the small content size expected, this can start as a simple in-memory comparison (no separate vector database needed) and move to something like `pgvector` later if the knowledge base grows significantly
-
----
 
 ## Default Seed Users
 

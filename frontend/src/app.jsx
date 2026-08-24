@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/home';
-import About from './pages/about';
+import OurVision from './pages/OurVision';
 import AcademicsRouted from './pages/AcademicsRouted';
 import AdministrationRouted from './pages/AdministrationRouted';
 import FacilitiesRouted from './pages/FacilitiesRouted';
@@ -11,34 +11,65 @@ import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
 import Notices from './pages/notice';
 import Contact from './pages/contact';
-import MMVerse from './pages/MMVerse';
 import AdminContentGuide from './pages/adminreadme'; 
 import Feedback from './pages/Feedback';
 import News from './pages/News';
+import { getToken, isAdmin as isAdminSession, verifySessionWithServer } from './utils/auth';
 
 // Protected Route Component
+//
+// - token/role now come from utils/auth, which reads sessionStorage
+//   (per-tab, not shared across the whole browser) and decodes the role
+//   out of the signed JWT rather than a separately-editable flag.
+// - For adminOnly routes we additionally re-check with the backend
+//   (/user/me) before rendering, so a token that *looks* admin from its
+//   claims but belongs to a user who was demoted/deactivated since it was
+//   issued still gets bounced. This runs once per visit to an admin
+//   route, not on every click.
 const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const token = localStorage.getItem('token');
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  const token = getToken();
+  const claimsAdmin = isAdminSession();
+
+  const [checking, setChecking] = useState(adminOnly);
+  const [serverConfirmsAdmin, setServerConfirmsAdmin] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (token && adminOnly) {
+      verifySessionWithServer().then((profile) => {
+        if (!cancelled) {
+          setServerConfirmsAdmin(!!profile?.is_admin);
+          setChecking(false);
+        }
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [token, adminOnly]);
 
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  if (adminOnly && !isAdmin) {
-    return <Navigate to="/" replace />;
+  if (adminOnly) {
+    if (!claimsAdmin) {
+      return <Navigate to="/" replace />;
+    }
+    if (checking) {
+      return null; // brief pause while /user/me confirms the role server-side
+    }
+    if (!serverConfirmsAdmin) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return children;
 };
 
-// Layout Wrapper to conditionally show Layout & automatically hide chat widget for logged-in Admins
-const LayoutWrapper = ({ children, hideFooter = false, hideChatWidget = false }) => {
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
-  const shouldHideChatWidget = hideChatWidget || isAdmin;
-
+const LayoutWrapper = ({ children, hideFooter = false}) => {
   return (
-    <Layout hideFooter={hideFooter} hideChatWidget={shouldHideChatWidget}>
+    <Layout hideFooter={hideFooter} >
       {children}
     </Layout>
   );
@@ -53,7 +84,7 @@ function App() {
 
         {/* Student Routes */}
         <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
-        <Route path="/About" element={<LayoutWrapper hideChatWidget><About/></LayoutWrapper>} />
+        <Route path="/OurVision" element={<LayoutWrapper><OurVision/></LayoutWrapper>} />
         <Route path="/facilities" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
         <Route path="/facilities/:sub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
         <Route path="/facilities/:sub/:subsub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
@@ -77,8 +108,6 @@ function App() {
         {/* contact */}
         <Route path="/Contact" element={<LayoutWrapper><Contact/></LayoutWrapper>} />
        
-        {/* Ai Assistant */}
-        <Route path="/ai-assistant" element={<LayoutWrapper hideChatWidget><MMVerse /></LayoutWrapper>} />
 
         {/* feedback */}
         <Route path="/Feedback" element={<LayoutWrapper><Feedback/></LayoutWrapper>} />
@@ -88,7 +117,7 @@ function App() {
           path="/admin" 
           element={
             <ProtectedRoute adminOnly={true}>
-              <LayoutWrapper hideChatWidget><AdminDashboard /></LayoutWrapper>
+              <LayoutWrapper ><AdminDashboard /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />
@@ -97,7 +126,7 @@ function App() {
           path="/admin/content-guide" 
           element={
             <ProtectedRoute adminOnly={true}>
-              <LayoutWrapper hideChatWidget><AdminContentGuide /></LayoutWrapper>
+              <LayoutWrapper ><AdminContentGuide /></LayoutWrapper>
             </ProtectedRoute>
           } 
         />

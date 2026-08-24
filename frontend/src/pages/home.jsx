@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import WelcomeSplash from '../components/WelcomeSplash';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 // Navy   #0D1F3C / #0F3358 — institution authority, headings, dark surfaces
@@ -565,106 +566,18 @@ const Administration = () => (
   </section>
 );
 
-// ─── AI ASSISTANT (Alternating Slate/Blue Shade #EAEFF5) ──────────────────────
-const AIAssistant = () => (
-  <section id="ai-assistant" className="bg-[#EAEFF5] py-12 sm:py-20 px-4 sm:px-6">
-    <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 sm:gap-10 md:gap-14 items-center">
-      <div className="md:w-7/12 w-full">
-        <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
-          AI Assistant
-        </p>
-        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#0f3358] mb-2 leading-snug">
-          Get Instant Answers with MMVerse
-        </h2>
-        <div className="w-12 h-0.5 bg-[#d4af37] mb-5" />
-        <p className="font-lato text-xs sm:text-[17px] text-slate-700 leading-relaxed mb-6">
-          MMVerse is a conversational AI assistant built specifically for MMV students.
-          Instead of searching through multiple pages, simply type your question
-          and get an accurate answer within seconds.
-        </p>
-        <ul className="space-y-3 mb-8">
-          {[
-            ['Natural Language',  'Ask in plain English — no keywords needed.'],
-            ['Available 24/7',    'Get answers anytime, even outside office hours.'],
-            ['MMV-Specific',      'Trained on MMV and BHU data, not generic answers.'],
-          ].map(([label, detail]) => (
-            <li key={label} className="flex items-start gap-3">
-              <span className="text-[#7d311f] font-bold text-sm mt-0.5 flex-shrink-0">✦</span>
-              <div className="font-lato text-xs sm:text-[16px] text-slate-800">
-                <span className="font-bold text-[#0f3358]">{label}: </span>{detail}
-              </div>
-            </li>
-          ))}
-        </ul>
-        <Link
-          to="/ai-assistant"
-          className="inline-block font-lato text-xs sm:text-sm font-bold bg-[#0f3358] text-[#fce8b2] border border-[#d4af37] px-6 sm:px-7 py-3 rounded-full hover:bg-[#174873] hover:text-white transition-all shadow-sm"
-        >
-          Open MMVerse AI →
-        </Link>
-      </div>
 
-      <div className="md:w-5/12 w-full max-w-sm sm:max-w-none mx-auto">
-        <div className="bg-[#FAF7F2] rounded-2xl shadow-xl border-2 border-[#0D1F3C]/30 overflow-hidden">
-          <div className="flex items-center gap-2.5 sm:gap-3 bg-[#0D1F3C] px-3.5 sm:px-4 py-2.5 sm:py-3 border-b border-[#E3B94F]/40">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FBF1DA] ring-2 ring-[#E3B94F] flex items-center justify-center overflow-hidden flex-shrink-0 shadow-xs">
-              <img src="/bhu/AI-icon.png" alt="MMVerse AI" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover"
-                onError={(e) => { e.target.style.display='none'; e.target.parentNode.innerText='🤖'; }} />
-            </div>
-            <div>
-              <div className="font-lato text-sm sm:text-base font-bold text-[#E3B94F] leading-none">MMVerse</div>
-              <div className="font-lato text-2xs sm:text-xs text-white mt-0.5 font-semibold">AI Campus Assistant</div>
-            </div>
-            <div className="ml-auto flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="font-lato text-2xs sm:text-xs text-[#FBF1DA] font-medium">Online</span>
-            </div>
-          </div>
-
-          <div className="p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 bg-[#FAF7F2]">
-            {[
-              { from: 'user', text: 'What are the Cyber Library timings?' },
-              { from: 'bot',  text: 'The Cyber Library is open Monday–Saturday, 8:00 AM to 5:00 PM.' },
-              { from: 'user', text: 'Where do I get my hostel allotment form?' },
-              { from: 'bot',  text: 'Hostel allotment forms are available at the Hostel Office in MMV Campus.' },
-            ].map((m, i) => (
-              <div key={i} className={`flex ${m.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`font-lato text-xs sm:text-sm rounded-2xl px-3.5 sm:px-4 py-2.5 max-w-[85%] leading-relaxed shadow-xs
-                  ${m.from === 'user'
-                    ? 'bg-[#0D1F3C] text-white rounded-br-xs'
-                    : 'bg-[#E5C29C] text-black font-medium rounded-bl-xs'}`}>
-                  {m.text}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="px-3.5 sm:px-4 pb-3.5 sm:pb-4 pt-2 bg-[#FAF7F2] border-t border-slate-200">
-            <div className="flex gap-2">
-              <div className="flex-1 bg-white rounded-xl px-3.5 sm:px-4 py-2 sm:py-2.5 font-lato text-xs sm:text-sm text-slate-400 border-2 border-[#0D1F3C]/40">
-                Ask a question...
-              </div>
-              <Link to="/ai-assistant" className="w-9 h-9 sm:w-10 sm:h-10 bg-[#C4561A] hover:bg-[#a3450f] rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0 shadow-xs">
-                →
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-);
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const Home = () => (
   <div className="font-lato">
+    <WelcomeSplash />
     <Hero />
     <NoticesAndNews />
     <About />
     <Facilities />
     <Academics />
     <Administration />
-    <AIAssistant />
   </div>
 );
 

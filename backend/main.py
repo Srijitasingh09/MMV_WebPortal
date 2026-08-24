@@ -1,18 +1,16 @@
 import sys
 import os
-import time
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, BackgroundTasks, Request
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func
+from sqlalchemy import text, func, inspect
 from typing import Optional, List
 from datetime import datetime
 import os
-import json
 import shutil
 import uuid
 from dotenv import load_dotenv
@@ -40,85 +38,13 @@ async def validate_upload(file: UploadFile, allowed_types: set):
     return contents
 
 import models, database, auth
-from embedding_provider import embed as embed_vectors, provider_status
-from chatbot_runtime import (
-    allow_request,
-    cache_get,
-    cache_key,
-    cache_set,
-    clean_answer,
-    detect_language,
-    language_instruction,
-    normalize_page_url,
-    page_title_from_url,
-    provider_slot,
-)
 from database import engine, get_db
-from chat_index import (
-    sync_facility_content_by_id,
-    sync_notice_by_id,
-    delete_chunks_for,
-    voyage_client,
-    EMBED_MODEL,
-)
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
 UPLOADS_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOADS_DIR, exist_ok=True)
-PROJECT_ROOT = os.path.dirname(os.path.dirname(__file__))
-INFO_DIR = os.path.join(PROJECT_ROOT, "info")
-MMV_KNOWLEDGE_FILE = os.path.join(INFO_DIR, "mmv_knowledge.json")
-
-
-def ensure_mmv_knowledge_file():
-    os.makedirs(INFO_DIR, exist_ok=True)
-    if not os.path.exists(MMV_KNOWLEDGE_FILE):
-        with open(MMV_KNOWLEDGE_FILE, "w", encoding="utf-8") as f:
-            json.dump([], f, indent=2)
-
-
-def _normalize_tags(value):
-    if isinstance(value, list):
-        return [str(v).strip() for v in value if str(v).strip()]
-    if isinstance(value, str):
-        return [t.strip() for t in value.split(",") if t.strip()]
-    return []
-
-
-def load_mmv_chat_knowledge():
-    ensure_mmv_knowledge_file()
-    try:
-        with open(MMV_KNOWLEDGE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (OSError, json.JSONDecodeError):
-        return []
-    if not isinstance(data, list):
-        return []
-    cleaned = []
-    for item in data:
-        if not isinstance(item, dict):
-            continue
-        title = str(item.get("title") or "").strip()
-        description = str(item.get("description") or "").strip()
-        if not title or not description:
-            continue
-        cleaned.append({
-            "id": str(item.get("id") or f"mmv-knowledge-{uuid.uuid4().hex[:8]}"),
-            "type": str(item.get("type") or "Notice"),
-            "title": title,
-            "description": description,
-            "contact": str(item.get("contact") or ""),
-            "tags": _normalize_tags(item.get("tags")),
-        })
-    return cleaned
-
-
-def save_mmv_chat_knowledge(entries):
-    ensure_mmv_knowledge_file()
-    with open(MMV_KNOWLEDGE_FILE, "w", encoding="utf-8") as f:
-        json.dump(entries, f, indent=2, ensure_ascii=False)
 
 
 def split_news_title_and_body(raw_text: str):
@@ -151,28 +77,17 @@ def serialize_news(n: "models.News"):
 
 
 def ensure_notice_attachment_columns():
-    with engine.connect() as conn:
-        column_rows = conn.execute(text(
-            "SELECT column_name FROM information_schema.columns WHERE table_name = 'notices'"
-        )).fetchall()
-        columns = {row[0] for row in column_rows}
-        if "attachment_url" not in columns:
+    # Uses SQLAlchemy's Inspector instead of raw information_schema SQL so this
+    # works on both Postgres (Supabase) and SQLite (local dev fallback) —
+    # information_schema.columns is Postgres-specific and breaks/no-ops on SQLite.
+    inspector = inspect(engine)
+    existing_columns = {col["name"] for col in inspector.get_columns("notices")}
+
+    with engine.begin() as conn:
+        if "attachment_url" not in existing_columns:
             conn.execute(text("ALTER TABLE notices ADD COLUMN attachment_url VARCHAR"))
-        if "attachment_name" not in columns:
+        if "attachment_name" not in existing_columns:
             conn.execute(text("ALTER TABLE notices ADD COLUMN attachment_name VARCHAR"))
-        conn.commit()
-
-
-def ensure_college_info_columns():
-    with engine.connect() as conn:
-        column_rows = conn.execute(text(
-            "SELECT column_name FROM information_schema.columns WHERE table_name = 'college_info_items'"
-        )).fetchall()
-        columns = {row[0] for row in column_rows}
-        if "display_order" not in columns:
-            conn.execute(text("ALTER TABLE college_info_items ADD COLUMN display_order INTEGER DEFAULT 0"))
-        conn.execute(text("UPDATE college_info_items SET display_order = id WHERE display_order IS NULL OR display_order = 0"))
-        conn.commit()
 
 
 def ensure_facility_content_table():
@@ -196,12 +111,24 @@ def ensure_news_table():
     ], checkfirst=True)
 
 
+def ensure_profile_cards_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.ProfileCard.__table__,
+    ], checkfirst=True)
+
+
+def ensure_feedback_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.Feedback.__table__,
+    ], checkfirst=True)
+
+
 ensure_emergency_contacts_table() 
 ensure_notice_attachment_columns()
-ensure_college_info_columns()
-ensure_mmv_knowledge_file()
 ensure_facility_content_table()
 ensure_news_table()
+ensure_profile_cards_table()
+ensure_feedback_table()
 
 app = FastAPI(title="MMV WebPortal")
 
@@ -213,7 +140,7 @@ def health():
 def readiness(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
-        return {"status": "ready", "database": "ok", "embedding": provider_status()}
+        return {"status": "ready", "database": "ok"}
     except Exception as exc:
         raise HTTPException(status_code=503, detail=f"Service is not ready: {exc}")
 
@@ -221,36 +148,10 @@ def readiness(db: Session = Depends(get_db)):
 def metrics():
     return {
         "service": "mmv-webportal",
-        "embedding": provider_status(),
-        "chat_rate_limit": "enabled",
         "cache": "redis" if os.getenv("REDIS_URL") else "in-memory",
         "image_indexing": "disabled",
     }
 
-_whisper_model = None
-
-@app.post("/transcribe")
-async def transcribe(audio: UploadFile = File(...)):
-    """Optional self-hosted voice fallback; browser speech remains the first choice."""
-    global _whisper_model
-    if not os.getenv("ENABLE_WHISPER", "false").lower() == "true":
-        raise HTTPException(status_code=501, detail="Self-hosted voice fallback is disabled")
-    try:
-        from faster_whisper import WhisperModel
-        if _whisper_model is None:
-            _whisper_model = WhisperModel(os.getenv("WHISPER_MODEL", "small"), device="cpu", compute_type="int8")
-        suffix = os.path.splitext(audio.filename or "voice.webm")[1] or ".webm"
-        temp_path = os.path.join(UPLOADS_DIR, f"voice_{uuid.uuid4().hex}{suffix}")
-        with open(temp_path, "wb") as target:
-            shutil.copyfileobj(audio.file, target)
-        segments, info = _whisper_model.transcribe(temp_path, vad_filter=True)
-        transcript = " ".join(segment.text.strip() for segment in segments).strip()
-        os.remove(temp_path)
-        return {"text": transcript, "language": info.language}
-    except HTTPException:
-        raise
-    except Exception as exc:
-        raise HTTPException(status_code=503, detail=f"Voice transcription is unavailable: {exc}")
 app.mount("/uploads", StaticFiles(directory=UPLOADS_DIR), name="uploads")
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",") 
@@ -303,12 +204,29 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         user.hashed_password = auth.get_password_hash(form_data.password)
         db.commit()
 
-    access_token = auth.create_access_token(data={"sub": user.email})
+    # is_admin is embedded directly in the signed token so the role can't be
+    # tampered with client-side independently of a valid token (it used to be
+    # tracked only via a separate, freely-editable localStorage flag).
+    access_token = auth.create_access_token(data={"sub": user.email, "is_admin": user.is_admin})
     return {
         "access_token": access_token,
         "token_type": "bearer",
         "is_admin": user.is_admin,
         "full_name": user.full_name,
+    }
+
+
+@app.get("/user/me")
+def get_current_user_info(user: models.User = Depends(get_current_user)):
+    """
+    Lets the frontend re-verify the caller's role/identity against the
+    database on demand (e.g. right before rendering the admin dashboard),
+    instead of trusting a client-stored flag indefinitely.
+    """
+    return {
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_admin": user.is_admin,
     }
 
 # ====================contacts=======================
@@ -368,7 +286,6 @@ def get_notices(db: Session = Depends(get_db)):
 
 @app.post("/admin/notice")
 async def add_notice(
-    background_tasks: BackgroundTasks,
     title: str = Form(...),
     content: str = Form(...),
     category: str = Form("General"),
@@ -381,7 +298,7 @@ async def add_notice(
     attachment_url = None
     attachment_name = None
     if attachment and attachment.filename:
-        await validate_upload(attachment, ALLOWED_PDF_TYPES)
+        await validate_upload(attachment, ALLOWED_PDF_TYPES | ALLOWED_IMAGE_TYPES)
         safe_name = attachment.filename.replace(" ", "_")
         unique_name = f"{uuid.uuid4().hex}_{safe_name}"
         file_path = os.path.join(UPLOADS_DIR, unique_name)
@@ -400,13 +317,11 @@ async def add_notice(
     db.add(new_notice)
     db.commit()
     db.refresh(new_notice)
-    background_tasks.add_task(sync_notice_by_id, new_notice.id)
     return new_notice
 
 @app.delete("/admin/notice/{notice_id}")
 def delete_notice(
     notice_id: int,
-    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -421,14 +336,12 @@ def delete_notice(
             os.remove(stored_path)
     db.delete(notice)
     db.commit()
-    background_tasks.add_task(delete_chunks_for, "notices", notice_id)
     return {"message": "Notice deleted"}
 
 @app.put("/admin/notice/{notice_id}")
 def update_notice(
     notice_id: int,
     payload: dict,
-    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -443,7 +356,6 @@ def update_notice(
 
     db.commit()
     db.refresh(notice)
-    background_tasks.add_task(sync_notice_by_id, notice.id)
     return notice
 
 # ===================== NEWS =====================
@@ -800,78 +712,6 @@ def reorder_college_info(payload: dict, user: models.User = Depends(get_current_
     return {"message": "College info reordered"}
 
 
-# ===================== MMV KNOWLEDGE =====================
-
-@app.get("/admin/mmv-knowledge")
-def get_mmv_knowledge_for_admin(user: models.User = Depends(get_current_user)):
-    ensure_admin(user)
-    return load_mmv_chat_knowledge()
-
-
-@app.post("/admin/mmv-knowledge")
-def add_mmv_knowledge_entry(payload: dict, user: models.User = Depends(get_current_user)):
-    ensure_admin(user)
-    title = str(payload.get("title") or "").strip()
-    description = str(payload.get("description") or "").strip()
-    if not title or not description:
-        raise HTTPException(status_code=400, detail="title and description are required")
-
-    entries = load_mmv_chat_knowledge()
-    entry = {
-        "id": str(payload.get("id") or f"mmv-knowledge-{uuid.uuid4().hex[:8]}"),
-        "type": str(payload.get("type") or "Notice").strip() or "Notice",
-        "title": title,
-        "description": description,
-        "contact": str(payload.get("contact") or "").strip(),
-        "tags": _normalize_tags(payload.get("tags")),
-    }
-    entries.append(entry)
-    save_mmv_chat_knowledge(entries)
-    return entry
-
-
-@app.put("/admin/mmv-knowledge/{entry_id}")
-def update_mmv_knowledge_entry(entry_id: str, payload: dict, user: models.User = Depends(get_current_user)):
-    ensure_admin(user)
-    entries = load_mmv_chat_knowledge()
-
-    updated = None
-    for item in entries:
-        if item.get("id") != entry_id:
-            continue
-        if "type" in payload:
-            item["type"] = str(payload.get("type") or "Notice").strip() or "Notice"
-        if "title" in payload:
-            item["title"] = str(payload.get("title") or "").strip()
-        if "description" in payload:
-            item["description"] = str(payload.get("description") or "").strip()
-        if "contact" in payload:
-            item["contact"] = str(payload.get("contact") or "").strip()
-        if "tags" in payload:
-            item["tags"] = _normalize_tags(payload.get("tags"))
-        if not item.get("title") or not item.get("description"):
-            raise HTTPException(status_code=400, detail="title and description are required")
-        updated = item
-        break
-
-    if not updated:
-        raise HTTPException(status_code=404, detail="Knowledge entry not found")
-
-    save_mmv_chat_knowledge(entries)
-    return updated
-
-
-@app.delete("/admin/mmv-knowledge/{entry_id}")
-def delete_mmv_knowledge_entry(entry_id: str, user: models.User = Depends(get_current_user)):
-    ensure_admin(user)
-    entries = load_mmv_chat_knowledge()
-    filtered = [item for item in entries if item.get("id") != entry_id]
-    if len(filtered) == len(entries):
-        raise HTTPException(status_code=404, detail="Knowledge entry not found")
-    save_mmv_chat_knowledge(filtered)
-    return {"message": "Knowledge entry removed"}
-
-
 # ===================== ADMINISTRATION (via GenericContentPage-like flow) =====================
 
 @app.get("/administration")
@@ -1184,6 +1024,21 @@ def get_facility_content(
                 {"id": p.id, "pdf_name": p.pdf_name, "pdf_url": p.pdf_url}
                 for p in r.pdfs
             ],
+            "profile_cards": [
+                {
+                    "id": c.id,
+                    "name": c.name,
+                    "designation": c.designation or "",
+                    "badge": c.badge or "",
+                    "university": c.university or "",
+                    "phone": c.phone or "",
+                    "email": c.email or "",
+                    "photo_name": c.photo_name,
+                    "photo_url": c.photo_url,
+                    "display_order": c.display_order,
+                }
+                for c in r.profile_cards
+            ],
             "created_at": r.created_at,
         }
         for r in rows
@@ -1193,7 +1048,6 @@ def get_facility_content(
 @app.put("/admin/facility-content")
 def upsert_facility_content(
     payload: dict,
-    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1227,12 +1081,6 @@ def upsert_facility_content(
     db.commit()
     db.refresh(row)
 
-    # Stage D: re-index this row's search chunks in the background, so the
-    # admin's save feels instant — embedding takes ~20+ seconds per chunk.
-    # Pass just the ID (not the row object) — by the time this background task
-    # runs, the request's db session will already be closed.
-    background_tasks.add_task(sync_facility_content_by_id, row.id)
-
     return {
         "id": row.id,
         "section": row.section,
@@ -1254,18 +1102,16 @@ def delete_facility_content(
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Deletes a FacilityContent row entirely — its pdfs/photos (cascade via
-    ORM relationship) and its chat index chunks. Use this for orphaned/duplicate
-    entries that aren't routed to by any frontend page (e.g. a leftover
-    'academics/section-incharge' row when the real pages live at
-    'section-incharge/science', '/socialscience', '/arts') — those stray rows
-    still get indexed for chat search and can out-compete the correct ones."""
+    """Deletes a FacilityContent row entirely — its pdfs/photos cascade via
+    ORM relationship. Use this for orphaned/duplicate entries that aren't
+    routed to by any frontend page (e.g. a leftover 'academics/section-incharge'
+    row when the real pages live at 'section-incharge/science', '/socialscience',
+    '/arts')."""
     ensure_admin(user)
     row = db.query(models.FacilityContent).filter(models.FacilityContent.id == content_id).first()
     if not row:
         raise HTTPException(status_code=404, detail="Not found")
 
-    delete_chunks_for("facility_content", row.id)  # remove chat index chunks first
     db.delete(row)  # cascades to pdfs/photos via relationship
     db.commit()
     return {"message": "Deleted successfully"}
@@ -1273,7 +1119,6 @@ def delete_facility_content(
 
 @app.post("/admin/facility-content/upload-pdf")
 async def upload_facility_content_pdf(
-    background_tasks: BackgroundTasks,
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -1311,14 +1156,12 @@ async def upload_facility_content_pdf(
         uploaded.append({"pdf_name": file.filename, "pdf_url": f"/uploads/{filename}"})
 
     db.commit()
-    background_tasks.add_task(sync_facility_content_by_id, row.id)
     return {"message": f"{len(uploaded)} PDF(s) uploaded", "pdfs": uploaded}
 
 
 @app.delete("/admin/facility-content/pdf/{pdf_id}")
 def delete_facility_content_pdf(
     pdf_id: int,
-    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1328,21 +1171,17 @@ def delete_facility_content_pdf(
     if not pdf:
         raise HTTPException(status_code=404, detail="PDF not found")
 
-    content_id = pdf.content_id  # capture before delete, needed for re-sync below
-
     filepath = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
     if os.path.exists(filepath):
         os.remove(filepath)
 
     db.delete(pdf)
     db.commit()
-    background_tasks.add_task(sync_facility_content_by_id, content_id)
     return {"message": "PDF deleted"}
 
 
 @app.post("/admin/facility-content/upload-photo")
 async def upload_facility_content_photo(
-    background_tasks: BackgroundTasks,
     section: str = Form(...),
     category: str = Form(""),
     sub_category: str = Form(""),
@@ -1381,14 +1220,12 @@ async def upload_facility_content_photo(
         uploaded.append({"photo_name": file.filename, "photo_url": f"/uploads/{filename}"})
 
     db.commit()
-    background_tasks.add_task(sync_facility_content_by_id, row.id)
     return {"message": f"{len(uploaded)} photo(s) uploaded", "photos": uploaded}
 
 
 @app.delete("/admin/facility-content/photo/{photo_id}")
 def delete_facility_content_photo(
     photo_id: int,
-    background_tasks: BackgroundTasks,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -1398,444 +1235,228 @@ def delete_facility_content_photo(
     if not photo:
         raise HTTPException(status_code=404, detail="Photo not found")
 
-    content_id = photo.content_id  # capture before delete, needed for re-sync below
-
     filepath = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
     if os.path.exists(filepath):
         os.remove(filepath)
 
     db.delete(photo)
     db.commit()
-    background_tasks.add_task(sync_facility_content_by_id, content_id)
     return {"message": "Photo deleted"}
 
+
+
+
 # ============================================================
-# STAGE E + F — Chat search endpoint (public, no auth required)
+# PROFILE CARDS — properly joined to FacilityContent via content_id
+# (see models.ProfileCard). Each card is its own row, same relational
+# pattern as facility_content_photos/facility_content_pdfs above.
 # ============================================================
 
-import groq as groq_lib
-
-_groq_client = groq_lib.Groq()
-
-
-def classify_question(question: str) -> str:
-    """Classify whether the question is MMV-related or off-topic.
-    Returns 'mmv' or 'offtopic'. When in doubt returns 'mmv'."""
-    try:
-        with provider_slot():
-            response = _groq_client.chat.completions.create(
-                model="openai/gpt-oss-20b",
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        "You are a classifier for MMVerse, AI assistant of Mahila Maha Vidyalaya (MMV), BHU.\n"
-                        "Classify the question as 'mmv' or 'offtopic'. Reply with ONE word only.\n\n"
-                        "'mmv' = questions about MMV/BHU: admissions, fees, courses, faculty, hostels, "
-                        "library, canteen, sports, medical, administration, exams, notices, campus life.\n"
-                        "'offtopic' = clearly unrelated: general knowledge, coding, other universities, "
-                        "entertainment, translation, politics, science facts.\n"
-                        "When in doubt: 'mmv'.\n\n"
-                        f"Question: {question}"
-                    )
-                }],
-                max_tokens=5,
-                temperature=0.0,
-            )
-        result = response.choices[0].message.content.strip().lower()
-        return "offtopic" if "offtopic" in result else "mmv"
-    except Exception:
-        return "mmv"
-
-
-def expand_query(question: str) -> list:
-    """Generate 2 alternative phrasings with MMV-specific vocabulary mapping."""
-    try:
-        with provider_slot():
-            response = _groq_client.chat.completions.create(
-                model="openai/gpt-oss-20b",
-                messages=[{
-                    "role": "user",
-                    "content": (
-                        "You are helping search a college portal for Mahila Maha Vidyalaya (MMV), BHU. "
-                        "Rephrase this student question in 2 different ways using formal academic terminology. "
-                        "Common mappings: 'timings'→'hours/schedule', 'charges/fees'→'fee structure', "
-                        "'principal ma'am'→'principal', 'incharge'→'coordinator/in-charge', "
-                        "'gym'→'gymnasium', 'OPD'→'outpatient department'. "
-                        "Output only the 2 rephrased questions, one per line, no numbering.\n\n"
-                        f"Question: {question}"
-                    )
-                }],
-                max_tokens=80,
-                temperature=0.0,
-            )
-        lines = response.choices[0].message.content.strip().split("\\n")
-        alternatives = [line.strip() for line in lines if line.strip() and line.strip() != question][:2]
-        return [question] + alternatives
-    except Exception:
-        return [question]
-
-
-def search_best_chunk(queries: list, db, section_filter: str = None, page_url: str = None):
-    """Embed all query variants, return the single best-matching chunk.
-    section_filter: optional section name to restrict search (e.g. 'facilities').
-    Returns (row, similarity) or (None, 0.0)."""
-    best_row = None
-    best_similarity = 0.0
-
-    # Short, live-appropriate retry for transient Voyage failures (mainly the
-    # free-tier 3 RPM rate limit). Deliberately short (a few seconds total) —
-    # a real person is waiting on a chat reply, unlike batch indexing where
-    # nobody's watching, so we don't use the same long 10s/20s/30s backoff
-    # chat_index.py uses.
-    last_error = None
-    embeddings = None
-    for attempt, wait in enumerate([0, 2, 4], start=1):
-        if wait:
-            time.sleep(wait)
-        try:
-            with provider_slot():
-                embeddings = embed_vectors(queries, input_type="query")
-            last_error = None
-            break
-        except Exception as e:
-            last_error = e
-
-    if embeddings is None:
-        raise HTTPException(
-            status_code=503,
-            detail=f"The assistant is a bit busy right now — please wait a few seconds and try again. ({last_error})",
-        )
-
-    # Build optional section filter clause
-    section_clause = "AND c.content_type NOT IN ('image')"
-    query_params = {}
-    if page_url:
-        # Exact page scope only. Accept a legacy trailing slash, but never broaden
-        # to the whole section when a page URL is supplied.
-        section_clause += " AND LOWER(c.section_url) IN (LOWER(:page_url), LOWER(:page_url || '/'))"
-        query_params["page_url"] = page_url
-    elif section_filter:
-        # Match source_table containing section name, or section_url starting with /section
-        safe_section = section_filter.replace("'", "''")
-        section_clause += f" AND (c.section_url LIKE '/{safe_section}%' OR c.source_table LIKE '%{safe_section}%')"
-
-    for q_text, emb in zip(queries, embeddings):
-        emb_str = str(emb)
-
-        # Keyword-based disambiguation. Your portal has many pages that are
-        # structurally similar and easy for embeddings to confuse: parallel
-        # MMV/University pages (mmvcanteen vs universitycanteen, mmvexam vs
-        # universityexam...), five separate hostels that share near-identical
-        # templates (only the hostel NAME differs), and several distinct
-        # "other amenities" pages (CDC, Bharat Kala Bhawan, guest houses,
-        # auditorium) that were confirmed pulling in an unrelated hostel
-        # page instead. All confirmed via real similarity checks, not
-        # guessed. If a query variant explicitly names one of these, nudge
-        # toward the matching page and away from its known confusable
-        # neighbors. No effect on queries that don't mention any of these.
-        lexical_adjustment = ""
-        q_lower = f" {q_text.lower()} "
-
-        DISAMBIGUATION_RULES = [
-            # (keywords that trigger this rule, url fragment to prefer, confusable url fragments to deprioritize)
-            (["mmv"], "mmv", ["university"]),
-            (["university"], "university", ["mmv"]),
-            (["jyoti kunj", "jyotikunj"], "jyotikunj", ["swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["swasti kunj", "swastikunj"], "swastikunj", ["jyotikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["kirti kunj", "kirtikunj"], "kirtikunj", ["jyotikunj", "swastikunj", "kundandevi", "pragyakunj"]),
-            (["kundan devi", "kundandevi"], "kundandevi", ["jyotikunj", "swastikunj", "kirtikunj", "pragyakunj"]),
-            (["pragya kunj", "pragyakunj"], "pragyakunj", ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi"]),
-            (["guest house", "guesthouse", "guesthouses"], "guesthouses",
-                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["cdc", "central discovery centre", "central discovery center"], "/cdc",
-                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["bharat kala bhawan", "bkb"], "bkb",
-                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["auditorium"], "auditorium",
-                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["who is principal", "principal of mmv", "mmv principal", "principal"], "administration/principal", ["administration/staff"]),
-            (["staff", "office staff", "staff directory"], "administration/staff", ["administration/principal"]),
-            (["mmv library", "mmv library timing", "mmv library timings", "mahila maha vidyalaya library"], "facilities/library/mmvlibrary", ["facilities/library/central", "facilities/library/cyber"]),
-            (["central library"], "facilities/library/central", ["facilities/library/mmvlibrary", "facilities/library/cyber"]),
-            (["cyber library"], "facilities/library/cyber", ["facilities/library/mmvlibrary", "facilities/library/central"]),
-            (["vishwanath temple"], "/vt",
-                ["jyotikunj", "swastikunj", "kirtikunj", "kundandevi", "pragyakunj"]),
-            (["postgraduate", " pg "], "syllabus/pg", ["syllabus/ug"]),
-            (["undergraduate", " ug "], "syllabus/ug", ["syllabus/pg"]),
-        ]
-
-        for keywords, preferred, conflicting in DISAMBIGUATION_RULES:
-            if any(kw in q_lower for kw in keywords):
-                conflict_check = " OR ".join(f"c.section_url ILIKE '%{frag}%'" for frag in conflicting)
-                lexical_adjustment += f"""
-                    + CASE
-                        WHEN c.section_url ILIKE '%{preferred}%' THEN -0.25
-                        WHEN ({conflict_check}) THEN 0.25
-                        ELSE 0
-                      END"""
-
-        row = db.execute(
-
-            text(f"""
-                SELECT
-                    c.id,
-                    c.chunk_text,
-                    c.section_title,
-                    c.section_url,
-                    c.content_type,
-                    1 - (c.embedding <=> '{emb_str}'::vector) AS similarity,
-                    a.asset_type,
-                    a.table_data,
-                    a.file_url,
-                    a.file_name,
-                    a.page_number
-                FROM chat_index_chunk c
-                LEFT JOIN chat_index_asset a ON a.chunk_id = c.id
-                {section_clause}
-                ORDER BY
-                    (c.embedding <=> '{emb_str}'::vector)
-                    + CASE WHEN c.content_type IN ('pdf', 'image') THEN 0.10 ELSE 0 END
-                    {lexical_adjustment}
-                LIMIT 1
-            """), query_params).fetchone()
-
-        if row and float(row.similarity) > best_similarity:
-            best_similarity = float(row.similarity)
-            best_row = row
-
-    return best_row, best_similarity
-
-
-def generate_answer(question: str, chunk_text: str, section_title: str, content_type: str = "text", language: str = "en") -> str:
-    """Generate a precise, grounded answer from the best matching chunk.
-    content_type hint helps the LLM handle table data vs prose differently."""
-
-    # Give the LLM a hint about what kind of data it's working with
-    if content_type == "table":
-        data_hint = "The information below is tabular data. Find the specific row(s) relevant to the question and extract the exact values."
-    else:
-        data_hint = "The information below is text, profile, or table data from the college portal. PDFs and images are not chatbot sources."
-
-    prompt = f"""You are MMVerse, the official AI assistant for Mahila Maha Vidyalaya (MMV), Banaras Hindu University (BHU).
-A student asked you: "{question}"
-
-RETRIEVED INFORMATION FROM MMV PORTAL (section: {section_title}):
-{data_hint}
----
-{chunk_text}
----
-
-INSTRUCTIONS:
-- Answer ONLY using the information above. Never add facts from outside.
-- Be direct and specific: give exact times, exact names, exact numbers as they appear above.
-- For table data: find the specific row matching the question and quote the relevant values.
-- If the retrieved information above contains multiple facts, entries, or Q&A pairs, answer
-  ONLY the one the student actually asked about — do not list or repeat the others.
-- If the information does not contain a direct answer, say exactly: "I don't have specific information about that. Please visit the {section_title} section or contact the relevant department directly."
-- Never guess, invent, or approximate facts not present in the text above.
-- Keep answers concise — 1-3 sentences for simple facts, bullet points (using •) for lists.
-- Write a natural, direct answer in your own words. Do NOT repeat the student's question
-  back, and do NOT include any labels or headers in your answer — no "Q:", "A:",
-  "STUDENT QUESTION:", "Answer:", or similar, even if the retrieved text above uses that format.
-- Do NOT start with "Based on the information", "According to", or "The text says".
-- Do NOT include markdown links — plain text only.
-- Do NOT include raw file paths or upload URLs (anything containing "/uploads/" or ending in .pdf, .docx, etc.) in your answer text. If the retrieved information is a document, just say it's available and that the link is shown below — the actual file link is already displayed to the user separately.
-- {language_instruction(language)}"""
-
-    with provider_slot():
-        response = _groq_client.chat.completions.create(
-            model="openai/gpt-oss-20b",
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=250,
-        temperature=0.0,
-    )
-    return clean_answer(response.choices[0].message.content)
-
-
-# 0.35 is safer than 0.30 — at 0.30 some irrelevant chunks pass through
-# and produce confidently wrong answers. Better to say "I don't know"
-# than return a wrong answer.
-SIMILARITY_THRESHOLD = 0.25
-
-
-def page_no_content_message(page_url: str | None) -> str:
-    normalized = (page_url or "").lower()
-    if "/academics/syllabus/pg/" in normalized:
-        return (
-            "This PG syllabus page currently provides its syllabus as a document. "
-            "I do not read document files, so I cannot answer syllabus details from it. "
-            "Please open the syllabus link shown on the page."
-        )
-    return f"I couldn't find non-document information for {page_title_from_url(page_url)} on this page."
-
-
-def related_pages(db: Session, page_url: str | None, section_filter: str | None):
-    """Return safe internal links from the same section for fallback guidance."""
-    prefix = (page_url or (f"/{section_filter}" if section_filter else "/")).rstrip("/")
-    rows = db.execute(text("""
-        SELECT section_url, MAX(section_title) AS section_title
-        FROM chat_index_chunk
-        WHERE content_type NOT IN ('image', 'pdf')
-          AND section_url LIKE :prefix
-        GROUP BY section_url
-        ORDER BY section_url
-        LIMIT 5
-    """), {"prefix": prefix + "%"}).fetchall()
-    return [{"url": row.section_url, "title": row.section_title or page_title_from_url(row.section_url)} for row in rows if row.section_url != page_url]
-
-
-@app.post("/chat")
-def chat(payload: dict, request: Request, db: Session = Depends(get_db)):
-    """Public endpoint — no auth required.
-
-    Request body:  { "question": "What are the hostel facilities?" }
-
-    Response — matched:
-    {
-        "matched": true,
-        "answer": "...",
-        "chunk_text": "...",
-        "section_title": "...",
-        "section_url": "/...",
-        "asset": { ... } | null
+def _serialize_profile_card(c: "models.ProfileCard"):
+    return {
+        "id": c.id,
+        "name": c.name,
+        "designation": c.designation or "",
+        "badge": c.badge or "",
+        "university": c.university or "",
+        "phone": c.phone or "",
+        "email": c.email or "",
+        "photo_name": c.photo_name,
+        "photo_url": c.photo_url,
+        "display_order": c.display_order,
     }
 
-    Response — no match (Stage F fallback):
-    {
-        "matched": false,
-        "message": "I couldn't find a specific answer...",
-        "section_title": "...",
-        "section_url": "/..."
-    }
-    """
-    question = (payload.get("question") or "").strip()
-    section_filter = (payload.get("section") or "").strip() or None
-    page_url = normalize_page_url(payload.get("page_url"))
-    language = detect_language(question)
-    client_key = request.client.host if request.client else "anonymous"
-    if not allow_request(client_key):
-        raise HTTPException(status_code=429, detail="Too many questions right now. Please wait a moment and try again.")
-    if not question:
-        raise HTTPException(status_code=400, detail="question is required")
 
-    response_cache_key = cache_key(question, section_filter, page_url, language)
-    cached = cache_get(response_cache_key)
-    if cached is not None:
-        return cached
+@app.post("/admin/facility-content/profile-card")
+async def add_profile_card(
+    section: str = Form(...),
+    category: str = Form(""),
+    sub_category: str = Form(""),
+    name: str = Form(...),
+    designation: str = Form(""),
+    badge: str = Form(""),
+    university: str = Form(""),
+    phone: str = Form(""),
+    email: str = Form(""),
+    photo: Optional[UploadFile] = File(None),
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Called by ProfileCardsBlock.jsx when adding a new card. Creates the
+    parent FacilityContent row on first use, same as the photo/pdf uploaders."""
+    ensure_admin(user)
 
-    # 1. Classify — off-topic check first.
-    intent = classify_question(question)
-    if intent == "offtopic":
-        result = {
-            "matched": False,
-            "fallback_type": "offtopic",
-            "message": (
-                "I'm MMVerse, an assistant specifically for Mahila Maha Vidyalaya (MMV), BHU. "
-                "I can only answer questions about MMV — academics, facilities, administration, "
-                "hostel, library, and campus life. For other topics, please use a general search engine."
-            ),
-            "section_title": None,
-            "section_url": None,
-            "language": language,
-        }
-        cache_set(response_cache_key, result)
-        return result
-
-    # 2. Expand question into multiple phrasings.
-    queries = expand_query(question)
-
-    # 3. Search for best matching chunk with optional section filter.
-    row, similarity = search_best_chunk(queries, db, section_filter=section_filter, page_url=page_url)
-
+    row = db.query(models.FacilityContent).filter(
+        models.FacilityContent.section == section,
+        models.FacilityContent.category == category,
+        models.FacilityContent.sub_category == sub_category
+    ).first()
     if not row:
-        result = {
-            "matched": False,
-            "fallback_type": "no_content",
-            "message": page_no_content_message(page_url) if page_url else "I couldn't find a specific answer in the MMV portal.",
-            "section_title": page_title_from_url(page_url) if page_url else None,
-            "section_url": page_url,
-            "page_scoped": bool(page_url),
-            "language": language,
-            "related_pages": related_pages(db, page_url, section_filter),
+        row = models.FacilityContent(section=section, category=category, sub_category=sub_category)
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+
+    card = models.ProfileCard(
+        content_id=row.id, name=name, designation=designation, badge=badge,
+        university=university, phone=phone, email=email,
+        display_order=len(row.profile_cards),
+    )
+
+    if photo is not None:
+        await validate_upload(photo, ALLOWED_IMAGE_TYPES)
+        filename = f"card_{uuid.uuid4().hex}_{photo.filename}"
+        filepath = os.path.join(UPLOADS_DIR, filename)
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(photo.file, buffer)
+        card.photo_name = photo.filename
+        card.photo_url = f"/uploads/{filename}"
+
+    db.add(card)
+    db.commit()
+    db.refresh(card)
+    return _serialize_profile_card(card)
+
+
+@app.put("/admin/facility-content/profile-card/{card_id}")
+async def update_profile_card(
+    card_id: int,
+    name: str = Form(...),
+    designation: str = Form(""),
+    badge: str = Form(""),
+    university: str = Form(""),
+    phone: str = Form(""),
+    email: str = Form(""),
+    photo: Optional[UploadFile] = File(None),
+    remove_photo: str = Form("false"),
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Called by ProfileCardsBlock.jsx when editing a card. remove_photo is
+    sent as the string 'true'/'false' since multipart form fields are text."""
+    ensure_admin(user)
+    card = db.query(models.ProfileCard).filter(models.ProfileCard.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Profile card not found")
+
+    card.name = name
+    card.designation = designation
+    card.badge = badge
+    card.university = university
+    card.phone = phone
+    card.email = email
+
+    def _delete_existing_photo_file():
+        if card.photo_url:
+            filepath = os.path.join(UPLOADS_DIR, os.path.basename(card.photo_url))
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
+    if photo is not None:
+        await validate_upload(photo, ALLOWED_IMAGE_TYPES)
+        _delete_existing_photo_file()
+        filename = f"card_{uuid.uuid4().hex}_{photo.filename}"
+        filepath = os.path.join(UPLOADS_DIR, filename)
+        with open(filepath, "wb") as buffer:
+            shutil.copyfileobj(photo.file, buffer)
+        card.photo_name = photo.filename
+        card.photo_url = f"/uploads/{filename}"
+    elif remove_photo.lower() == "true":
+        _delete_existing_photo_file()
+        card.photo_name = None
+        card.photo_url = None
+
+    db.commit()
+    db.refresh(card)
+    return _serialize_profile_card(card)
+
+
+@app.delete("/admin/facility-content/profile-card/{card_id}")
+def delete_profile_card(
+    card_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Called by handleDelete in ProfileCardsBlock.jsx."""
+    ensure_admin(user)
+    card = db.query(models.ProfileCard).filter(models.ProfileCard.id == card_id).first()
+    if not card:
+        raise HTTPException(status_code=404, detail="Profile card not found")
+
+    if card.photo_url:
+        filepath = os.path.join(UPLOADS_DIR, os.path.basename(card.photo_url))
+        if os.path.exists(filepath):
+            os.remove(filepath)
+
+    db.delete(card)
+    db.commit()
+    return {"message": "Profile card deleted"}
+
+
+# ============================================================
+# FEEDBACK — standalone table, deliberately not joined to anything
+# (see models.Feedback docstring for why). Public submit endpoint +
+# admin list/delete for triage.
+# ============================================================
+
+@app.post("/feedback")
+def submit_feedback(payload: dict, db: Session = Depends(get_db)):
+    """Called by Feedback.jsx. Public — no auth required, anyone visiting
+    the site can submit feedback."""
+    name = (payload.get("name") or "").strip()
+    email = (payload.get("email") or "").strip()
+    message = (payload.get("message") or "").strip()
+    category = (payload.get("category") or "General").strip()
+    page_url = payload.get("page_url")
+
+    if not name:
+        raise HTTPException(status_code=400, detail="Name is required")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    if not message:
+        raise HTTPException(status_code=400, detail="Message is required")
+
+    entry = models.Feedback(
+        name=name, email=email, category=category, message=message, page_url=page_url
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return {"message": "Feedback received", "id": entry.id}
+
+
+@app.get("/admin/feedback")
+def list_feedback(
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Lets an admin browse submissions in AdminDashboard.jsx."""
+    ensure_admin(user)
+    rows = db.query(models.Feedback).order_by(models.Feedback.created_at.desc()).all()
+    return [
+        {
+            "id": r.id,
+            "name": r.name,
+            "email": r.email,
+            "category": r.category,
+            "message": r.message,
+            "page_url": r.page_url,
+            "created_at": r.created_at,
         }
-        cache_set(response_cache_key, result)
-        return result
+        for r in rows
+    ]
 
-    # 4. Stage F fallback — score too low.
-    if similarity < SIMILARITY_THRESHOLD:
-        result = {
-            "matched": False,
-            "fallback_type": "no_content",
-            "message": (
-                page_no_content_message(page_url)
-                if page_url else
-                "This looks like an MMV-related question, but I don't have specific information about it yet."
-            ),
-            "section_title": page_title_from_url(page_url) if page_url else row.section_title,
-            "section_url": page_url if page_url else row.section_url,
-            "page_scoped": bool(page_url),
-            "language": language,
-            "related_pages": related_pages(db, page_url, section_filter),
-        }
-        cache_set(response_cache_key, result)
-        return result
 
-    # Defensive guarantee: image rows must never reach answer generation.
-    if (row.content_type or '').lower() == 'image' or (row.asset_type or '').lower() == 'image':
-        return {
-            "matched": False,
-            "fallback_type": "unsupported_source",
-            "message": "I can answer from the portal's text, profile, and table content, but not from images.",
-            "section_title": row.section_title,
-            "section_url": row.section_url,
-            "page_scoped": bool(page_url),
-        }
-
-    # Interim PDF handling: we don't read PDF content yet, but if the best
-    # match is a PDF's filename chunk, hand back a download link instead of
-    # a generated answer (and instead of the old "unsupported" dead end).
-    if (row.content_type or '').lower() == 'pdf' or (row.asset_type or '').lower() == 'pdf':
-        return {
-            "matched": True,
-            "answer": f"I found this document for {row.section_title}: {row.file_name}. You can download it below.",
-            "chunk_text": row.chunk_text,
-            "section_title": row.section_title,
-            "section_url": row.section_url,
-            "asset": {"asset_type": "pdf", "file_url": row.file_url, "file_name": row.file_name},
-            "page_scoped": bool(page_url),
-            "language": language,
-        }
-
-    # 5. Generate NLP answer from best matching chunk.
-    try:
-        answer = generate_answer(question, row.chunk_text, row.section_title, row.content_type or "text", language=language)
-    except Exception:
-        answer = clean_answer(row.chunk_text)
-
-    # 6. Build table-only asset payload. Website PDF/image files are not chatbot assets.
-    # file_url handling remains available for non-chat website APIs.
-    # Return as-is — frontend uses API_BASE + file_url to build full URL.
-    # For section_url (internal page links), return as-is for React Router.
-    asset = None
-    if row.asset_type == "table" and row.table_data:
-        asset = {
-            "asset_type": "table",
-            "table_data": (
-                json.loads(row.table_data)
-                if isinstance(row.table_data, str)
-                else row.table_data
-            ),
-        }
-
-    result = {
-        "matched": True,
-        "answer": answer,
-        "chunk_text": row.chunk_text,
-        "section_title": row.section_title,
-        "section_url": row.section_url,
-        "asset": asset,
-        "page_scoped": bool(page_url),
-        "language": language,
-    }
-    cache_set(response_cache_key, result)
-    return result
+@app.delete("/admin/feedback/{feedback_id}")
+def delete_feedback(
+    feedback_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    ensure_admin(user)
+    entry = db.query(models.Feedback).filter(models.Feedback.id == feedback_id).first()
+    if not entry:
+        raise HTTPException(status_code=404, detail="Feedback not found")
+    db.delete(entry)
+    db.commit()
+    return {"message": "Feedback deleted"}

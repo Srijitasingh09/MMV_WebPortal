@@ -46,18 +46,17 @@ const pages = {
   },
 
   // ── Electives ─────────────────────────────────────────────────────────────
-  // DB has description + table data — pageType must include both.
-  // 'pdf-list' was wrong and hid the actual content.
+
   'electives': {
     title: 'Electives',
     pageType: 'table-description'
   },
 
   // ── SWAYAM ────────────────────────────────────────────────────────────────
-  'swayam': {
-    title: 'SWAYAM Courses',
-    pageType: 'description'
-  },
+  // 'swayam': {
+  //   title: 'SWAYAM Courses',
+  //   pageType: 'description'
+  // },
 
   // ── Section In-Charge ───────────────────────────────────────────────────
  

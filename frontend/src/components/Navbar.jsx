@@ -1,30 +1,36 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import { getToken, isAdmin as isAdminSession, clearSession } from '../utils/auth';
 
 // ============================================
 // SHARED MENU DATA
 // Only items with REAL pages have a `path` property.
 // Items with children that have NO page omit `path`.
 // ============================================
+// Helper to detect external URLs (starting with http:// or https://)
+const isExternalUrl = (url) => {
+  return typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'));
+};
+
 const administrationItems = [
-  { label: "Vice Chancellor", path: "/administration/vc" },
-  { label: "MMV Principal", path: "/administration/principal" },
-  { label: "Dean of Students", path: "/administration/dean" },
+  { label: "Vice Chancellor", path: "https://www.bhu.ac.in/Site/Page/1_3251_4734_Main-Site-Vice-Chancellor", target: "_blank" },
+  { label: "MMV Principal", path: "https://www.bhu.ac.in/Site/Page/1_184_1233_436_Mahila-Maha-Vidyalaya-Principal", target : "_blank" },
+  { label: "Dean of Students", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_3256_6912_Dean-of-Students-Home" , target : "_blank" },
   { label: "Student Advisor", path: "/administration/advisor" },
   { label: "Proctorial Board", children: [
-    { label: "Chief Proctor", path: "/administration/proctorial/chief" },
-    { label: "University Proctorial Board", path: "/administration/proctorial/uniboard" },
+    { label: "Chief Proctor", path: "https://www.bhu.ac.in/Site/UnitHomeTemplate/1_3258_6569_Main-Site-Chief-Proctor" , target : "_blank" },
+    { label: "University Proctorial Board", path: "https://www.bhu.ac.in/Site/Page/1_3258_4738_Chief-Proctor-Office-Proctorial-Board", target : "_blank" },
   ]},
   { label: "Controller of Examination", children: [
-    { label: "University", path: "/administration/examination/universityexam" },
+    { label: "University", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_3255_4727_Controller-of-Examinations-Home" , target : "_blank"},
     { label: "MMV", path: "/administration/examination/mmvexam" },
   ]},
   { label: "MMV Office Staff", path: "/administration/staff" },
 ];
 
 const academicsItems = [
-  { label: "NEP", path: "/academics/nep" },
+  { label: "NEP", path: "/academics/nep"},
   { label: "Syllabus", children: [
     { label: "Under Graduate", children: [
       { label: "Science", path: "/academics/syllabus/ug/science" },
@@ -38,7 +44,7 @@ const academicsItems = [
     ]},
   ]},
   { label: "Electives", path: "/academics/electives" },
-  { label: "SWAYAM Courses", path: "/academics/swayam" },
+  { label: "SWAYAM Courses", path: "https://www.bhu.ac.in/Site/UnitHomeTemplate/1_3402_7001" , target :"_blank" },
   { label: "Incharge", children: [
     { label: "Science", path: "/academics/section-incharge/science"},
     { label: "Social Science", path: "/academics/section-incharge/socialscience"},
@@ -49,7 +55,8 @@ const academicsItems = [
 ];
 
 const facilitiesItems = [
-  // Hostels HAS A REAL PAGE -> path: "/facilities/hostels"
+  
+
   { label: "Hostels", path: "/facilities/hostels", children: [
     { label: "Chief Warden", path: "/facilities/hostels/chiefwarden" },
     { label: "Hostel Coordinator", path: "/facilities/hostels/coordinator" },
@@ -59,58 +66,61 @@ const facilitiesItems = [
     { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
     { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
   ]},
-  { label: "Library", children: [
-    { label: "Central Library", path: "/facilities/library/central" },
-    { label: "Cyber Library", path: "/facilities/library/cyber" },
-    { label: "MMV Library", path: "/facilities/library/mmvlibrary" },
-  ]},
+//    { label: "Library", children: [
+// -    { label: "Central Library", path: "/facilities/library/central" },
+// -    { label: "Cyber Library", path: "/facilities/library/cyber" },
+  { label: "Library",path : "/facilities/library" },
+  ,
   { label: "Sports", children: [
-    { label: "University Sports Board", path: "/facilities/sports/universitysports" },
+    { label: "University Sports Board", path: "https://www.bhu.ac.in/site/UnitHomeTemplate/1_3281_4800_Main-Site-University-Sports-Boards" , target:"_blank" },
     { label: "MMV Sports Board", path: "/facilities/sports/mmvsports" },
     { label: "Gym", path: "/facilities/sports/gym" },
   ]},
   { label: "Well-Being", children: [
-    { label: "WBSC", path: "/facilities/wellbeing/wbsc" },
+    { label: "WBSC", path: "https://www.bhu.ac.in/site/UnitHomeTemplate/2_3247_4690_Well-Being-Services-Cell-(WBSC)-Home",target:"_blank" },
     { label: "MMV Pahal", path: "/facilities/wellbeing/mmvwell" },
   ]},
   { label: "Training & Placement", children: [
-    { label: "University T&P", path: "/facilities/trainingplacement/universitytraining" },
+    { label: "University T&P", path: "https://www.bhu.ac.in/Site/Page/1_3246_4682_Placement-and-Internship-Cell-Home",target:"_blank" },
     { label: "MMV T&P", path: "/facilities/trainingplacement/mmvtraining" },
   ]},
-  { label: "Central Discovery Centre", path: "/facilities/cdc" },
-  { label: "Medical", children: [
-    { label: "Sir Sundarlal Hospital", path: "/facilities/medical/ssh" },
-    { label: "Trauma Center", path: "/facilities/medical/tc" },
-    { label: "Student Health Center", path: "/facilities/medical/health" },
-  ]},
-  { label: "Extra Curricular", children: [
-    { label: "NCC", path: "/facilities/extracurricular/ncc" },
-    { label: "NSS", path: "/facilities/extracurricular/nss" },
-    { label: "NLSC", path: "/facilities/extracurricular/nlsc" },
-    { label: "Diploma & Certificate Courses", path: "/facilities/extracurricular/diplomacourses" },
-  ]},
+  { label: "Central Discovery Centre", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_180_1152_Computer-Centre-Home",target:"_blank" },
+  // { label: "Medical", children: [
+  //   { label: "Sir Sundarlal Hospital", path: "/facilities/medical/ssh" },
+  //   { label: "Trauma Center", path: "/facilities/medical/tc" },
+  //   { label: "Student Health Center", path: "/facilities/medical/health" },
+  // ]},
+
+   { label: "Medical",path : "/facilities/medical" },
+
+    { label: "Extra Curricular",path : "/facilities/extracurricular" },
+  
+  // { label: "Extra Curricular", children: [
+  //   { label: "NCC", path: "/facilities/extracurricular/ncc" },
+  //   { label: "NSS", path: "/facilities/extracurricular/nss" },
+  //   { label: "NLSC", path: "/facilities/extracurricular/nlsc" },
+  //   { label: "Diploma & Certificate Courses", path: "/facilities/extracurricular/diplomacourses" },
+  // ]},
   { label: "Samarth Portal", path: "/facilities/samarth" },
   { label: "Namaste BHU App", path: "/facilities/namaste" },
   { label: "Canteen", children: [
     { label: "University", path: "/facilities/canteen/universitycanteen" },
     { label: "MMV", path: "/facilities/canteen/mmvcanteen" },
   ]},
-  { label: "City Delegacy", path: "/facilities/citydelegacy" },
-  { label: "Other Amenities", children: [
-    { label: "Vishwanath Temple", path: "/facilities/other/vt" },
-    { label: "Bharat Kala Bhawan", path: "/facilities/other/bkb" },
-    { label: "Transportation", path: "/facilities/other/transportation" },
-    { label: "Banks & Post Offices", path: "/facilities/other/banks" },
-    { label: "Guest Houses", path: "/facilities/other/guesthouses" },
-    { label: "Auditorium", path: "/facilities/other/auditorium" },
-  ]},
+  { label: "City Delegacy", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_3400_6944_City-Delegacies-Home",target:"_blank" },
+ 
+   { label: "Other Amenties",path : "/facilities/other" }, 
+  // { label: "Other Amenities", children: [
+  //   { label: "Vishwanath Temple", path: "/facilities/other/vt" },
+  //   { label: "Bharat Kala Bhawan", path: "/facilities/other/bkb" },
+  //   { label: "Transportation", path: "/facilities/other/transportation" },
+  //   { label: "Banks & Post Offices", path: "/facilities/other/banks" },
+  //   { label: "Guest Houses", path: "/facilities/other/guesthouses" },
+  //   { label: "Auditorium", path: "/facilities/other/auditorium" },
+  // ]},
 ];
 
 // Mobile menu structure with valid top-level routes.
-// `highlight: true` marks an item that should get the same special
-// "AI Assistant" amber-pill treatment it has in the desktop nav — see
-// MobileMenuItem below, which reads this flag instead of the normal
-// depth-based color styles.
 const mobileNavItems = [
   { label: "Home", path: "/" },
   { label: "About MMV", path: "/about" },
@@ -119,7 +129,6 @@ const mobileNavItems = [
   { label: "Facilities", path: "/facilities", children: facilitiesItems },
   { label: "Notices", path: "/notices" },
   { label: "News", path: "/news" },
-  { label: "AI Assistant", path: "/ai-assistant", highlight: true },
   { label: "Contact", path: "/contact" },
   { label: "Feedback", path: "/feedback" },
 ];
@@ -128,16 +137,29 @@ const mobileNavItems = [
 // DESKTOP — LEVEL 3
 // ============================================
 const SubSubMenu = ({ label, path, children }) => {
+  const isExt = isExternalUrl(path);
   return (
     <div className="relative group/subsub">
       {path ? (
-        <Link
-          to={path}
-          className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
-        >
-          <span>{label}</span>
-          <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
-        </Link>
+        isExt ? (
+          <a
+            href={path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+          >
+            <span>{label}</span>
+            <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
+          </a>
+        ) : (
+          <Link
+            to={path}
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+          >
+            <span>{label}</span>
+            <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
+          </Link>
+        )
       ) : (
         <div className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
           <span>{label}</span>
@@ -146,9 +168,20 @@ const SubSubMenu = ({ label, path, children }) => {
       )}
 
       <div className="absolute top-0 left-full bg-[#0f3358] shadow-2xl min-w-52 lg:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
-        {children.map((item, idx) => (
-          item.children ? (
+        {children.map((item, idx) => {
+          const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
+          return item.children ? (
             <SubSubMenu key={item.label || idx} label={item.label} path={item.path} children={item.children} />
+          ) : isItemExt ? (
+            <a
+              key={item.path || idx}
+              href={item.path || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+            >
+              {item.label}
+            </a>
           ) : (
             <Link
               key={item.path || idx}
@@ -158,8 +191,8 @@ const SubSubMenu = ({ label, path, children }) => {
             >
               {item.label}
             </Link>
-          )
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -169,16 +202,29 @@ const SubSubMenu = ({ label, path, children }) => {
 // DESKTOP — LEVEL 2
 // ============================================
 const SubMenu = ({ label, path, children }) => {
+  const isExt = isExternalUrl(path);
   return (
     <div className="relative group/sub">
       {path ? (
-        <Link
-          to={path}
-          className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
-        >
-          <span>{label}</span>
-          <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
-        </Link>
+        isExt ? (
+          <a
+            href={path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+          >
+            <span>{label}</span>
+            <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
+          </a>
+        ) : (
+          <Link
+            to={path}
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+          >
+            <span>{label}</span>
+            <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
+          </Link>
+        )
       ) : (
         <div className="flex items-center justify-between px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
           <span>{label}</span>
@@ -187,14 +233,25 @@ const SubMenu = ({ label, path, children }) => {
       )}
 
       <div className="absolute top-0 left-full bg-[#0f3358] shadow-2xl min-w-52 lg:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/sub:block">
-        {children.map((item, idx) =>
-          item.children ? (
+        {children.map((item, idx) => {
+          const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
+          return item.children ? (
             <SubSubMenu
               key={item.label || idx}
               label={item.label}
               path={item.path}
               children={item.children}
             />
+          ) : isItemExt ? (
+            <a
+              key={item.path || idx}
+              href={item.path || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+            >
+              {item.label}
+            </a>
           ) : (
             <Link
               key={item.path || idx}
@@ -204,8 +261,8 @@ const SubMenu = ({ label, path, children }) => {
             >
               {item.label}
             </Link>
-          )
-        )}
+          );
+        })}
       </div>
     </div>
   );
@@ -215,25 +272,49 @@ const SubMenu = ({ label, path, children }) => {
 // DESKTOP — LEVEL 1
 // ============================================
 const DropdownMenu = ({ title, path, items }) => {
+  const isExt = isExternalUrl(path);
   return (
     <div className="relative group/main">
-      <Link 
-        to={path}
-        className="flex items-center gap-1.5 px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold hover:bg-[#174873] hover:text-[#d4af37] transition-all duration-200 h-full whitespace-nowrap cursor-pointer"
-      >
-        {title}
-        <span className="text-[9px] text-[#d4af37] font-bold">▼</span>
-      </Link>
+      {isExt ? (
+        <a
+          href={path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold hover:bg-[#174873] hover:text-[#d4af37] transition-all duration-200 h-full whitespace-nowrap cursor-pointer"
+        >
+          {title}
+          <span className="text-[9px] text-[#d4af37] font-bold">▼</span>
+        </a>
+      ) : (
+        <Link 
+          to={path}
+          className="flex items-center gap-1.5 px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold hover:bg-[#174873] hover:text-[#d4af37] transition-all duration-200 h-full whitespace-nowrap cursor-pointer"
+        >
+          {title}
+          <span className="text-[9px] text-[#d4af37] font-bold">▼</span>
+        </Link>
+      )}
 
       <div className="absolute top-full left-0 bg-[#0f3358] shadow-2xl min-w-52 lg:min-w-60 z-[999] border-2 border-[#d4af37] rounded-b-xl hidden group-hover/main:block">
-        {items.map((item, idx) =>
-          item.children ? (
+        {items.map((item, idx) => {
+          const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
+          return item.children ? (
             <SubMenu
               key={item.label || idx}
               label={item.label}
               path={item.path}
               children={item.children}
             />
+          ) : isItemExt ? (
+            <a
+              key={item.path || idx}
+              href={item.path || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`block px-3.5 py-1.5 text-xs lg:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+            >
+              {item.label}
+            </a>
           ) : (
             <Link
               key={item.path || idx}
@@ -243,8 +324,8 @@ const DropdownMenu = ({ title, path, items }) => {
             >
               {item.label}
             </Link>
-          )
-        )}
+          );
+        })}
       </div>
     </div>
   );
@@ -274,9 +355,6 @@ const depthStyles = [
   },
 ];
 
-// Same amber-pill treatment the desktop "AI Assistant" link gets, reused here
-// so highlighted mobile items (see `highlight: true` in mobileNavItems) match
-// the desktop styling instead of falling back to the plain depth colors.
 const highlightStyle = {
   bg: "bg-amber-300",
   text: "text-[#0f3358]",
@@ -289,20 +367,34 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
 
   const style = item.highlight ? highlightStyle : depthStyles[Math.min(depth, depthStyles.length - 1)];
   const indentPad = 16 + depth * 14;
+  const isExt = isExternalUrl(item.path) || item.target === '_blank';
 
   if (item.children) {
     return (
       <div>
         <div className="flex items-center justify-between">
           {item.path ? (
-            <Link
-              to={item.path}
-              onClick={onNavigate}
-              className={`flex-1 py-3 text-xs sm:text-sm text-left transition-colors cursor-pointer ${style.bg} ${style.text} ${style.weight} ${style.hover}`}
-              style={{ paddingLeft: `${indentPad}px` }}
-            >
-              <span className={depth === 0 ? "font-cinzel tracking-wide" : ""}>{item.label}</span>
-            </Link>
+            isExt ? (
+              <a
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onNavigate}
+                className={`flex-1 py-3 text-xs sm:text-sm text-left transition-colors cursor-pointer ${style.bg} ${style.text} ${style.weight} ${style.hover}`}
+                style={{ paddingLeft: `${indentPad}px` }}
+              >
+                <span className={depth === 0 ? "font-cinzel tracking-wide" : ""}>{item.label}</span>
+              </a>
+            ) : (
+              <Link
+                to={item.path}
+                onClick={onNavigate}
+                className={`flex-1 py-3 text-xs sm:text-sm text-left transition-colors cursor-pointer ${style.bg} ${style.text} ${style.weight} ${style.hover}`}
+                style={{ paddingLeft: `${indentPad}px` }}
+              >
+                <span className={depth === 0 ? "font-cinzel tracking-wide" : ""}>{item.label}</span>
+              </Link>
+            )
           ) : (
             <span
               onClick={() => setOpen((o) => !o)}
@@ -334,6 +426,21 @@ const MobileMenuItem = ({ item, depth = 0, onNavigate }) => {
           </div>
         )}
       </div>
+    );
+  }
+
+  if (isExt) {
+    return (
+      <a
+        href={item.path}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onNavigate}
+        className={`block py-3 pr-4 text-xs sm:text-sm transition-colors ${style.bg} ${style.text} ${style.weight} ${style.hover}`}
+        style={{ paddingLeft: `${indentPad}px` }}
+      >
+        <span className={depth === 0 ? "font-cinzel tracking-wide" : ""}>{item.label}</span>
+      </a>
     );
   }
 
@@ -410,9 +517,12 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname.toLowerCase() === '/' || location.pathname.toLowerCase() === '/home';
-  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  // Read per-tab (sessionStorage) and derived from the signed JWT, so this
+  // no longer flips just because some other tab in the browser logged in
+  // or out as admin.
+  const isAdmin = isAdminSession();
   const isAdminPage = location.pathname.toLowerCase().startsWith('/admin');
-  const token = localStorage.getItem('token');
+  const token = getToken();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notices, setNotices] = useState([]);
 
@@ -476,8 +586,7 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('isAdmin');
+    clearSession();
     navigate('/login');
   };
 
@@ -545,29 +654,19 @@ const Navbar = () => {
                 </span>
               </div>
 
-              <div>
-                {token && isAdmin ? (
-                  <div className="flex items-center gap-3">
-                    <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
-                      Admin Panel
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <a
-                    href="/login"
-                    className="text-[#0f3358] hover:text-white transition-colors duration-200 text-xs font-medium cursor-default hover:cursor-pointer select-none"
-                    title="Admin Login"
+              {token && isAdmin && (
+                <div className="flex items-center gap-3">
+                  <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
+                    Admin Panel
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-xs hover:bg-red-800 transition-colors"
                   >
-                    Admin Login
-                  </a>
-                )}
-              </div>
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Main Branding Header Bar */}
@@ -577,14 +676,6 @@ const Navbar = () => {
                   src="/bhu/logo_bhu.png"
                   alt="BHU Logo"
                   className="h-9 sm:h-14 md:h-16 rounded-2xl object-contain"
-                />
-              </div>
-
-              <div className="hidden md:block flex-shrink-0 bg-transparent">
-                <img 
-                  src="/mmv_saarthi_logo.png" 
-                  alt="mmv-saarthi-logo"
-                  className="w-24 h-9 sm:w-32 sm:h-12 md:w-40 md:h-14 object-contain rounded-2xl" 
                 />
               </div>
 
@@ -606,11 +697,20 @@ const Navbar = () => {
                 </div>
               </div>
 
+              {/* Mobile View Right Side: MMV Logo only (no text) + Menu Toggle Button */}
               <div className="md:hidden flex items-center gap-2 flex-shrink-0">
-                <img 
-                  src="/mmv_saarthi_logo.png" 
-                  alt="mmv-saarthi-logo"
-                  className="w-24 h-9 sm:w-32 object-contain rounded-2xl" 
+                <div className="min-w-0 text-right">
+                  <h1 className="text-[#353375] text-xs sm:text-md md:text-2xl font-bold font-cinzel leading-tight tracking-wide whitespace-normal">
+                    Mahila Mahavidyalaya
+                  </h1>
+                  <p className="text-[9px] sm:text-xs text-[#353375] font-semibold tracking-wider uppercase whitespace-normal">
+                    Varanasi
+                  </p>
+                </div>
+                <img
+                  src="/mmvlogo.jpeg"
+                  alt="MMV Logo"
+                  className="h-9 w-9 rounded-2xl object-contain"
                 />
                 <button
                   onClick={() => setMobileOpen(true)}
@@ -670,11 +770,11 @@ const Navbar = () => {
                     transition-all duration-200 whitespace-nowrap">
             Home
           </Link>
-          <Link to="/about"
+          <Link to="/OurVision"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold
                     hover:bg-[#174873] hover:text-[#d4af37]
                     transition-all duration-200 whitespace-nowrap">
-            About MMV
+            Our Vision
           </Link>
 
           <DropdownMenu title="Administration" path="/administration" items={administrationItems} />
@@ -694,14 +794,6 @@ const Navbar = () => {
                     transition-all duration-200 whitespace-nowrap">
             News
           </Link>
-
-         <Link 
-  to="/ai-assistant"
-  className="flex items-center gap-1.5 px-4 py-2 text-xs lg:text-sm font-bold text-[#0f3358] bg-amber-300 hover:bg-amber-400 rounded-tl-2xl rounded-br-2xl shadow-sm transition-all duration-200 whitespace-nowrap"
->
-  
-  <span>AI Assistant</span>
-</Link>
 
           <Link to="/contact"
             className="px-3 lg:px-4 py-2 sm:py-2.5 text-white text-xs lg:text-sm font-bold

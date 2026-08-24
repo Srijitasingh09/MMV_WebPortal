@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Bell, Send, Paperclip, Phone, FileText, Newspaper, X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import AdminReadme from './adminreadme';
+import { getToken as getSessionToken, clearSession } from '../utils/auth';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('notice');
@@ -23,8 +24,7 @@ const AdminDashboard = () => {
   const newsAttachmentInputRef = useRef(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("isAdmin");
+    clearSession();
     navigate("/login");
   };
 
@@ -36,7 +36,7 @@ const AdminDashboard = () => {
     map_embed_url: ''
   });
 
-  const getToken = () => localStorage.getItem('token');
+  const getToken = () => getSessionToken();
   const authHeader = () => ({ Authorization: `Bearer ${getToken()}` });
 
   const fetchAdminData = async () => {
@@ -236,12 +236,12 @@ const AdminDashboard = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
-                <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachment (PDF/Doc/Image)
+                <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachment (PDF/Image)
               </label>
               <input
                 ref={noticeAttachmentInputRef}
                 type="file"
-                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                accept=".pdf,.png,.jpg,.jpeg,.webp"
                 onChange={(e) => setNoticeAttachment(e.target.files?.[0] || null)}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm"
               />
