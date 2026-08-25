@@ -159,7 +159,7 @@ class FacilityContent(Base):
     description = Column(Text, default="")                     # the markdown-style description text
     details = Column(Text, default="")                         # JSON string: {"columns": [...], "rows": [...]}
 
-    # Legacy single photo/pdf columns — kept for backward compatibility,
+    # Legacy single photo/pdf columns -kept for backward compatibility,
     # but new uploads go through the photos/pdfs relationships below.
     pdf_name = Column(String, nullable=True)
     pdf_url = Column(String, nullable=True)
@@ -213,7 +213,7 @@ class FacilityContentPdf(Base):
 
 class ProfileCard(Base):
     """One row per profile card (warden, admin-warden, faculty member, etc).
-    Properly joined to FacilityContent via content_id — same relational
+    Properly joined to FacilityContent via content_id -same relational
     pattern as FacilityContentPhoto/FacilityContentPdf above. Replaces the
     old approach of stuffing all cards into FacilityContent.details as one
     JSON blob, so cards can now be queried/joined/cascaded like everything

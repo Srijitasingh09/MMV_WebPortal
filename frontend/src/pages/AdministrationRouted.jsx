@@ -49,13 +49,13 @@ const pages = {
 
 
   // 'examination/universityexam': {  
-  //   title: 'Controller of Examination — University', 
+  //   title: 'Controller of Examination -University', 
   //   pageType: 'description' 
     
   // },
   
   'examination/mmvexam': { 
-    title: 'Controller of Examination — MMV',       
+    title: 'Controller of Examination -MMV',       
     pageType: 'table',
     tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
   },
@@ -67,14 +67,14 @@ const AdministrationRouted = () => {
   const key = rawKey || 'overview';
   const page = pages[key];
 
-  if (!page) return <Navigate to="/" replace />;
+  if (!page) return <Navigate to="/home" replace />;
 
   return (
     <GenericContentPage
       section="administration"
       subsection={key}
       title={page.title}
-      backPath="/"
+      backPath="/home"
       backLabel="Home"
       pageType={page.pageType}
       tableColumns={page.tableColumns || []}

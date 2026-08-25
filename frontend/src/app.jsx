@@ -3,7 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Home from './pages/home';
-import OurVision from './pages/OurVision';
+import About from './pages/about';
+import AboutSarthi from './pages/AboutSarthi';
 import AcademicsRouted from './pages/AcademicsRouted';
 import AdministrationRouted from './pages/AdministrationRouted';
 import FacilitiesRouted from './pages/FacilitiesRouted';
@@ -54,13 +55,13 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 
   if (adminOnly) {
     if (!claimsAdmin) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/home" replace />;
     }
     if (checking) {
       return null; // brief pause while /user/me confirms the role server-side
     }
     if (!serverConfirmsAdmin) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/home" replace />;
     }
   }
 
@@ -82,9 +83,12 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
 
+        {/* Gate page: About Us, shown first with a link into the main site */}
+        <Route path="/" element={<AboutSarthi />} />
+
         {/* Student Routes */}
-        <Route path="/" element={<LayoutWrapper><Home /></LayoutWrapper>} />
-        <Route path="/OurVision" element={<LayoutWrapper><OurVision/></LayoutWrapper>} />
+        <Route path="/home" element={<LayoutWrapper><Home /></LayoutWrapper>} />
+        <Route path="/about" element={<LayoutWrapper><About/></LayoutWrapper>} />
         <Route path="/facilities" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
         <Route path="/facilities/:sub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
         <Route path="/facilities/:sub/:subsub" element={<LayoutWrapper><FacilitiesRouted /></LayoutWrapper>} />
@@ -132,7 +136,7 @@ function App() {
         />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Routes>
     </Router>
   );

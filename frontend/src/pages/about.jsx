@@ -182,7 +182,7 @@ const IntroSection = () => {
     <section aria-labelledby="about-heading" className="bg-white pt-8 sm:pt-12 lg:pt-16 pb-4 sm:pb-6 lg:pb-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-10 lg:gap-14 items-center">
 
-        {/* LEFT — Photo */}
+        {/* LEFT -Photo */}
         <div className="w-full md:w-1/2 lg:w-5/12">
           <img
             src="/mmvimage2.jpeg"
@@ -192,7 +192,7 @@ const IntroSection = () => {
           />
         </div>
 
-        {/* RIGHT — Text */}
+        {/* RIGHT -Text */}
         <div className="w-full md:w-1/2 lg:w-7/12">
           <h2
             id="about-heading"
@@ -214,22 +214,6 @@ const IntroSection = () => {
             The campus features extensive, secure residential infrastructure across several well-maintained hostels, laboratories for advanced research
             in the sciences, and a well-stocked specialized library carrying over 54,000 text volumes and hundreds of
             educational journals.
-          </p>
-          <p className="text-black text-md sm:text-md leading-relaxed text-justify mt-3">
-            Mahila Mahavidyalaya, its steady
-            growth and the development stands testimony to the
-            spontaneous social revolution that has been brought
-            about the vision of Mahamana. In the times that
-            reverberated with women's silence it offered a
-            precious niché where all the social constructs could
-            be unmade and re-made. The college is well equipped
-            to make its contribution to knowledge and to address
-            the present day connotations of service to the nation.
-            With its glorious tradition of commitment to
-            education and nation building. Mahila
-            Mahavidyalaya successfully continues to take on the
-            challenges posed by the fast changing national and
-            global scenario.
           </p>
         </div>
 

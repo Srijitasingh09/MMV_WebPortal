@@ -61,7 +61,7 @@ const MetaRow = ({ news }) => (
 );
 
 // ============================================
-// ATTACHMENTS — photo gallery + pdf links
+// ATTACHMENTS -photo gallery + pdf links
 // ============================================
 const PdfLink = ({ pdf }) => (
   <a
@@ -118,7 +118,7 @@ const NewsAttachments = ({ news }) => {
 };
 
 // ============================================
-// MODAL — full news view (+ admin edit)
+// MODAL -full news view (+ admin edit)
 // ============================================
 const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -473,7 +473,7 @@ const News = () => {
 
         {isAdmin && (
           <div className="mb-6 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl text-xs font-bold text-yellow-700">
-            ADMIN MODE — hover a news item to edit or delete it, or open it for full edit controls.
+            ADMIN MODE -hover a news item to edit or delete it, or open it for full edit controls.
           </div>
         )}
 

@@ -98,7 +98,7 @@ const EmergencyGroupCard = ({ groupName, entries, type, isAdmin, onDelete, onEdi
 };
 
 // ============================================
-// ADMIN FORM — Add multiple entries to a group / Edit one entry
+// ADMIN FORM -Add multiple entries to a group / Edit one entry
 // ============================================
 // `initial` (set) -> editing a single existing entry: label/value/type/group_name + Save/Cancel.
 // `initial` (unset) -> batch-add mode: lock in group_name + type once, then keep adding
@@ -534,7 +534,7 @@ const Contact = () => {
           {/* Admin panel */}
           {isAdmin && (
             <div className="mb-5 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-              <p className="text-xs font-bold text-yellow-700 mb-3">ADMIN — EMERGENCY CONTACTS</p>
+              <p className="text-xs font-bold text-yellow-700 mb-3">ADMIN -EMERGENCY CONTACTS</p>
               {showForm && !editingEntry && (
                 <EmergencyForm onSaveBatch={handleAddBatch} onCancel={() => setShowForm(false)} saving={saving} />
               )}

@@ -15,15 +15,15 @@ const PROFILE_PHOTO_TAG = '__profile_photo__';
 const CARD_PHOTO_TAG = '__profile_card_';
 // Same idea, but for PDFs uploaded into a table cell (e.g. a "syllabus PDF"
 // column). They're stored in the same backend `pdfs` table as the standalone
-// pdf-list block, so they need a tag to be told apart — otherwise they'd also
+// pdf-list block, so they need a tag to be told apart -otherwise they'd also
 // show up in the generic "Documents" viewer below the description.
 const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
   heading:        'text-[#0f3358] font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
-  subheading:     'text-lg sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel leading-snug',       // '## ' — description body, description notes, accordion notes
-  subSubheading:  'text-sm sm:text-base md:text-lg font-bold text-[#174873] font-sans-official leading-snug',    // '### ' — description body, description notes, accordion notes
+  subheading:     'text-lg sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel leading-snug',       // '## ' -description body, description notes, accordion notes
+  subSubheading:  'text-sm sm:text-base md:text-lg font-bold text-[#174873] font-sans-official leading-snug',    // '### ' -description body, description notes, accordion notes
   accordionTitle: 'text-sm sm:text-base md:text-lg font-bold text-[#0f3358]',    // accordion bar title ('+++ Title')
 };
 
@@ -2026,7 +2026,7 @@ const GenericContentPage = ({
                         placeholder="Enter description, contact info, about this section..."
                       />
 
-                      {/* Floating format icon — sits directly above the cursor. */}
+                      {/* Floating format icon -sits directly above the cursor. */}
                       <div
                         className="absolute z-20"
                         style={{ top: Math.max(caretPos.top - 34, 0), left: Math.max(caretPos.left - 12, 0) }}

@@ -18,7 +18,7 @@ const AdminDashboard = () => {
 
   // ── NEWS TAB STATE ──
   // Backend expects one text block (first line = heading) plus any number
-  // of image/PDF attachments — same shape as /admin/news in main.py.
+  // of image/PDF attachments -same shape as /admin/news in main.py.
   const [newsText, setNewsText] = useState('');
   const [newsAttachments, setNewsAttachments] = useState([]);
   const newsAttachmentInputRef = useRef(null);
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
   const handleSubmitNews = async (e) => {
     e.preventDefault();
     if (!newsText.trim()) {
-      alert('News text cannot be empty — the first line becomes the heading.');
+      alert('News text cannot be empty -the first line becomes the heading.');
       return;
     }
     setLoading(true);
@@ -278,7 +278,7 @@ const AdminDashboard = () => {
           <div>
             <h3 className="font-bold text-lg text-[#0f3358] font-serif">Publish News</h3>
             <p className="text-slate-600 text-sm mt-1">
-              Type the story as one block of text — the first line becomes the headline,
+              Type the story as one block of text -the first line becomes the headline,
               everything after it becomes the body. Attach any number of photos or PDFs below.
             </p>
           </div>
@@ -299,7 +299,7 @@ const AdminDashboard = () => {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
-              <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachments (Images / PDFs — any number)
+              <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachments (Images / PDFs -any number)
             </label>
             <input
               ref={newsAttachmentInputRef}
