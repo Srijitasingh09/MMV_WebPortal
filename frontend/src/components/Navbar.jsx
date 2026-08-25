@@ -636,7 +636,7 @@ const Navbar = () => {
               {/* Sarthi Logo — centered ONLY on large screens */}
               <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="/bhu/MMV SarthiLogo.jpeg"
+                  src="/mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
                   className="h-12 xl:h-14 rounded-2xl object-contain scale-150"
                 />
@@ -734,7 +734,7 @@ const Navbar = () => {
 
           <Link to="/notices" className={navLinkClass}>Notices</Link>
           <Link to="/News" className={navLinkClass}>News</Link>
-          <Link to="/contact" className={navLinkClass}>Contact</Link>
+          <Link to="/contact" className={navLinkClass}>Contact Us</Link>
           <Link to="/Feedback" className={navLinkClass}>Feedback</Link>
         </div>
       </nav>
