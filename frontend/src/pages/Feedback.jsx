@@ -91,7 +91,7 @@ const Feedback = () => {
           style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
         >
           Have a suggestion, found something that isn't working, or want to tell us what we're
-          doing right? Share it below — the college administration reviews every submission.
+          doing right? Share it below -the college administration reviews every submission.
         </p>
 
         {/* ── SUCCESS STATE ── */}

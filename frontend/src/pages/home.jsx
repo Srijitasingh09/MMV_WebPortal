@@ -132,16 +132,18 @@ const Hero = () => (
         </div>
 
         <p className="font-hero-cormorant italic text-sm sm:text-base text-slate-200 max-w-xl mb-8 leading-relaxed drop-shadow-xs">
-          "Vidya Dadati Vinayam" — Empowering women through holistic education, leadership, and moral values.
+          "Vidya Dadati Vinayam" - Empowering women through holistic education, leadership, and moral values.
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-4">
-          <Link
-            to="/ai-assistant"
+         <a
+            href="https://namaste.bhu.edu.in/login-namaste"
+            target="_blank"
+            rel="noopener noreferrer"
             className="font-lato text-xs sm:text-sm font-bold bg-[#7D311F] text-white px-6 py-3 rounded-full hover:bg-[#963b25] border border-[#D4AF37]/50 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
           >
-            <span>➤</span> Ask MMVerse AI Assistant
-          </Link>
+            <span>➤</span> Namaste BHU
+          </a>
           <a
             href="https://bhu.samarth.edu.in/index.php/site/login"
             target="_blank"
@@ -415,7 +417,7 @@ const About = () => (
         <p className="font-lato text-xs sm:text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
           The MMV Student Portal is the centralized information hub for all students of
           Mahila Mahavidyalaya. Whether you need your syllabus, hostel details,
-          administrative contacts, or the latest notices — it is all organized here.
+          administrative contacts, or the latest notices - it is all organized here.
         </p>
       </div>
 
@@ -436,7 +438,7 @@ const About = () => (
 // ─── FACILITIES HIGHLIGHT (Alternating Warm Ivory #FAF7F2) ───────────────────
 const facilities = [
   { label: 'Hostels',       detail: 'Five on-campus hostels with mess, security & Wi-Fi.', link: '/facilities/hostels' },
-  { label: 'Libraries',     detail: 'MMV, Central & Cyber Library — 1 lakh+ books & digital access.', link: '/facilities/library/mmvlibrary' },
+  { label: 'Libraries',     detail: 'MMV, Central & Cyber Library - 1 lakh+ books & digital access.', link: '/facilities/library/mmvlibrary' },
   { label: 'Sports',        detail: 'Courts, athletics track, gymnasium & sports ground', link: '/facilities/sports/mmvsports' },
   { label: 'Health Centre', detail: 'On-campus medical facilities, Sir Sundarlal Hospital & Trauma Centre.', link: '/facilities/medical/health' },
   { label: 'Canteen',       detail: 'Access to affordable, hygienic meals and snacks within the campus.', link: '/facilities/canteen/mmvcanteen' },
@@ -497,7 +499,7 @@ const Academics = () => (
         </h2>
         <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
         <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
-          All academic resources for every department at MMV — semester syllabi,
+          All academic resources for every department at MMV - semester syllabi,
           annual schedules, and contact details of Incharge.
         </p>
         <ul className="space-y-1.5 sm:space-y-3">
@@ -541,7 +543,7 @@ const Administration = () => (
         <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
 
         <p className="font-lato text-xs sm:text-[16px] text-slate-700 leading-relaxed mb-3 sm:mb-5 line-clamp-3 sm:line-clamp-none">
-          Official information about the administrative structure —
+          Official information about the administrative structure -
           Principal's Office, administrative departments, staff, and institutional policies.
         </p>
 

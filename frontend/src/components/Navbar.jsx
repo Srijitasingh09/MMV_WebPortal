@@ -75,7 +75,7 @@ const facilitiesItems = [
   { label: "Training & Placement", children: [
     { label: "University T&P", path: "https://www.bhu.ac.in/Site/Page/1_3246_4682_Placement-and-Internship-Cell-Home", target: "_blank" },
     { label: "MMV T&P", path: "/facilities/trainingplacement/mmvtraining" },
-  ]},
+  ]}, 
   { label: "Central Discovery Centre", path: "https://bhu.ac.in/Site/UnitHomeTemplate/1_3364_6480_Main-Site-CDC", target: "_blank" },
   { label: "Medical", path: "/facilities/medical" },
   { label: "Extra Curricular", path: "/facilities/extracurricular" },
@@ -91,8 +91,8 @@ const facilitiesItems = [
 
 // Mobile menu structure with valid top-level routes.
 const mobileNavItems = [
-  { label: "Home", path: "/" },
-  { label: "Our Vision", path: "/OurVision" },
+  { label: "Home", path: "/home" },
+  { label: "About", path: "/about" },
   { label: "Administration", path: "/administration", children: administrationItems },
   { label: "Academics", path: "/academics", children: academicsItems },
   { label: "Facilities", path: "/facilities", children: facilitiesItems },
@@ -103,7 +103,7 @@ const mobileNavItems = [
 ];
 
 // ============================================
-// DESKTOP — LEVEL 3
+// DESKTOP -LEVEL 3
 // ============================================
 const SubSubMenu = ({ label, path, children }) => {
   const isExt = isExternalUrl(path);
@@ -168,7 +168,7 @@ const SubSubMenu = ({ label, path, children }) => {
 };
 
 // ============================================
-// DESKTOP — LEVEL 2
+// DESKTOP -LEVEL 2
 // ============================================
 const SubMenu = ({ label, path, children }) => {
   const isExt = isExternalUrl(path);
@@ -233,7 +233,7 @@ const SubMenu = ({ label, path, children }) => {
 };
 
 // ============================================
-// DESKTOP — LEVEL 1
+// DESKTOP -LEVEL 1
 // ============================================
 const DropdownMenu = ({ title, path, items }) => {
   const isExt = isExternalUrl(path);
@@ -592,11 +592,15 @@ const Navbar = () => {
         <div className="overflow-hidden">
           <header className="w-full bg-[#0f3358]">
             {/* Top-most view line */}
-            <div className="bg-[#0f3358] text-xs text-slate-200 px-3 sm:px-6 py-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[#d4af37]/40">
+            <div className="bg-[#0f3358] text-xs px-3 sm:px-6 py-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[#d4af37]/40">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="text-[#d4af37] text-[10px] sm:text-xs font-bold font-cinzel leading-tight tracking-wide truncate">
-                  <span className="sm:hidden">Mahila Mahavidyalaya</span>
-                  <span className="hidden sm:inline">Banaras Hindu University | Mahila Mahavidyalaya</span>
+                <span className="text-[10px] sm:text-xs font-bold font-cinzel leading-tight tracking-wide truncate">
+                  <span className="sm:hidden text-gray-200">Mahila Mahavidyalaya</span>
+                  <span className="hidden sm:inline">
+                    <span className="text-amber-200">Banaras Hindu University</span>
+                    <span className="text-gray-400 mx-1.5">|</span>
+                    <span className="text-gray-200">Mahila Mahavidyalaya</span>
+                  </span>
                 </span>
               </div>
 
@@ -633,10 +637,10 @@ const Navbar = () => {
                 </a>
               </div>
 
-              {/* Sarthi Logo — centered ONLY on large screens */}
+              {/* Sarthi Logo -centered ONLY on large screens */}
               <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="/mmv_saarthi_logo.png"
+                  src="mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
                   className="h-12 xl:h-14 rounded-2xl object-contain scale-150"
                 />
@@ -670,7 +674,7 @@ const Navbar = () => {
               {/* Mobile / Tablet / Small Screen (< 1024px) Right Side: ONLY MMV Sarthi Logo + Hamburger Button */}
               <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
                 <img
-                  src="/bhu/MMV SarthiLogo.jpeg"
+                  src="mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
                   className="h-8 sm:h-11 w-auto rounded-xl object-contain"
                 />
@@ -710,7 +714,7 @@ const Navbar = () => {
                     ))
                   ) : (
                     <div className="inline-flex items-center gap-4 px-6 text-slate-200 font-medium">
-                      <span className="text-[#d4af37] font-semibold">Welcome to Mahila Mahavidyalaya (MMV) Portal — Banaras Hindu University</span>
+                      <span className="text-[#d4af37] font-semibold">Welcome to Mahila Mahavidyalaya (MMV) Portal -Banaras Hindu University</span>
                       <span className="text-[#d4af37]">•</span>
                       <span>Visit the Notices section for real-time examination schedules and official notifications.</span>
                     </div>
@@ -725,8 +729,8 @@ const Navbar = () => {
       {/* ── Navigation Bar (desktop only, lg and up) ── */}
       <nav className="bg-[#0f3358] px-2 xl:px-4 border-b-2 border-[#d4af37] shadow-lg">
         <div className="hidden lg:flex relative flex-wrap justify-end items-center">
-          <Link to="/" className={navLinkClass}>Home</Link>
-          <Link to="/OurVision" className={navLinkClass}>Our Vision</Link>
+          <Link to="/home" className={navLinkClass}>Home</Link>
+          <Link to="/about" className={navLinkClass}>About</Link>
 
           <DropdownMenu title="Administration" path="/administration" items={administrationItems} />
           <DropdownMenu title="Academics" path="/academics" items={academicsItems} />

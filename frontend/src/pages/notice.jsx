@@ -93,7 +93,7 @@ const AttachmentLink = ({ notice }) => {
 };
 
 // ============================================
-// MODAL — full notice view (+ admin edit)
+// MODAL -full notice view (+ admin edit)
 // ============================================
 const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -149,7 +149,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
       aria-modal="true"
       aria-labelledby="notice-modal-title"
     >
-      {/* Backdrop — semi-transparent + blurred, click to close */}
+      {/* Backdrop -semi-transparent + blurred, click to close */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]"
         onClick={onClose}
@@ -386,7 +386,7 @@ const Notices = () => {
   const isAdmin = isAdminSession();
   const token   = getToken();
 
-  // Reset visible notices count whenever category or search filter changes
+
   useEffect(() => {
     setVisibleCount(20);
   }, [activeCategory, searchTerm]);
@@ -409,7 +409,6 @@ const Notices = () => {
     fetchNotices();
   }, []);
 
-  // Direct notice navigation via URL parameter ?id=... (from ticker click)
   useEffect(() => {
     if (notices.length > 0) {
       const params = new URLSearchParams(location.search);
@@ -487,7 +486,7 @@ const Notices = () => {
 
         {isAdmin && (
           <div className="mb-6 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl text-xs font-bold text-yellow-700">
-            ADMIN MODE — hover a notice to edit or delete it, or open it for full edit controls.
+            ADMIN MODE -hover a notice to edit or delete it, or open it for full edit controls.
           </div>
         )}
 

@@ -248,14 +248,14 @@ const FacilitiesRouted = () => {
   const key = rawKey || 'overview';
   const page = pages[key];
 
-  if (!page) return <Navigate to="/" replace />;
+  if (!page) return <Navigate to="/home" replace />;
 
   return (
     <GenericContentPage
       section="facilities"
       subsection={key}
       title={page.title}
-      backPath="/"
+      backPath="/home"
       backLabel="Home"
       pageType={page.pageType}
       tableColumns={page.tableColumns || []}

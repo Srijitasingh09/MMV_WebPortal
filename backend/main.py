@@ -48,8 +48,7 @@ os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 
 def split_news_title_and_body(raw_text: str):
-    """The admin types one block of text for a news item — the first line
-    becomes the heading (title), everything after it becomes the body."""
+   
     normalized = (raw_text or "").replace("\r\n", "\n").strip("\n")
     if not normalized.strip():
         return "", ""
@@ -233,11 +232,7 @@ def get_current_user_info(user: models.User = Depends(get_current_user)):
 
 @app.get("/contact-info")
 def get_contact_info(db: Session = Depends(get_db)):
-    """
-    Public route — returns the single contact info row.
-    If none exists yet, returns an empty-ish object so the
-    frontend can render its 'not added yet' state gracefully.
-    """
+    
     info = db.query(models.ContactInfo).first()
     if not info:
         return {
@@ -257,11 +252,7 @@ def update_contact_info(
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """
-    Admin-only route — creates the row if it doesn't exist yet,
-    otherwise updates the existing one (upsert pattern, since
-    there should only ever be ONE contact info row).
-    """
+   
     ensure_admin(user)
  
     info = db.query(models.ContactInfo).first()
@@ -359,10 +350,7 @@ def update_notice(
     return notice
 
 # ===================== NEWS =====================
-# Same idea as Notices, except the admin only types one block of text —
-# the first line becomes the heading — and any number of images/PDFs can
-# be attached. Clicking a news item opens the same style of detail view
-# used for notices.
+
 
 @app.get("/news")
 def get_news(db: Session = Depends(get_db)):
@@ -383,7 +371,7 @@ async def add_news(
     if not title:
         raise HTTPException(
             status_code=400,
-            detail="News text cannot be empty — the first line becomes the heading."
+            detail="News text cannot be empty - the first line becomes the heading."
         )
 
     new_news = models.News(title=title, content=body)
@@ -445,7 +433,7 @@ def update_news(
         if not title:
             raise HTTPException(
                 status_code=400,
-                detail="News text cannot be empty — the first line becomes the heading."
+                detail="News text cannot be empty -the first line becomes the heading."
             )
         news.title = title
         news.content = body
@@ -531,7 +519,7 @@ def delete_news_pdf(
 @app.get("/emergency-contacts")
 def get_emergency_contacts(db: Session = Depends(get_db)):
     """
-    Public route — returns all emergency contact entries ordered by display_order.
+    Public route -returns all emergency contact entries ordered by display_order.
     Frontend groups them by group_name to build the three cards.
     """
     contacts = (
@@ -548,7 +536,7 @@ def add_emergency_contact(
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Admin-only — add a new emergency contact entry."""
+    """Admin-only -add a new emergency contact entry."""
     ensure_admin(user)
  
     # Auto-set display_order to max+1 so new entries go to the bottom
@@ -574,7 +562,7 @@ def update_emergency_contact(
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Admin-only — update an existing emergency contact entry."""
+    """Admin-only -update an existing emergency contact entry."""
     ensure_admin(user)
  
     entry = db.query(models.EmergencyContact).filter(
@@ -598,7 +586,7 @@ def delete_emergency_contact(
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Admin-only — delete an emergency contact entry."""
+    """Admin-only -delete an emergency contact entry."""
     ensure_admin(user)
  
     entry = db.query(models.EmergencyContact).filter(
@@ -1102,7 +1090,7 @@ def delete_facility_content(
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Deletes a FacilityContent row entirely — its pdfs/photos cascade via
+    """Deletes a FacilityContent row entirely -its pdfs/photos cascade via
     ORM relationship. Use this for orphaned/duplicate entries that aren't
     routed to by any frontend page (e.g. a leftover 'academics/section-incharge'
     row when the real pages live at 'section-incharge/science', '/socialscience',
@@ -1190,7 +1178,7 @@ async def upload_facility_content_photo(
     db: Session = Depends(get_db)
 ):
     """Called by handleImageUpload in GenericContentPage.jsx. Each uploaded
-    photo becomes its own row in facility_content_photos — this is what
+    photo becomes its own row in facility_content_photos -this is what
     powers both the multi-photo gallery and the SlideshowBlock."""
     ensure_admin(user)
 
@@ -1247,7 +1235,7 @@ def delete_facility_content_photo(
 
 
 # ============================================================
-# PROFILE CARDS — properly joined to FacilityContent via content_id
+# PROFILE CARDS -properly joined to FacilityContent via content_id
 # (see models.ProfileCard). Each card is its own row, same relational
 # pattern as facility_content_photos/facility_content_pdfs above.
 # ============================================================
@@ -1394,14 +1382,14 @@ def delete_profile_card(
 
 
 # ============================================================
-# FEEDBACK — standalone table, deliberately not joined to anything
+# FEEDBACK - standalone table, deliberately not joined to anything
 # (see models.Feedback docstring for why). Public submit endpoint +
 # admin list/delete for triage.
 # ============================================================
 
 @app.post("/feedback")
 def submit_feedback(payload: dict, db: Session = Depends(get_db)):
-    """Called by Feedback.jsx. Public — no auth required, anyone visiting
+    """Called by Feedback.jsx. Public -no auth required, anyone visiting
     the site can submit feedback."""
     name = (payload.get("name") or "").strip()
     email = (payload.get("email") or "").strip()

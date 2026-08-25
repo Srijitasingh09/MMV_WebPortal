@@ -14,7 +14,7 @@ const Footer = () => {
         const data = await res.json();
         setContactInfo(data);
       } catch {
-        // Silently fail — footer contact is non-critical
+        // Silently fail -footer contact is non-critical
       }
     };
     fetchContact();
@@ -25,7 +25,7 @@ const Footer = () => {
       {/* Grid: 2 columns on mobile, 3 columns on tablet/desktop */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
 
-        {/* Col 1 — College blurb (Spans full width on mobile) */}
+        {/* Col 1 -College blurb (Spans full width on mobile) */}
         <div className="col-span-2 md:col-span-1">
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">
             Mahila Maha Vidyalaya
@@ -36,7 +36,7 @@ const Footer = () => {
           </p>
         </div>
 
-        {/* Col 2 — Quick Links (Side-by-side with Contact Us on mobile) */}
+        {/* Col 2 -Quick Links (Side-by-side with Contact Us on mobile) */}
         <div className="col-span-1">
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">Quick Links</h3>
           <ul className="space-y-1.5 sm:space-y-2 font-sans-official">
@@ -47,7 +47,7 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* Col 3 — Contact Us (Side-by-side with Quick Links on mobile) */}
+        {/* Col 3 -Contact Us (Side-by-side with Quick Links on mobile) */}
         <div className="col-span-1">
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">Contact Us</h3>
           {contactInfo ? (
@@ -86,9 +86,9 @@ const Footer = () => {
             </ul>
           ) : (
             <ul className="space-y-2 text-slate-400 text-xs sm:text-sm opacity-50 font-sans-official">
-              <li>📍 —</li>
-              <li>📞 —</li>
-              <li>✉️ —</li>
+              <li>📍 -</li>
+              <li>📞 -</li>
+              <li>✉️ -</li>
             </ul>
           )}
         </div>
