@@ -10,7 +10,7 @@ const CARD_GAP = 28;      // reference gap (1.75rem)
 const blankCard = () => ({
   name: '',
   designation: '',   // e.g. "Warden", "Admin Warden"
-  badge: '',         // e.g. "Sunrise Boys Hostel" — small pill under designation
+  badge: '',         // e.g. "Sunrise Boys Hostel" -small pill under designation
   university: '',    // e.g. "Greenfield University"
   phone: '',
   email: '',
@@ -170,7 +170,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   // Cards now come straight from the `profile_cards` table via a proper
-  // content_id foreign key (see models.ProfileCard) — no more parsing them
+  // content_id foreign key (see models.ProfileCard) -no more parsing them
   // out of a `details` JSON blob, and no more filename-tag hack for photos.
   const cards = content?.profile_cards || [];
 

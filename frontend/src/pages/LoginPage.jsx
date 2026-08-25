@@ -36,7 +36,7 @@ const LoginPage = () => {
           headers: { Authorization: `Bearer ${response.data.access_token}` }
         });
         const hasPrefs = (profile.data?.interests || []).length > 0 || (profile.data?.goals || []).length > 0 || (profile.data?.selected_problems || []).length > 0;
-        navigate(hasPrefs ? '/' : '/recommendations');
+        navigate(hasPrefs ? '/home' : '/recommendations');
       }
     } catch (err) {
       setError('Invalid email or password. Please try again.');

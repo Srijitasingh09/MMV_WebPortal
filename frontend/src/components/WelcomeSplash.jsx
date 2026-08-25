@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// ─── SPLASH CONFIG — tweak these freely ───────────────────────────────────
+// ─── SPLASH CONFIG -tweak these freely ───────────────────────────────────
 // How long the welcome screen stays up before it starts fading (ms).
 // You asked for 1–20s, this is set to ~8s. Change the number below.
 const SPLASH_DURATION_MS = 5000;

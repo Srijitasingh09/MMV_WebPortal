@@ -15,33 +15,33 @@ const pages = {
 
   // ── Syllabus ────────────────────────────────────────────────────────────────
    'syllabus/ug/science': {
-    title: 'Syllabus — UG Science',
+    title: 'Syllabus -UG Science',
     pageType: 'pdf-list-table',
     tableColumns: ['Subject', 'Syllabus']
   },
   'syllabus/ug/socialscience': {
-    title: 'Syllabus — UG Social Science',
+    title: 'Syllabus -UG Social Science',
     pageType: 'pdf-list-table'
   },
   'syllabus/ug/arts': {
-    title: 'Syllabus — UG Arts',
+    title: 'Syllabus -UG Arts',
     pageType: 'pdf-list-table'
   },
 
-  // ── Syllabus — PG (three separate pages, not one combined key) ────────────
+  // ── Syllabus -PG (three separate pages, not one combined key) ────────────
   // Navbar links to /academics/syllabus/pg/bioinformatics etc. individually.
   // A single 'syllabus/pg' key would never match those URLs.
   
   'syllabus/pg/bioinformatics': {
-    title: 'Syllabus — PG Bioinformatics',
+    title: 'Syllabus -PG Bioinformatics',
     pageType: 'pdf-list'
   },
   'syllabus/pg/homescience': {
-    title: 'Syllabus — PG Home Science',
+    title: 'Syllabus -PG Home Science',
     pageType: 'pdf-list'
   },
   'syllabus/pg/education': {
-    title: 'Syllabus — PG Education',
+    title: 'Syllabus -PG Education',
     pageType: 'pdf-list'
   },
 
@@ -61,17 +61,17 @@ const pages = {
   // ── Section In-Charge ───────────────────────────────────────────────────
  
   'section-incharge/science': {
-    title: 'Incharge — Science',
+    title: 'Incharge -Science',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/socialscience': {
-    title: 'Incharge — Social Science',
+    title: 'Incharge -Social Science',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/arts': {
-    title: 'Incharge — Arts',
+    title: 'Incharge -Arts',
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
@@ -96,14 +96,14 @@ const AcademicsRouted = () => {
   const key = rawKey || 'overview';
   const page = pages[key];
 
-  if (!page) return <Navigate to="/" replace />;
+  if (!page) return <Navigate to="/home" replace />;
 
   return (
     <GenericContentPage
       section="academics"
       subsection={key}
       title={page.title}
-      backPath="/"
+      backPath="/home"
       backLabel="Home"
       pageType={page.pageType}
       tableColumns={page.tableColumns || []}
