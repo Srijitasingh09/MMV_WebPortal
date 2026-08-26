@@ -106,7 +106,7 @@ const Hero = () => (
         <div className="mb-4 sm:mb-6">
           <div className="w-24 h-24 sm:w-36 sm:h-36 md:w-44 md:h-44 lg:w-48 lg:h-48 rounded-full p-2 bg-white ring-4 ring-[#D4AF37] shadow-2xl flex items-center justify-center mx-auto overflow-hidden">
             <img
-              src="/mmvlogo.jpeg"
+              src="/bhu/mmvlogo.jpeg"
               alt="MMV BHU Crest"
               className="w-full h-full object-contain rounded-full bg-white"
             />

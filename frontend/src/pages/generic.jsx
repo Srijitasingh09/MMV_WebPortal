@@ -225,6 +225,53 @@ const renderInlineFormatting = (text) => {
   });
 };
 
+// ─── Signature "Sarthi pointer" bullet ──────────────────────────────────────
+// The MMV Sarthi pointer badge (public/icons/sarthi-pointer.jpeg), used in
+// place of the plain dot marker whenever a bullet line is a link, so
+// clickable list items read as "go here" at a glance.
+const SARTHI_POINTER_SRC = '/bhu/SarthiPointer.jpeg';
+
+const SarthiPointerIcon = ({ className = '' }) => (
+  <img
+    src={SARTHI_POINTER_SRC}
+    alt=""
+    aria-hidden="true"
+    className={`shrink-0 rounded-full object-cover ${className}`}
+  />
+);
+
+// A bullet line counts as "link-only" when, once trimmed, it's nothing but
+// a single [label](url) / bare-URL link — not a sentence that merely
+// contains one.
+const isLinkOnlyBullet = (text) => {
+  if (typeof text !== 'string') return false;
+  const segs = splitLinks(text.trim());
+  return segs.length === 1 && segs[0].type === 'link';
+};
+
+// Drop-in replacement for a plain `list-disc` bullet <ul>: link-only lines
+// get the SarthiPointerIcon marker, every other line keeps a plain
+// terracotta dot. `className` carries the same text-size/color classes the
+// call site used to put on the <ul> itself (minus list-style/marker classes,
+// which this component now handles per-item).
+const SarthiBulletList = ({ items, className = '', spacing = 'space-y-1.5', keyPrefix = 'ul' }) => (
+  <ul className={`list-none ${spacing} ${className}`}>
+    {items.map((item, i) => {
+      const isLink = isLinkOnlyBullet(item);
+      return (
+        <li key={`${keyPrefix}-${i}`} className="flex items-center gap-2.5">
+          {isLink ? (
+            <SarthiPointerIcon className="w-10 h-10 sm:w-12 sm:h-12" />
+          ) : (
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
+          )}
+          <span>{renderInlineFormatting(item)}</span>
+        </li>
+      );
+    })}
+  </ul>
+);
+
 const GenericContentPage = ({
   section,
   subsection,
@@ -886,11 +933,12 @@ const GenericContentPage = ({
     const flushBullets = () => {
       if (bulletBuffer.length > 0) {
         elements.push(
-          <ul key={`ul-${elements.length}`} className={`list-disc list-inside space-y-1.5 text-slate-900 marker:text-[#7d311f] marker:font-bold ${BODY_STYLES[currentBodyLevel]}`}>
-            {bulletBuffer.map((b, i) => (
-              <li key={i}>{renderInlineFormatting(b)}</li>
-            ))}
-          </ul>
+          <SarthiBulletList
+            key={`ul-${elements.length}`}
+            keyPrefix={`ul-${elements.length}`}
+            items={bulletBuffer}
+            className={`text-slate-900 ${BODY_STYLES[currentBodyLevel]}`}
+          />
         );
         bulletBuffer = [];
       }
@@ -904,11 +952,13 @@ const GenericContentPage = ({
         const flushNoteBullets = () => {
           if (noteBulletBuffer.length > 0) {
             noteElements.push(
-              <ul key={`note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
-                {noteBulletBuffer.map((b, i) => (
-                  <li key={i}>{renderInlineFormatting(b)}</li>
-                ))}
-              </ul>
+              <SarthiBulletList
+                key={`note-ul-${noteElements.length}`}
+                keyPrefix={`note-ul-${noteElements.length}`}
+                items={noteBulletBuffer}
+                spacing="space-y-1"
+                className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800"
+              />
             );
             noteBulletBuffer = [];
           }
@@ -1032,11 +1082,13 @@ const GenericContentPage = ({
                       const flushCardNoteBullets = () => {
                         if (cardNoteBulletBuffer.length > 0) {
                           noteElements.push(
-                            <ul key={`card-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
-                              {cardNoteBulletBuffer.map((b, i) => (
-                                <li key={i}>{renderInlineFormatting(b)}</li>
-                              ))}
-                            </ul>
+                            <SarthiBulletList
+                              key={`card-note-ul-${noteElements.length}`}
+                              keyPrefix={`card-note-ul-${noteElements.length}`}
+                              items={cardNoteBulletBuffer}
+                              spacing="space-y-1"
+                              className="text-xs sm:text-sm leading-relaxed text-slate-800"
+                            />
                           );
                           cardNoteBulletBuffer = [];
                         }
@@ -1182,11 +1234,12 @@ const GenericContentPage = ({
       const flushLocalBullets = () => {
         if (localBulletBuffer.length > 0) {
           contentElements.push(
-            <ul key={`acc-ul-${contentElements.length}`} className="list-disc list-inside space-y-1.5 text-slate-900 text-xs sm:text-sm md:text-base marker:text-[#7d311f] marker:font-bold">
-              {localBulletBuffer.map((b, bi) => (
-                <li key={bi}>{renderInlineFormatting(b)}</li>
-              ))}
-            </ul>
+            <SarthiBulletList
+              key={`acc-ul-${contentElements.length}`}
+              keyPrefix={`acc-ul-${contentElements.length}`}
+              items={localBulletBuffer}
+              className="text-slate-900 text-xs sm:text-sm md:text-base"
+            />
           );
           localBulletBuffer = [];
         }
@@ -1200,11 +1253,13 @@ const GenericContentPage = ({
           const flushLocalNoteBullets = () => {
             if (localNoteBulletBuffer.length > 0) {
               noteElements.push(
-                <ul key={`acc-note-ul-${noteElements.length}`} className="list-disc list-inside space-y-1 text-xs sm:text-sm md:text-base leading-relaxed text-slate-800 marker:text-[#7d311f] marker:font-bold">
-                  {localNoteBulletBuffer.map((b, i) => (
-                    <li key={i}>{renderInlineFormatting(b)}</li>
-                  ))}
-                </ul>
+                <SarthiBulletList
+                  key={`acc-note-ul-${noteElements.length}`}
+                  keyPrefix={`acc-note-ul-${noteElements.length}`}
+                  items={localNoteBulletBuffer}
+                  spacing="space-y-1"
+                  className="text-xs sm:text-sm md:text-base leading-relaxed text-slate-800"
+                />
               );
               localNoteBulletBuffer = [];
             }
