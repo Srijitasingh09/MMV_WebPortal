@@ -68,13 +68,13 @@ const AboutSarthi = () => {
             The Purpose Behind "Sarthi"
           </h2>
           <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            The name <strong className="font-semibold text-[#0f3358]">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students—from helping freshers understand their new college to assisting existing students with everyday information.
+            The name <strong className="font-semibold text-[#0f3358]">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students. From helping freshers understand their new college to assisting existing students with everyday information.
           </p>
         </div>
 
         {/* Closing Promise Quote */}
         <p className="text-[#0f3358] text-sm sm:text-base md:text-lg font-serif font-semibold italic py-2 text-center border-y border-amber-900/15">
-          More than just a website, MMV Sarthi is a guide, a companion, and a reliable source of information—so that no student has to navigate her MMV journey alone.
+          More than just a website, MMV Sarthi is a guide, a companion, and a reliable source of information so that no student has to navigate her MMV journey alone.
         </p>
 
         {/* Dedicated Team Blurb */}
@@ -103,7 +103,7 @@ const AboutSarthi = () => {
             />
           </div>
           <figcaption className="mt-2 text-xs sm:text-sm md:text-base text-gray-600 text-center italic font-medium">
-           *From Left to Right:* Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Rakhi Garg (Professor); Roshni Khushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
+           <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Rakhi Garg (Professor); Roshni Khushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
           </figcaption>
         </figure>
 
