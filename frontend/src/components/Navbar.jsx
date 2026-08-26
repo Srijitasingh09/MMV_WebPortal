@@ -640,9 +640,9 @@ const Navbar = () => {
               {/* Sarthi Logo -centered ONLY on large screens */}
               <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="mmv_saarthi_logo.png"
+                  src="/bhu/mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
-                  className="h-12 xl:h-14 rounded-2xl object-contain scale-150"
+                  className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
                 />
               </div>
 
@@ -664,7 +664,7 @@ const Navbar = () => {
                   className="flex-shrink-0"
                 >
                   <img
-                    src="/mmvlogo.jpeg"
+                    src="/bhu/mmvlogo.jpeg"
                     alt="MMV Logo"
                     className="h-12 w-12 xl:h-16 xl:w-16 rounded-2xl object-contain"
                   />
@@ -674,7 +674,7 @@ const Navbar = () => {
               {/* Mobile / Tablet / Small Screen (< 1024px) Right Side: ONLY MMV Sarthi Logo + Hamburger Button */}
               <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
                 <img
-                  src="mmv_saarthi_logo.png"
+                  src="/bhu/mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
                   className="h-8 sm:h-11 w-auto rounded-xl object-contain"
                 />
