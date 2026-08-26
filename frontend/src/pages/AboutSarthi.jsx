@@ -18,16 +18,15 @@ const AboutSarthi = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-center sm:text-left text-xs sm:text-sm">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
             <span className="font-semibold tracking-wide text-amber-200 uppercase text-[11px] sm:text-xs md:text-sm">
-              Mahila Mahavidyalaya
+              Banaras Hindu University 
             </span>
-            <span className="text-amber-400/60 hidden xs:inline">•</span>
-            <span className="text-gray-200 font-medium text-[11px] sm:text-xs md:text-sm">
-              Banaras Hindu University (BHU)
+            <span className="text-gray-200 font-semibold uppercase text-[11px] sm:text-xs md:text-sm">
+             | Mahila Mahavidyalaya 
             </span>
           </div>
-          <div className="text-gray-300 text-[10px] sm:text-xs tracking-wider uppercase font-medium">
+          {/* <div className="text-gray-300 text-[10px] sm:text-xs tracking-wider uppercase font-medium">
             Official Student Guidance & Information Portal
-          </div>
+          </div> */}
         </div>
       </header>
 
@@ -35,9 +34,9 @@ const AboutSarthi = () => {
       <Link
         to="/home"
         aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
-        className="fixed top-16 sm:top-20 md:top-24 right-3 sm:right-6 md:right-10 lg:right-14 z-40 group flex flex-col items-center justify-center bg-[#0f3358]/80 hover:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-2xl sm:rounded-3xl border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
+        className="fixed top-12 sm:top-20 md:top-16 right-3 sm:right-6 md:right-10 lg:right-12 z-40 group flex flex-col items-center justify-center bg-[#0f3358]/80 hover:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-2xl sm:rounded-3xl border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
       >
-        <span className="text-amber-200 font-bold text-sm sm:text-base md:text-lg tracking-wide drop-shadow-sm">
+        <span className="text-amber-200 font-bold text-sm sm:text-base tracking-wide drop-shadow-sm">
           जिज्ञासा
         </span>
         <span className="text-xs sm:text-sm font-semibold text-gray-100 flex items-center gap-1 mt-0.5">
@@ -68,7 +67,7 @@ const AboutSarthi = () => {
             The Purpose Behind "Sarthi"
           </h2>
           <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            The name <strong className="font-semibold text-[#0f3358]">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students. From helping freshers understand their new college to assisting existing students with everyday information.
+            The name <strong className="font-semibold text-[#0f3358]">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students from helping freshers understand their new college to assisting existing students with everyday information.
           </p>
         </div>
 
@@ -103,14 +102,14 @@ const AboutSarthi = () => {
             />
           </div>
           <figcaption className="mt-2 text-xs sm:text-sm md:text-base text-gray-600 text-center italic font-medium">
-           <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Rakhi Garg (Professor); Roshni Khushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
+           <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Prof. Rakhi Garg (Professor); Roshni Kumari Kushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
           </figcaption>
         </figure>
 
         {/* Official Footer Strip */}
         <footer className="pt-4 sm:pt-6 border-t border-gray-200 text-center text-[11px] sm:text-xs md:text-sm text-gray-500 space-y-1">
-          <p>© {new Date().getFullYear()} Mahila Mahavidyalaya, Banaras Hindu University. All rights reserved.</p>
-          <p>MMV Sarthi — Official Student Advisory & Information Portal</p>
+          <p>&copy; {new Date().getFullYear()} Mahila Mahavidyalaya, Banaras Hindu University. All rights reserved.</p>
+          <p>MMV Sarthi - Official Student Advisory & Information Portal</p>
         </footer>
 
       </div>

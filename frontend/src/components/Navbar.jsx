@@ -594,7 +594,7 @@ const Navbar = () => {
             {/* Top-most view line */}
             <div className="bg-[#0f3358] text-xs px-3 sm:px-6 py-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[#d4af37]/40">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="text-[10px] sm:text-xs font-bold font-cinzel leading-tight tracking-wide truncate">
+                <span className="text-[10px] sm:text-xs font-bold font-cinzel uppercase leading-tight tracking-wide truncate">
                   <span className="sm:hidden text-gray-200">Mahila Mahavidyalaya</span>
                   <span className="hidden sm:inline">
                     <span className="text-amber-200">Banaras Hindu University</span>
@@ -642,7 +642,9 @@ const Navbar = () => {
                 <img
                   src="/bhu/mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
-                  className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
+                  // className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
+                  className="h-8 xl:h-10 rounded-2xl object-contain scale-150"
+
                 />
               </div>
 
@@ -730,7 +732,7 @@ const Navbar = () => {
       <nav className="bg-[#0f3358] px-2 xl:px-4 border-b-2 border-[#d4af37] shadow-lg">
         <div className="hidden lg:flex relative flex-wrap justify-end items-center">
           <Link to="/home" className={navLinkClass}>Home</Link>
-          <Link to="/about" className={navLinkClass}>About</Link>
+          <Link to="/about" className={navLinkClass}>About MMV</Link>
 
           <DropdownMenu title="Administration" path="/administration" items={administrationItems} />
           <DropdownMenu title="Academics" path="/academics" items={academicsItems} />
