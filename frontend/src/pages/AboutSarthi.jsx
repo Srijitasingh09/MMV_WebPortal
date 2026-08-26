@@ -93,9 +93,9 @@ const AboutSarthi = () => {
             style={{ aspectRatio: '4 / 3' }}
           >
             <img
-              src="/bhu/teamphoto2.jpeg"
+              src="/bhu/teamphoto.jpeg"
               alt="MMV Sarthi Team and Mahila Mahavidyalaya Campus"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-full"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
