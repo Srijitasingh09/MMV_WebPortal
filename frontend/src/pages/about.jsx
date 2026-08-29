@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const slides = [
   {
-    image: '/officegate.png',
+    image: '/bhu/officegate.png',
     fit: 'cover',
     position: 'center center',
     alt: 'mmv campus',
@@ -10,7 +10,7 @@ const slides = [
     subtitle: 'A Tradition of Excellence'
   },
   {
-    image: '/innerbuild.png',
+    image: '/bhu/innerbuild.png',
     fit: 'cover',
     position: 'center center',
     alt: 'inner building',
@@ -18,7 +18,7 @@ const slides = [
     subtitle: 'Est. under Banaras Hindu University'
   },
   {
-    image: '/inner2.png',
+    image: '/bhu/inner2.png',
     fit: 'cover',
     position: 'center center',
     alt: 'inner building view from library',
@@ -26,7 +26,7 @@ const slides = [
     subtitle: 'Inspiring Future Leaders'
   },
   {
-    image: '/officegateLeft.png',
+    image: '/bhu/officegateLeft.png',
     fit: 'cover',
     position: 'center 90%',
     alt: 'inner building view from library',
@@ -185,7 +185,7 @@ const IntroSection = () => {
         {/* LEFT -Photo */}
         <div className="w-full md:w-1/2 lg:w-5/12">
           <img
-            src="/mmvimage2.jpeg"
+            src="/bhu/mmvimage2.jpeg"
             alt="MMV gate"
             className="w-full max-w-[420px] sm:max-w-[480px] md:max-w-none mx-auto md:mx-0 aspect-square object-cover"
             style={{ objectPosition: 'top center' }}
@@ -280,7 +280,7 @@ const History = () => {
 
         <div className="w-full md:w-1/2 lg:w-5/12">
           <img
-            src="/malviyaold2.jpeg"
+            src="/bhu/malviyaold2.jpeg"
             alt="Malviya ji"
             className="w-full max-w-[420px] sm:max-w-[480px] md:max-w-none mx-auto md:ml-auto md:mr-0 aspect-square object-cover"
             style={{ objectPosition: 'center 15%' }}
