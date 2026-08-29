@@ -14,7 +14,7 @@ const AboutSarthi = () => {
       />
 
       {/* ── Official Institutional Top Bar Header ── */}
-      <header className="relative z-20 bg-[#0f3358] text-white py-2.5 sm:py-3 px-3 sm:px-6 lg:px-10 border-b-2 border-[#D4AF37]/80 shadow-md">
+      <header className="relative z-20 bg-primary text-white py-2.5 sm:py-3 px-3 sm:px-6 lg:px-10 border-b-2 border-[#D4AF37]/80 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-center sm:text-left text-xs sm:text-sm">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
             <span className="font-semibold tracking-wide text-amber-200 uppercase text-[11px] sm:text-xs md:text-sm">
@@ -32,58 +32,73 @@ const AboutSarthi = () => {
 
       {/* ── Floating / Scrolling Right Glassy Button ── */}
       <Link
-        to="/home"
-        aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
-        className="fixed top-12 sm:top-20 md:top-16 right-3 sm:right-6 md:right-10 lg:right-12 z-40 group flex flex-col items-center justify-center bg-[#0f3358]/80 hover:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-2xl sm:rounded-3xl border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
-      >
-        <span className="text-amber-200 font-bold text-sm sm:text-base tracking-wide drop-shadow-sm">
-          जिज्ञासा
-        </span>
-        <span className="text-xs sm:text-sm font-semibold text-gray-100 flex items-center gap-1 mt-0.5">
-          Click Here!!
-          <span className="group-hover:translate-x-1 transition-transform duration-200 text-amber-300">→</span>
-        </span>
-      </Link>
+  to="/home"
+  aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
+  className="fixed top-12 sm:top-20 md:top-16 right-3 sm:right-6 md:right-10 lg:right-12 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
+>
+  {/* ── Fixed Size Circle Wrapper (overflow-hidden clips zoomed image) ── */}
+  <div className="w-12 h-12 sm:w-16 sm:h-16 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
+    <img
+      src="/bhu/sarthi1.jpeg"
+      alt="Jigyasa Icon"
+     
+      className="w-full h-full object-cover scale-125 group-hover:scale-135 transition-transform duration-200"
+      onError={(e) => {
+        e.currentTarget.style.display = 'none';
+      }}
+    />
+  </div>
+
+  <span className="text-amber-200 font-bold text-sm sm:text-base tracking-wide drop-shadow-sm">
+    जिज्ञासा
+  </span>
+  <span className="text-xs sm:text-sm font-semibold text-gray-100 flex items-center gap-0.5">
+    Click Here!!
+    <span className="group-hover:translate-x-1 transition-transform duration-200 text-amber-300">→</span>
+  </span>
+</Link>
 
       {/* ── Main Content Flow (Full Width on Mobile, Covers Whole Page) ── */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-10 space-y-4 sm:space-y-6">
 
         {/* Header Section */}
         <section className="space-y-1.5 pb-1">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#0f3358] tracking-tight">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-primary tracking-tight">
             About MMV Sarthi
           </h1>
-          <div className="h-0.5 w-24 sm:w-32 bg-gradient-to-r from-[#0f3358] via-[#D4AF37] to-transparent rounded-full" />
+          <div className="h-0.5 w-24 sm:w-32 bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full" />
         </section>
 
         {/* Intro Narrative */}
         <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-          <strong className="font-semibold text-[#0f3358]">MMV Sarthi</strong> is a student-focused website created to make life at Mahila Mahavidyalaya easier and more informed. It brings essential information about <strong className="font-semibold text-[#0f3358]">academics, administration, facilities, departments, and services</strong> together in one place, while keeping students updated with the latest <strong className="font-semibold text-[#0f3358]">college news and notices</strong>.
+          <strong className="font-semibold text-primary">MMV Sarthi</strong> is a student-focused website created to make life at Mahila Mahavidyalaya easier and more informed. It brings essential information about <strong className="font-semibold text-primary">academics, administration, facilities, departments, and services</strong> together in one place, while keeping students updated with the latest <strong className="font-semibold text-primary">college news and notices</strong>.
         </p>
 
         {/* The Purpose Behind "Sarthi" */}
         <div className="space-y-1">
-          <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-[#0f3358]">
+          <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-primary">
             The Purpose Behind "Sarthi"
           </h2>
           <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            The name <strong className="font-semibold text-[#0f3358]">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students from helping freshers understand their new college to assisting existing students with everyday information.
+            The name <strong className="font-semibold text-primary">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students from helping freshers understand their new college to assisting existing students with everyday information.
           </p>
         </div>
 
         {/* Closing Promise Quote */}
-        <p className="text-[#0f3358] text-sm sm:text-base md:text-lg font-serif font-semibold italic py-2 text-center border-y border-amber-900/15">
+        <p className="text-primary text-sm sm:text-base md:text-lg font-serif font-semibold italic py-2 text-center border-y border-amber-900/15">
           More than just a website, MMV Sarthi is a guide, a companion, and a reliable source of information so that no student has to navigate her MMV journey alone.
         </p>
 
         {/* Dedicated Team Blurb */}
-        <div className="space-y-1">
-          <h3 className="text-base sm:text-lg md:text-xl font-serif font-bold text-[#0f3358]">
-            सह-सृजन: Our Team
+        <div className="space-y-1.5 text-center pb-1">
+          <h3 className="text-3xl sm:text-4xl md:text-4xl font-serif font-bold text-primary tracking-tight">
+            सह-सृजन
           </h3>
-          <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            Behind MMV Sarthi is a dedicated team that brings together <strong className="font-semibold text-[#0f3358]">creativity, technical skills, and fresh ideas</strong>, working together to create a platform that makes every student’s MMV journey <strong className="font-semibold text-[#0f3358]">simpler, smoother, and more informed</strong>.
-          </p>
+          <h3 className="text-xl sm:text-2xl md:text-2xl font-serif font-bold text-primary tracking-tight">
+            (Our Team)
+          </h3>
+          {/* Matching colorful line styled like the main heading */}
+          <div className="h-0.5 w-24 sm:w-32 mx-auto bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full mt-2" />
         </div>
 
         {/* ── Closing Institutional Photo Feature (4:3 Aspect Ratio) ── */}
@@ -95,16 +110,24 @@ const AboutSarthi = () => {
             <img
               src="/bhu/teamphoto.jpeg"
               alt="MMV Sarthi Team and Mahila Mahavidyalaya Campus"
-              className="w-full h-full object-cover rounded-full"
+              className="w-full h-full rounded-full object-cover"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
           </div>
-          <figcaption className="mt-2 text-xs sm:text-sm md:text-base text-gray-600 text-center italic font-medium">
-           <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Prof. Rakhi Garg (Professor); Roshni Kumari Kushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
+          {/* Center-aligned caption */}
+          <figcaption className="mt-2.5 text-xs sm:text-sm md:text-base text-gray-600 text-center italic font-medium max-w-2xl mx-auto leading-normal">
+            <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Prof. Rakhi Garg (Professor); Roshni Kumari Kushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
+            <br/>Department of Computer Science, MMV, BHU.
           </figcaption>
         </figure>
+
+        <div className="space-y-1">
+          <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
+            Behind MMV Sarthi is a dedicated team that brings together <strong className="font-semibold text-primary">creativity, technical skills, and fresh ideas</strong>, working together to create a platform that makes every student’s MMV journey <strong className="font-semibold text-primary">simpler, smoother, and more informed</strong>.
+          </p>
+        </div>
 
         {/* Official Footer Strip */}
         <footer className="pt-4 sm:pt-6 border-t border-gray-200 text-center text-[11px] sm:text-xs md:text-sm text-gray-500 space-y-1">

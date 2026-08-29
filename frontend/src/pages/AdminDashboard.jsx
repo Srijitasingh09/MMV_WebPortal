@@ -180,25 +180,25 @@ const AdminDashboard = () => {
       <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-3">
         <button
           onClick={() => setActiveTab('notice')}
-          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'notice' ? 'border-[#0f3358] text-[#0f3358] bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'notice' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <Bell size={18} className="mr-2 text-[#7d311f]" /> CREATE NOTICE
         </button>
         <button
           onClick={() => setActiveTab('news')}
-          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'news' ? 'border-[#0f3358] text-[#0f3358] bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'news' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <Newspaper size={18} className="mr-2 text-[#7d311f]" /> CREATE NEWS
         </button>
         <button
           onClick={() => setActiveTab('contact-info')}
-          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'contact-info' ? 'border-[#0f3358] text-[#0f3358] bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'contact-info' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <Phone size={18} className="mr-2 text-[#7d311f]" /> CONTACT INFO
         </button>
         <button
           onClick={() => setActiveTab('admin-readme')}
-          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'admin-readme' ? 'border-[#0f3358] text-[#0f3358] bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'admin-readme' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <FileText size={18} className="mr-2 text-[#7d311f]" /> ADMIN README
         </button>
@@ -213,7 +213,7 @@ const AdminDashboard = () => {
               required
               value={notice.title}
               onChange={(e) => setNotice({...notice, title: e.target.value})}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="e.g., End Semester Exam Schedule"
             />
           </div>
@@ -257,14 +257,14 @@ const AdminDashboard = () => {
               rows={5}
               value={notice.content}
               onChange={(e) => setNotice({...notice, content: e.target.value})}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Enter full notice announcement text..."
             />
           </div>
 
           <button
             disabled={loading}
-            className="w-full py-4 sm:py-5 bg-[#0f3358] text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
+            className="w-full py-4 sm:py-5 bg-primary text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
           >
             <Send size={18} className="mr-3" />
             {loading ? 'POSTING NOTICE...' : 'PUBLISH NOTICE'}
@@ -276,7 +276,7 @@ const AdminDashboard = () => {
       {activeTab === 'news' && (
         <form onSubmit={handleSubmitNews} className="bg-white p-5 sm:p-8 md:p-10 rounded-2xl shadow-sm border border-gray-200 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div>
-            <h3 className="font-bold text-lg text-[#0f3358] font-serif">Publish News</h3>
+            <h3 className="font-bold text-lg text-primary font-serif">Publish News</h3>
             <p className="text-slate-600 text-sm mt-1">
               Type the story as one block of text -the first line becomes the headline,
               everything after it becomes the body. Attach any number of photos or PDFs below.
@@ -292,7 +292,7 @@ const AdminDashboard = () => {
               rows={8}
               value={newsText}
               onChange={(e) => setNewsText(e.target.value)}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder={'MMV Students Win National Debate Championship\nWrite the full story here. It can span as many lines as you need...'}
             />
           </div>
@@ -334,7 +334,7 @@ const AdminDashboard = () => {
 
           <button
             disabled={loading}
-            className="w-full py-4 sm:py-5 bg-[#0f3358] text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
+            className="w-full py-4 sm:py-5 bg-primary text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
           >
             <Send size={18} className="mr-3" />
             {loading ? 'POSTING NEWS...' : 'PUBLISH NEWS'}
@@ -346,7 +346,7 @@ const AdminDashboard = () => {
       {activeTab === 'contact-info' && (
         <form onSubmit={handleSubmitContactInfo} className="bg-white p-5 sm:p-8 md:p-10 rounded-2xl shadow-sm border border-gray-200 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div>
-            <h3 className="font-bold text-lg text-[#0f3358] font-serif">Contact Page Details</h3>
+            <h3 className="font-bold text-lg text-primary font-serif">Contact Page Details</h3>
             <p className="text-slate-600 text-sm mt-1">
               This information appears on the public Contact Us page, along with the interactive map.
             </p>
@@ -358,7 +358,7 @@ const AdminDashboard = () => {
               rows={3}
               value={contactInfoForm.address}
               onChange={(e) => setContactInfoForm({ ...contactInfoForm, address: e.target.value })}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="e.g., Mahila Mahavidyalaya, Banaras Hindu University, Varanasi, Uttar Pradesh 221005"
             />
           </div>
@@ -369,7 +369,7 @@ const AdminDashboard = () => {
               <input
                 value={contactInfoForm.phone}
                 onChange={(e) => setContactInfoForm({ ...contactInfoForm, phone: e.target.value })}
-                className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+                className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="e.g., +91 542 230 7220"
               />
             </div>
@@ -379,7 +379,7 @@ const AdminDashboard = () => {
                 type="email"
                 value={contactInfoForm.email}
                 onChange={(e) => setContactInfoForm({ ...contactInfoForm, email: e.target.value })}
-                className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+                className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
                 placeholder="e.g., principal_mmv@bhu.ac.in"
               />
             </div>
@@ -390,7 +390,7 @@ const AdminDashboard = () => {
             <input
               value={contactInfoForm.office_hours}
               onChange={(e) => setContactInfoForm({ ...contactInfoForm, office_hours: e.target.value })}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="e.g., Mon–Sat, 10:00 AM – 5:00 PM"
             />
           </div>
@@ -402,7 +402,7 @@ const AdminDashboard = () => {
             <input
               value={contactInfoForm.map_embed_url}
               onChange={(e) => setContactInfoForm({ ...contactInfoForm, map_embed_url: e.target.value })}
-              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-[#0f3358]/20"
+              className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Paste the 'src' link from Google Maps > Share > Embed a map"
             />
             <p className="text-xs text-slate-500">
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
 
           <button
             disabled={loading}
-            className="w-full py-4 sm:py-5 bg-[#0f3358] text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
+            className="w-full py-4 sm:py-5 bg-primary text-white rounded-2xl font-bold tracking-widest hover:bg-[#174873] transition-colors flex items-center justify-center shadow-sm"
           >
             <Send size={18} className="mr-3" />
             {loading ? 'SAVING DETAILS...' : 'SAVE CONTACT INFO'}

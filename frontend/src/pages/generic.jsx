@@ -21,10 +21,10 @@ const TABLE_PDF_TAG = '__table_pdf__';
 
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
-  heading:        'text-[#0f3358] font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
-  subheading:     'text-lg sm:text-xl md:text-2xl font-bold text-[#0f3358] font-cinzel leading-snug',       // '## ' -description body, description notes, accordion notes
+  heading:        'text-primary font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
+  subheading:     'text-lg sm:text-xl md:text-2xl font-bold text-primary font-cinzel leading-snug',       // '## ' -description body, description notes, accordion notes
   subSubheading:  'text-sm sm:text-base md:text-lg font-bold text-[#174873] font-sans-official leading-snug',    // '### ' -description body, description notes, accordion notes
-  accordionTitle: 'text-sm sm:text-base md:text-lg font-bold text-[#0f3358]',    // accordion bar title ('+++ Title')
+  accordionTitle: 'text-sm sm:text-base md:text-lg font-bold text-primary',    // accordion bar title ('+++ Title')
 };
 
 // ─── Body text size per description section ────────────────────────────────
@@ -855,9 +855,9 @@ const GenericContentPage = ({
         cardBorder: 'border-slate-200/90 hover:border-[#d4af37]',
         cardBg: 'bg-white hover:bg-[#FAF7F2]/80',
         headerHoverBg: 'group-hover:bg-[#FAF7F2]',
-        headerText: 'text-[#0f3358] group-hover:text-[#7d311f]',
+        headerText: 'text-primary group-hover:text-[#7d311f]',
         badge: 'bg-[#d4af37] group-hover:bg-[#7d311f]',
-        arrowBg: 'bg-slate-100 group-hover:bg-[#0f3358]',
+        arrowBg: 'bg-slate-100 group-hover:bg-primary',
         arrowText: 'text-slate-500 group-hover:text-white',
         dividerBorder: 'border-[#d4af37]/40',
         bodyBg: 'bg-white',
@@ -968,7 +968,7 @@ const GenericContentPage = ({
           if (lineText.startsWith('### ')) {
             flushNoteBullets();
             noteElements.push(
-              <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+              <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-primary font-bold text-xs sm:text-sm md:text-base">
                 <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
                 <span>{renderInlineFormatting(lineText.slice(4))}</span>
               </h4>
@@ -976,7 +976,7 @@ const GenericContentPage = ({
           } else if (lineText.startsWith('## ')) {
             flushNoteBullets();
             noteElements.push(
-              <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+              <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-primary font-cinzel font-bold text-sm sm:text-base md:text-lg">
                 <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
                 <span>{renderInlineFormatting(lineText.slice(3))}</span>
               </h3>
@@ -1098,7 +1098,7 @@ const GenericContentPage = ({
                         if (lineText.startsWith('### ')) {
                           flushCardNoteBullets();
                           noteElements.push(
-                            <h4 key={`card-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm">
+                            <h4 key={`card-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-primary font-bold text-xs sm:text-sm">
                               <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
                               <span>{renderInlineFormatting(lineText.slice(4))}</span>
                             </h4>
@@ -1106,7 +1106,7 @@ const GenericContentPage = ({
                         } else if (lineText.startsWith('## ')) {
                           flushCardNoteBullets();
                           noteElements.push(
-                            <h3 key={`card-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base">
+                            <h3 key={`card-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-primary font-cinzel font-bold text-sm sm:text-base">
                               <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
                               <span>{renderInlineFormatting(lineText.slice(3))}</span>
                             </h3>
@@ -1269,7 +1269,7 @@ const GenericContentPage = ({
             if (lineText.startsWith('### ')) {
               flushLocalNoteBullets();
               noteElements.push(
-                <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-[#0f3358] font-bold text-xs sm:text-sm md:text-base">
+                <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-primary font-bold text-xs sm:text-sm md:text-base">
                   <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
                   <span>{renderInlineFormatting(lineText.slice(4))}</span>
                 </h4>
@@ -1277,7 +1277,7 @@ const GenericContentPage = ({
             } else if (lineText.startsWith('## ')) {
               flushLocalNoteBullets();
               noteElements.push(
-                <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg">
+                <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-primary font-cinzel font-bold text-sm sm:text-base md:text-lg">
                   <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
                   <span>{renderInlineFormatting(lineText.slice(3))}</span>
                 </h3>
@@ -1363,7 +1363,7 @@ const GenericContentPage = ({
             onClick={() => setOpenSections(prev => ({ ...prev, [index]: !prev[index] }))}
             className="w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-3 sm:py-3.5 bg-[#FAF7F2] hover:bg-[#F3EDE3] text-left border-l-4 border-[#d4af37] transition-all cursor-pointer"
           >
-            <span className="text-sm sm:text-base md:text-lg font-bold text-[#0f3358] font-cinzel tracking-wide">
+            <span className="text-sm sm:text-base md:text-lg font-bold text-primary font-cinzel tracking-wide">
               {renderInlineFormatting(accordionTitle)}
             </span>
             <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
@@ -1411,10 +1411,10 @@ const GenericContentPage = ({
         const colWidthPct = `${(100 / colCount).toFixed(2)}%`;
 
         elements.push(
-          <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-[#0f3358]/30 shadow-md my-3 bg-white overflow-hidden">
+          <div key={`table-${elements.length}`} className="w-full rounded-xl border-2 border-primary/30 shadow-md my-3 bg-white overflow-hidden">
             <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
               <thead>
-                <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                <tr className="bg-primary text-white border-b-3 border-[#d4af37]">
                   {headerRow.map((cell, ci) => (
                     <th
                       key={ci}
@@ -1502,7 +1502,7 @@ const GenericContentPage = ({
         flushTable();
         elements.push(
           <div key={idx} className="mb-4 sm:mb-6 text-center">
-            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-[#0f3358] tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
+            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-primary tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
               {trimmed}
             </h2>
           </div>
@@ -1516,7 +1516,7 @@ const GenericContentPage = ({
         currentBodyLevel = 'subheading';
         elements.push(
           <div key={idx} className="mt-5 mb-2.5">
-            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-[#0f3358] font-cinzel font-bold text-lg sm:text-xl md:text-2xl tracking-wide leading-snug py-0.5`}>
+            <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-primary font-cinzel font-bold text-lg sm:text-xl md:text-2xl tracking-wide leading-snug py-0.5`}>
               <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
               <span>{trimmed.slice(3)}</span>
             </h3>
@@ -1530,7 +1530,7 @@ const GenericContentPage = ({
         flushTable();
         currentBodyLevel = 'subSubheading';
         elements.push(
-          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-[#0f3358] font-cinzel font-bold text-sm sm:text-base md:text-lg flex items-center gap-2.5 leading-snug py-0.5`}>
+          <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-primary font-cinzel font-bold text-sm sm:text-base md:text-lg flex items-center gap-2.5 leading-snug py-0.5`}>
             <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
             <span>{trimmed.slice(4)}</span>
           </h4>
@@ -1602,7 +1602,7 @@ const GenericContentPage = ({
       <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex items-end">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
-          <h1 className="text-[#0f3358] font-cinzel font-bold text-lg sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-normal sm:leading-tight py-0.5 truncate sm:whitespace-normal">
+          <h1 className="text-primary font-cinzel font-bold text-lg sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-normal sm:leading-tight py-0.5 truncate sm:whitespace-normal">
             {title}
           </h1>
         </div>
@@ -1610,11 +1610,11 @@ const GenericContentPage = ({
 
       {/* ── OFFICIAL EXECUTIVE PROFILE CARD ── */}
       {hasProfile && (
-        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#0f3358] p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-primary p-4 sm:p-8 md:p-10 shadow-2xl border-2 border-[#d4af37]">
           {isAdmin && !isEditingProfile && (
             <button
               onClick={() => { setEditProfile(profile); setIsEditingProfile(true); }}
-              className="absolute top-4 right-4 z-20 px-4 py-2 bg-[#d4af37] text-[#0f3358] hover:bg-[#e5c158] rounded-xl text-xs font-bold shadow-md transition-all border border-amber-300 flex items-center gap-1.5"
+              className="absolute top-4 right-4 z-20 px-4 py-2 bg-[#d4af37] text-primary hover:bg-[#e5c158] rounded-xl text-xs font-bold shadow-md transition-all border border-amber-300 flex items-center gap-1.5"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Edit Profile
@@ -1624,7 +1624,7 @@ const GenericContentPage = ({
           {isEditingProfile ? (
             <div className="text-left max-w-2xl mx-auto space-y-4 bg-white/95 backdrop-blur-md p-6 sm:p-8 rounded-2xl text-slate-800 shadow-2xl relative z-10 border border-amber-300">
               <div className="flex items-center justify-between border-b pb-3">
-                <h3 className="text-xl font-bold text-[#0f3358] font-cinzel">Edit Profile</h3>
+                <h3 className="text-xl font-bold text-primary font-cinzel">Edit Profile</h3>
                 <span className="text-xs bg-amber-100 text-amber-900 font-semibold px-2.5 py-1 rounded-md">Admin Portal Mode</span>
               </div>
 
@@ -1649,7 +1649,7 @@ const GenericContentPage = ({
                   <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
                     <button
                       onClick={() => profileImageRef.current?.click()}
-                      className="px-3.5 py-1.5 bg-[#0f3358] text-white rounded-lg text-xs font-semibold hover:bg-[#174873] transition-colors"
+                      className="px-3.5 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-[#174873] transition-colors"
                     >
                       {profilePhoto ? 'Change Photo' : 'Upload Photo'}
                     </button>
@@ -1683,7 +1683,7 @@ const GenericContentPage = ({
                       value={editProfile[field.key] || ''}
                       onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
                       placeholder={field.label}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#0f3358] focus:border-transparent bg-white shadow-xs"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white shadow-xs"
                     />
                   </div>
                 ))}
@@ -1695,7 +1695,7 @@ const GenericContentPage = ({
                   Cancel
                 </button>
                 <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-5 py-2 bg-[#0f3358] text-white rounded-lg text-xs font-bold hover:bg-[#174873] disabled:opacity-50 shadow-md">
+                  className="px-5 py-2 bg-primary text-white rounded-lg text-xs font-bold hover:bg-[#174873] disabled:opacity-50 shadow-md">
                   {savingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
                 </button>
               </div>
@@ -1755,7 +1755,7 @@ const GenericContentPage = ({
                       href={`tel:${profile.phone}`}
                       className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
                     >
-                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-primary transition-colors shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                       </div>
                       <div className="min-w-0 pr-1">
@@ -1782,7 +1782,7 @@ const GenericContentPage = ({
                       href={`mailto:${profile.email}`}
                       className="inline-flex items-center gap-3 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all text-left group w-fit max-w-full"
                     >
-                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-[#0f3358] transition-colors shrink-0">
+                      <div className="p-1.5 rounded-lg bg-[#d4af37]/20 text-[#d4af37] group-hover:bg-[#d4af37] group-hover:text-primary transition-colors shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                       </div>
                       <div className="min-w-0 pr-1">
@@ -2091,7 +2091,7 @@ const GenericContentPage = ({
                           title="Insert formatting"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => { e.preventDefault(); setCaretMenuMode(caretMenuMode ? null : 'menu'); }}
-                          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#174873] text-white shadow-md hover:bg-[#0f3358] transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#174873] text-white shadow-md hover:bg-primary transition-colors cursor-pointer"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
@@ -2386,11 +2386,11 @@ const GenericContentPage = ({
               );
 
             return (
-              <div className="rounded-xl border-2 border-[#0f3358]/30 shadow-md overflow-hidden my-3 bg-white w-full">
+              <div className="rounded-xl border-2 border-primary/30 shadow-md overflow-hidden my-3 bg-white w-full">
                 <div className="w-full overflow-x-auto">
                   <table className="w-full text-left border-collapse table-fixed text-[10px] sm:text-xs md:text-sm">
                     <thead>
-                      <tr className="bg-[#0f3358] text-white border-b-3 border-[#d4af37]">
+                      <tr className="bg-primary text-white border-b-3 border-[#d4af37]">
                         {columns.map((col, colIdx) => (
                           <th
                             key={col}
@@ -2447,7 +2447,7 @@ const GenericContentPage = ({
                           </th>
                         ))}
                         {isAdmin && (
-                          <th className="px-1.5 sm:px-3 py-1.5 sm:py-2.5 bg-[#0f3358] text-[#fce8b2] font-bold text-[10px] sm:text-xs">
+                          <th className="px-1.5 sm:px-3 py-1.5 sm:py-2.5 bg-primary text-[#fce8b2] font-bold text-[10px] sm:text-xs">
                             {addingCol ? (
                               <div className="flex gap-1">
                                 <input value={newColName} onChange={e => setNewColName(e.target.value)}

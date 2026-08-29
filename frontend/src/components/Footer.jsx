@@ -21,7 +21,7 @@ const Footer = () => {
   }, []);
 
   return (
-    <footer className="bg-[#0f3358] text-slate-200 border-t-2 border-[#d4af37]">
+    <footer className="bg-primary text-slate-200 border-t-2 border-[#d4af37]">
       {/* Grid: 2 columns on mobile, 3 columns on tablet/desktop */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
 

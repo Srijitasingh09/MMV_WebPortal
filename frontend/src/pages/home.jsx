@@ -64,12 +64,12 @@ const CountUpStat = ({ targetStr, label, startFrom = 0 }) => {
   return (
     <div
       ref={ref}
-      className="group bg-white rounded-xl py-4 sm:py-7 px-3 sm:px-5 text-center border-2 border-[#0f3358]/20 hover:border-[#d4af37] shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.04] cursor-pointer"
+      className="group bg-white rounded-xl py-4 sm:py-7 px-3 sm:px-5 text-center border-2 border-primary/20 hover:border-[#d4af37] shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.04] cursor-pointer"
     >
       <div className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#7d311f] group-hover:scale-105 transition-transform mb-1">
         {formattedValue}{suffix}
       </div>
-      <div className="font-lato text-[10px] sm:text-xs text-[#0f3358] font-bold uppercase tracking-wider group-hover:text-[#7d311f] transition-colors">
+      <div className="font-lato text-[10px] sm:text-xs text-primary font-bold uppercase tracking-wider group-hover:text-[#7d311f] transition-colors">
         {label}
       </div>
     </div>
@@ -263,7 +263,7 @@ const NoticesAndNews = () => {
           <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#7d311f] mb-1.5">
             Official Bulletin Hub
           </p>
-          <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#0f3358] mb-2 leading-snug">
+          <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-primary mb-2 leading-snug">
             Campus Notices & News
           </h2>
           <div className="w-12 h-0.5 bg-[#d4af37] mx-auto" />
@@ -273,9 +273,9 @@ const NoticesAndNews = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
           {/* Left Column: NOTICES CARD */}
-          <div className="bg-white rounded-xl border-2 border-[#0f3358]/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
+          <div className="bg-white rounded-xl border-2 border-primary/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
             <div>
-              <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-[#0f3358] leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-primary leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
                 <span>Notices & Circulars</span>
                 <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Live</span>
               </h3>
@@ -284,7 +284,7 @@ const NoticesAndNews = () => {
               <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
                 {loadingNotices ? (
                   <div className="py-8 text-center">
-                    <div className="w-7 h-7 border-3 border-[#0f3358] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <div className="w-7 h-7 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                     <p className="font-lato text-xs text-slate-500 font-medium">Loading Notices...</p>
                   </div>
                 ) : notices.length > 0 ? (
@@ -292,7 +292,7 @@ const NoticesAndNews = () => {
                     <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
                       <Link
                         to={`/notices?id=${n.id}`}
-                        className="font-lato text-xs sm:text-sm font-semibold text-[#0f3358] hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
+                        className="font-lato text-xs sm:text-sm font-semibold text-primary hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
                       >
                         {n.title}
                       </Link>
@@ -326,7 +326,7 @@ const NoticesAndNews = () => {
             <div className="mt-3 pt-3 border-t border-slate-100 text-right">
               <Link
                 to="/notices"
-                className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-[#0f3358] hover:text-[#7d311f] transition-colors"
+                className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-primary hover:text-[#7d311f] transition-colors"
               >
                 <span>Read More Notices</span>
                 <span className="text-base font-bold">→</span>
@@ -335,9 +335,9 @@ const NoticesAndNews = () => {
           </div>
 
           {/* Right Column: NEWS CARD */}
-          <div className="bg-white rounded-xl border-2 border-[#0f3358]/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
+          <div className="bg-white rounded-xl border-2 border-primary/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
             <div>
-              <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-[#0f3358] leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-primary leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
                 <span>Latest Campus News</span>
                 <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Updates</span>
               </h3>
@@ -346,7 +346,7 @@ const NoticesAndNews = () => {
               <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
                 {loadingNews ? (
                   <div className="py-8 text-center">
-                    <div className="w-7 h-7 border-3 border-[#0f3358] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <div className="w-7 h-7 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                     <p className="font-lato text-xs text-slate-500 font-medium">Loading News...</p>
                   </div>
                 ) : news.length > 0 ? (
@@ -354,7 +354,7 @@ const NoticesAndNews = () => {
                     <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
                       <Link
                         to={`/news?id=${n.id}`}
-                        className="font-lato text-xs sm:text-sm font-semibold text-[#0f3358] hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
+                        className="font-lato text-xs sm:text-sm font-semibold text-primary hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
                       >
                         {n.title}
                       </Link>
@@ -388,7 +388,7 @@ const NoticesAndNews = () => {
             <div className="mt-3 pt-3 border-t border-slate-100 text-right">
               <Link
                 to="/news"
-                className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-[#0f3358] hover:text-[#7d311f] transition-colors"
+                className="inline-flex items-center gap-1.5 font-lato text-xs sm:text-sm font-bold text-primary hover:text-[#7d311f] transition-colors"
               >
                 <span>Read More News</span>
                 <span className="text-base font-bold">→</span>
@@ -410,7 +410,7 @@ const About = () => (
         <p className="font-lato font-semibold text-2xs tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           About the Portal
         </p>
-        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-semibold text-[#0f3358] mb-4 leading-snug">
+        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-semibold text-primary mb-4 leading-snug">
           One Portal, Every Answer
         </h2>
         <div className="w-12 h-0.5 bg-[#d4af37] mx-auto mb-5" />
@@ -454,7 +454,7 @@ const Facilities = () => (
         <p className="font-lato text-2xs font-bold tracking-[0.2em] uppercase text-[#7d311f] mb-2">
           Campus Resources
         </p>
-        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-[#0f3358] leading-snug mb-3">
+        <h2 className="font-cormorant text-2xl sm:text-4xl md:text-5xl font-bold text-primary leading-snug mb-3">
           Facilities at MMV
         </h2>
         <div className="w-12 h-0.5 bg-[#d4af37] mx-auto mb-4" />
@@ -469,9 +469,9 @@ const Facilities = () => (
           <Link
             key={f.label}
             to={f.link}
-            className="group bg-white border-2 border-[#0f3358]/20 hover:border-[#d4af37] rounded-xl p-3.5 sm:p-5 shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.03] cursor-pointer block text-left"
+            className="group bg-white border-2 border-primary/20 hover:border-[#d4af37] rounded-xl p-3.5 sm:p-5 shadow-xs hover:shadow-xl hover:shadow-amber-500/20 active:scale-95 active:border-[#d4af37] active:bg-amber-50/40 transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.03] cursor-pointer block text-left"
           >
-            <div className="font-cormorant text-sm sm:text-lg font-bold text-[#0f3358] group-hover:text-[#7d311f] transition-colors mb-1 sm:mb-2">
+            <div className="font-cormorant text-sm sm:text-lg font-bold text-primary group-hover:text-[#7d311f] transition-colors mb-1 sm:mb-2">
               {f.label}
             </div>
             <div className="font-lato text-[11px] sm:text-sm text-slate-600 leading-relaxed">{f.detail}</div>
@@ -494,7 +494,7 @@ const Academics = () => (
         <p className="font-lato text-[10px] sm:text-2xs font-bold tracking-[0.15em] uppercase text-[#7d311f] mb-1 sm:mb-2">
           Academics
         </p>
-        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
+        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-primary mb-1 sm:mb-2 leading-snug">
           Academic Information
         </h2>
         <div className="w-8 h-0.5 bg-[#d4af37] mb-2 sm:mb-4" />
@@ -511,7 +511,7 @@ const Academics = () => (
             <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
               <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
               <div className="font-lato text-slate-800">
-                <span className="font-bold text-[#0f3358]">{label}: </span>
+                <span className="font-bold text-primary">{label}: </span>
                 <span className="hidden sm:inline">{detail}</span>
                 <span className="sm:hidden text-[11px]">{detail}</span>
               </div>
@@ -536,7 +536,7 @@ const Administration = () => (
           Administration
         </p>
         
-        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-[#0f3358] mb-1 sm:mb-2 leading-snug">
+        <h2 className="font-cormorant text-lg sm:text-3xl md:text-4xl font-bold text-primary mb-1 sm:mb-2 leading-snug">
           Leadership & Administration
         </h2>
         
@@ -556,7 +556,7 @@ const Administration = () => (
             <li key={label} className="flex items-start gap-1.5 sm:gap-3 text-xs sm:text-[15px]">
               <span className="text-[#7d311f] font-bold flex-shrink-0">✦</span>
               <div className="font-lato text-slate-800">
-                <span className="font-bold text-[#0f3358]">{label}: </span>
+                <span className="font-bold text-primary">{label}: </span>
                 <span className="hidden sm:inline">{detail}</span>
                 <span className="sm:hidden text-[11px]">{detail}</span>
               </div>

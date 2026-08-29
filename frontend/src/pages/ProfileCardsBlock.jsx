@@ -48,7 +48,7 @@ const ScrollArrow = ({ direction, onClick }) => (
     onClick={onClick}
     aria-label={direction === 'left' ? 'Show previous profile' : 'Show next profile'}
     title={direction === 'left' ? 'Show previous' : 'Show more'}
-    className={`absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 backdrop-blur-xs border-2 border-[#0f3358]/20 shadow-md sm:shadow-lg flex items-center justify-center text-[#0f3358] hover:bg-[#0f3358] hover:text-white hover:border-[#0f3358] active:scale-95 transition-all cursor-pointer ${
+    className={`absolute top-1/2 -translate-y-1/2 z-20 w-9 h-9 xs:w-10 xs:h-10 sm:w-11 sm:h-11 rounded-full bg-white/95 backdrop-blur-xs border-2 border-primary/20 shadow-md sm:shadow-lg flex items-center justify-center text-primary hover:bg-primary hover:text-white hover:border-primary active:scale-95 transition-all cursor-pointer ${
       direction === 'left' ? 'left-1 sm:-left-3 md:-left-5' : 'right-1 sm:-right-3 md:-right-5'
     }`}
   >
@@ -84,7 +84,7 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
     <div className="flex flex-col items-center w-full">
       {/* photo */}
       <div className="relative mb-4 xs:mb-5 shrink-0">
-        <div className="w-28 h-28 xs:w-36 xs:h-36 sm:w-40 sm:h-40 rounded-full border-3 sm:border-4 border-[#0f3358] overflow-hidden bg-slate-100 flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105">
+        <div className="w-28 h-28 xs:w-36 xs:h-36 sm:w-40 sm:h-40 rounded-full border-3 sm:border-4 border-primary overflow-hidden bg-slate-100 flex items-center justify-center shadow-lg transition-transform duration-300 hover:scale-105">
           {photoUrl ? (
             <img src={photoUrl} alt={card.name} className="w-full h-full object-cover" />
           ) : (
@@ -95,14 +95,14 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
             </div>
           )}
         </div>
-        <div className="absolute bottom-0 right-0 sm:right-1 w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-full bg-[#0f3358] border-2 border-white flex items-center justify-center text-white shadow-md">
+        <div className="absolute bottom-0 right-0 sm:right-1 w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 rounded-full bg-primary border-2 border-white flex items-center justify-center text-white shadow-md">
           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.42 0-8 2.24-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.76-3.58-5-8-5z" />
           </svg>
         </div>
       </div>
 
-      <h3 className="text-lg xs:text-xl sm:text-2xl font-extrabold font-cinzel text-[#0f3358] text-center leading-tight tracking-wide break-words [overflow-wrap:anywhere] w-full px-1">
+      <h3 className="text-lg xs:text-xl sm:text-2xl font-extrabold font-cinzel text-primary text-center leading-tight tracking-wide break-words [overflow-wrap:anywhere] w-full px-1">
         {card.name || 'Unnamed'}
       </h3>
       <div className="w-10 sm:w-12 h-[3px] bg-[#d4af37] my-2 xs:my-2.5 rounded-full shrink-0" />
@@ -119,7 +119,7 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
     {/* BOTTOM SECTION (pushed to bottom by mt-auto): Badge, University, Phone, Email */}
     <div className="w-full flex flex-col items-center mt-auto pt-3">
       {card.badge && (
-        <div className="flex items-center justify-center gap-1.5 sm:gap-2 bg-[#EAEFF5] text-[#0f3358] text-xs xs:text-sm sm:text-base font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl mb-2 xs:mb-2.5 shadow-xs max-w-full text-center break-words [overflow-wrap:anywhere] leading-tight">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 bg-[#EAEFF5] text-primary text-xs xs:text-sm sm:text-base font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl mb-2 xs:mb-2.5 shadow-xs max-w-full text-center break-words [overflow-wrap:anywhere] leading-tight">
           <IconBuilding />
           <span>{card.badge}</span>
         </div>
@@ -151,7 +151,7 @@ const ProfileCard = ({ card, photoUrl, isAdmin, onEdit, onDelete }) => (
       )}
     </div>
 
-    <div className="absolute bottom-0 left-0 right-0 h-1.5 sm:h-2 bg-[#0f3358]" />
+    <div className="absolute bottom-0 left-0 right-0 h-1.5 sm:h-2 bg-primary" />
   </div>
 );
 
@@ -347,7 +347,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
       {showForm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 xs:p-4 sm:p-6 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-5 sm:p-6 my-auto max-h-[90vh] overflow-y-auto">
-            <h3 className="text-base sm:text-lg font-bold text-[#0f3358] mb-4 font-cinzel">
+            <h3 className="text-base sm:text-lg font-bold text-primary mb-4 font-cinzel">
               {isNew ? 'Add Profile Card' : 'Edit Profile Card'}
             </h3>
 
@@ -377,22 +377,22 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
             </div>
 
             <div className="space-y-3">
-              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f3358]/20 focus:border-[#0f3358]"
+              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="Full Name *" value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f3358]/20 focus:border-[#0f3358]"
+              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="Designation (e.g. Warden)" value={form.designation}
                 onChange={e => setForm(f => ({ ...f, designation: e.target.value }))} />
-              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f3358]/20 focus:border-[#0f3358]"
+              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="Hostel / Department (e.g. Sunrise Boys Hostel)" value={form.badge}
                 onChange={e => setForm(f => ({ ...f, badge: e.target.value }))} />
-              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f3358]/20 focus:border-[#0f3358]"
+              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="University / College" value={form.university}
                 onChange={e => setForm(f => ({ ...f, university: e.target.value }))} />
-              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f3358]/20 focus:border-[#0f3358]"
+              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="Phone" value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} />
-              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0f3358]/20 focus:border-[#0f3358]"
+              <input className="w-full px-3 py-2 text-base sm:text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 placeholder="Email" value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
             </div>
@@ -402,7 +402,7 @@ const ProfileCardsBlock = forwardRef(({ section, subsection, content, isAdmin, t
                 Cancel
               </button>
               <button onClick={handleSave} disabled={saving}
-                className="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-[#174873] text-white hover:bg-[#0f3358] disabled:opacity-50 transition-colors">
+                className="px-4 py-2 text-xs sm:text-sm font-bold rounded-lg bg-[#174873] text-white hover:bg-primary disabled:opacity-50 transition-colors">
                 {saving ? 'Saving...' : 'Save'}
               </button>
             </div>
