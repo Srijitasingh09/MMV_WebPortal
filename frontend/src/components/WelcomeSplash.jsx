@@ -71,7 +71,7 @@ const WelcomeSplash = () => {
       role="presentation"
     >
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;600;700&family=Eczar&display=swap');
 
         @keyframes mmvSplashTextIn {
           0%   { opacity: 0; transform: translateY(12px); }
@@ -90,6 +90,7 @@ const WelcomeSplash = () => {
 
         .mmv-splash-font-heading { font-family: 'Cormorant Garamond', Georgia, serif; }
         .mmv-splash-font-body { font-family: 'Lato', sans-serif; }
+        .mmv-splash-font-yatra { font-family: 'Eczar', serif; }
       `}</style>
 
       {/* Background image + navy gradient overlay, matching the site's hero */}
@@ -119,7 +120,7 @@ const WelcomeSplash = () => {
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center px-6">
         <h1 className="mmv-splash-title mmv-splash-font-heading text-3xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight drop-shadow-md mb-3">
-          Welcome to MMV Sarthi
+          Welcome to MMV <span className="mmv-splash-font-yatra">सारथी</span>
         </h1>
 
         <div className="mmv-splash-rule flex items-center gap-3 w-40 sm:w-48 mx-auto mb-3">
