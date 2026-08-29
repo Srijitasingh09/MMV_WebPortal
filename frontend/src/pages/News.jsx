@@ -217,7 +217,7 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-semibold hover:bg-[#0f3358] disabled:opacity-50"
+                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -248,7 +248,7 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
 
               <h3
                 id="news-modal-title"
-                className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-4 leading-snug pr-8"
+                className="text-2xl sm:text-3xl font-bold text-primary mb-4 leading-snug pr-8"
                 style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
               >
                 {news.title}
@@ -304,7 +304,7 @@ const NewsRow = ({ news, isAdmin, onExpand, onDelete }) => {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-[#0f3358] group-hover:text-[#174873] leading-snug transition-colors flex flex-wrap items-center gap-1.5">
+          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-[#174873] leading-snug transition-colors flex flex-wrap items-center gap-1.5">
             <span>{news.title}</span>
             {isNew && (
               <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
@@ -460,7 +460,7 @@ const News = () => {
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
-            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               News
             </h1>
           </div>
@@ -549,10 +549,10 @@ const News = () => {
                 <div className="flex flex-col items-center gap-2">
                   <button
                     onClick={() => setVisibleCount((prev) => prev + 20)}
-                    className="px-6 py-2.5 bg-[#0f3358] hover:bg-[#174873] active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
+                    className="px-6 py-2.5 bg-primary hover:bg-[#174873] active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
                   >
                     <span>View More News</span>
-                    <span className="text-xs bg-[#d4af37] text-[#0f3358] font-bold px-2 py-0.5 rounded-full group-hover:bg-amber-300 transition-colors">
+                    <span className="text-xs bg-[#d4af37] text-primary font-bold px-2 py-0.5 rounded-full group-hover:bg-amber-300 transition-colors">
                       +{Math.min(20, filteredNews.length - visibleCount)}
                     </span>
                   </button>

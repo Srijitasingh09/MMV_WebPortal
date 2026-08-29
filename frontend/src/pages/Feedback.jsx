@@ -75,7 +75,7 @@ const Feedback = () => {
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
-            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               Feedback & Suggestions
             </h1>
           </div>
@@ -102,11 +102,11 @@ const Feedback = () => {
                 <path d="M20 6L9 17l-5-5" />
               </svg>
             </div>
-            <h2 className="text-lg font-bold text-[#0f3358] mb-1">Thank you for your feedback</h2>
+            <h2 className="text-lg font-bold text-primary mb-1">Thank you for your feedback</h2>
             <p className="text-sm text-slate-500 mb-5">It has been sent to the college administration.</p>
             <button
               onClick={() => setStatus('idle')}
-              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#174873] text-white hover:bg-[#0f3358] transition-colors"
+              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#174873] text-white hover:bg-primary transition-colors"
             >
               Submit another response
             </button>
@@ -119,7 +119,7 @@ const Feedback = () => {
           >
             <div className="grid sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-semibold text-[#0f3358] mb-1.5">
+                <label className="block text-xs font-semibold text-primary mb-1.5">
                   Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -132,7 +132,7 @@ const Feedback = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#0f3358] mb-1.5">
+                <label className="block text-xs font-semibold text-primary mb-1.5">
                   Email Address <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -147,7 +147,7 @@ const Feedback = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#0f3358] mb-1.5">Category</label>
+              <label className="block text-xs font-semibold text-primary mb-1.5">Category</label>
               <select
                 value={form.category}
                 onChange={handleChange('category')}
@@ -160,7 +160,7 @@ const Feedback = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#0f3358] mb-1.5">
+              <label className="block text-xs font-semibold text-primary mb-1.5">
                 Your Feedback / Message <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -182,7 +182,7 @@ const Feedback = () => {
             <button
               type="submit"
               disabled={status === 'submitting'}
-              className="w-full sm:w-auto px-8 py-3 text-sm font-bold rounded-full bg-[#174873] text-white hover:bg-[#0f3358] transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3 text-sm font-bold rounded-full bg-[#174873] text-white hover:bg-primary transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {status === 'submitting' ? 'Submitting...' : 'Submit Feedback'}
             </button>

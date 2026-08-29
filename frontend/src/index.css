@@ -2,7 +2,7 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0f3358;
+  --color-primary: #1D4F7A;
   --color-secondary: #174873;
   --color-accent: #d4af37;
   --color-gold: #d4af37;
@@ -11,14 +11,14 @@
 }
 
 :root {
-  --primary: #0f3358;
+  --primary: #1D4F7A;
   --secondary: #174873;
   --accent: #d4af37;
   --gold: #d4af37;
   --crimson: #7d311f;
   --bg-main: #EAEFF5;
-  --bg-sidebar: #0f3358;
-  --text-primary: #0f3358;
+  --bg-sidebar: #1D4F7A;
+  --text-primary: #1D4F7A8;
   --text-muted: #64748b;
   --card-shadow: 0 10px 25px -5px rgba(15, 51, 88, 0.08), 0 8px 10px -6px rgba(15, 51, 88, 0.04);
   --gold-glow: 0 0 15px rgba(212, 175, 55, 0.25);
@@ -75,11 +75,11 @@ body,
 
 /* Official Gradient Styles */
 .bhu-gradient {
-  background: linear-gradient(135deg, #0f3358 0%, #174873 50%, #1b5385 100%);
+  background: linear-gradient(135deg, #1D4F7A 0%, #174873 50%, #1b5385 100%);
 }
 
 .official-header-gradient {
-  background: linear-gradient(135deg, #091f38 0%, #0f3358 60%, #174873 100%);
+  background: linear-gradient(135deg, #091f38 0%, #1D4F7A 60%, #174873 100%);
 }
 
 .executive-card-gradient {
@@ -98,7 +98,7 @@ body,
 }
 
 .official-pill-header {
-  background: linear-gradient(135deg, #0f3358 0%, #174873 100%);
+  background: linear-gradient(135deg, #1D4F7A 0%, #174873 100%);
   border-left: 4px solid #d4af37;
   box-shadow: 0 4px 15px rgba(15, 51, 88, 0.15);
 }
@@ -120,7 +120,7 @@ body,
   background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #0f3358;
+  background: #1D4F7A;
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {

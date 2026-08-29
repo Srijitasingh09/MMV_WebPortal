@@ -12,7 +12,7 @@ const GROUP_CONFIG = {
 
 const COLOR_MAP = {
   red:  { bg: 'bg-red-50',    border: 'border-red-200',   iconBg: 'bg-red-100 text-red-600',        title: 'text-red-700'   },
-  blue: { bg: 'bg-[#eef6ff]', border: 'border-blue-200',  iconBg: 'bg-[#174873]/10 text-[#174873]', title: 'text-[#0f3358]' },
+  blue: { bg: 'bg-[#eef6ff]', border: 'border-blue-200',  iconBg: 'bg-[#174873]/10 text-[#174873]', title: 'text-primary' },
   teal: { bg: 'bg-teal-50',   border: 'border-teal-200',  iconBg: 'bg-teal-100 text-teal-600',      title: 'text-teal-700'  },
 };
 
@@ -134,7 +134,7 @@ const EmergencyForm = ({ initial, onSaveBatch, onSaveSingle, onCancel, saving })
   if (isEditing) {
     return (
       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-3 shadow-sm mb-4">
-        <p className="text-sm font-semibold text-[#0f3358]">Edit Entry</p>
+        <p className="text-sm font-semibold text-primary">Edit Entry</p>
 
         <div>
           <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Group / Card Title</label>
@@ -205,7 +205,7 @@ const EmergencyForm = ({ initial, onSaveBatch, onSaveSingle, onCancel, saving })
   // ---- Batch-add mode ----
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 shadow-sm mb-4">
-      <p className="text-sm font-semibold text-[#0f3358]">Add Emergency Contacts</p>
+      <p className="text-sm font-semibold text-primary">Add Emergency Contacts</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
@@ -442,7 +442,7 @@ const Contact = () => {
           {/* Left Side: Page Name */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
-            <h1 className="text-[#0f3358] font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               Contact Us
             </h1>
           </div>
@@ -477,7 +477,7 @@ const Contact = () => {
             <div className="lg:col-span-2">
               <div className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 h-full">
                 <h2
-                  className="text-2xl sm:text-3xl font-bold text-[#0f3358] mb-6"
+                  className="text-2xl sm:text-3xl font-bold text-primary mb-6"
                   style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
                 >
                   Connect with us
@@ -521,7 +521,7 @@ const Contact = () => {
             <div className="inline-flex items-center gap-2 mb-2">
               <ShieldAlert size={20} className="text-red-500" />
               <h2
-                className="text-2xl sm:text-3xl font-bold text-[#0f3358]"
+                className="text-2xl sm:text-3xl font-bold text-primary"
                 style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
               >
                 Emergency Contact

@@ -136,7 +136,7 @@ const SubSubMenu = ({ label, path, children }) => {
         </div>
       )}
 
-      <div className="absolute top-0 left-full bg-[#0f3358] shadow-2xl min-w-52 xl:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
+      <div className="absolute top-0 left-full bg-primary shadow-2xl min-w-52 xl:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
         {children.map((item, idx) => {
           const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
           return item.children ? (
@@ -201,7 +201,7 @@ const SubMenu = ({ label, path, children }) => {
         </div>
       )}
 
-      <div className="absolute top-0 left-full bg-[#0f3358] shadow-2xl min-w-52 xl:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/sub:block">
+      <div className="absolute top-0 left-full bg-primary shadow-2xl min-w-52 xl:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/sub:block">
         {children.map((item, idx) => {
           const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
           return item.children ? (
@@ -253,7 +253,7 @@ const DropdownMenu = ({ title, path, items }) => {
         </Link>
       )}
 
-      <div className="absolute top-full left-0 bg-[#0f3358] shadow-2xl min-w-52 xl:min-w-60 z-[999] border-2 border-[#d4af37] rounded-b-xl hidden group-hover/main:block">
+      <div className="absolute top-full left-0 bg-primary shadow-2xl min-w-52 xl:min-w-60 z-[999] border-2 border-[#d4af37] rounded-b-xl hidden group-hover/main:block">
         {items.map((item, idx) => {
           const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
           return item.children ? (
@@ -288,14 +288,14 @@ const DropdownMenu = ({ title, path, items }) => {
 // MOBILE MENU ITEM
 // ============================================
 const depthStyles = [
-  { bg: "bg-[#0f3358]", text: "text-white", weight: "font-bold", hover: "hover:bg-[#174873] hover:text-[#d4af37]" },
+  { bg: "bg-primary", text: "text-white", weight: "font-bold", hover: "hover:bg-[#174873] hover:text-[#d4af37]" },
   { bg: "bg-[#133a63]", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-[#1b4d7e] hover:text-[#f4d580]" },
   { bg: "bg-[#091f38]", text: "text-amber-200", weight: "font-medium", hover: "hover:bg-[#12314f] hover:text-[#fce8b2]" },
 ];
 
 const highlightStyle = {
   bg: "bg-amber-300",
-  text: "text-[#0f3358]",
+  text: "text-primary",
   weight: "font-bold",
   hover: "hover:bg-amber-400",
 };
@@ -423,7 +423,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
           overflow-y-auto transition-transform duration-300 lg:hidden border-l-2 border-[#d4af37]
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#d4af37] sticky top-0 bg-[#0f3358] z-10 shadow-md">
+        <div className="flex items-center justify-between px-5 py-4 border-b-2 border-[#d4af37] sticky top-0 bg-primary z-10 shadow-md">
           <div className="flex min-w-0 items-center gap-2">
             <span className="w-2.5 h-2.5 shrink-0 rounded-full bg-[#d4af37]" />
             <span className="truncate text-white font-bold font-cinzel text-base tracking-wide">MMV Menu</span>
@@ -437,7 +437,7 @@ const MobileMenu = ({ isOpen, onClose }) => {
           </button>
         </div>
         <div className="p-3">
-          <div className="border-2 border-[#d4af37] rounded-xl overflow-hidden shadow-md bg-[#0f3358] divide-y divide-[#d4af37]/30">
+          <div className="border-2 border-[#d4af37] rounded-xl overflow-hidden shadow-md bg-primary divide-y divide-[#d4af37]/30">
             {mobileNavItems.map((item) => (
               <MobileMenuItem key={item.label} item={item} onNavigate={onClose} />
             ))}
@@ -579,7 +579,7 @@ const Navbar = () => {
     <div
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="w-full sticky top-0 z-[990] bg-[#0f3358]"
+      className="w-full sticky top-0 z-[990] bg-primary"
     >
       {/* Collapsible Header Container */}
       <div
@@ -590,9 +590,9 @@ const Navbar = () => {
         }`}
       >
         <div className="overflow-hidden">
-          <header className="w-full bg-[#0f3358]">
+          <header className="w-full bg-primary">
             {/* Top-most view line */}
-            <div className="bg-[#0f3358] text-xs px-3 sm:px-6 py-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[#d4af37]/40">
+            <div className="bg-primary text-xs px-3 sm:px-6 py-1.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-[#d4af37]/40">
               <div className="flex min-w-0 items-center gap-3">
                 <span className="text-[10px] sm:text-xs font-bold font-cinzel uppercase leading-tight tracking-wide truncate">
                   <span className="sm:hidden text-gray-200">Mahila Mahavidyalaya</span>
@@ -640,7 +640,7 @@ const Navbar = () => {
               {/* Sarthi Logo -centered ONLY on large screens */}
               <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="/bhu/mmv_saarthi_logo.png"
+                  src="/mmv_saarthi_logo2.png"
                   alt="MMV Sarthi Logo"
                   // className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
                   className="h-8 xl:h-10 rounded-2xl object-contain scale-200"
@@ -693,13 +693,13 @@ const Navbar = () => {
             </div>
 
             {/* Announcements Bar */}
-            <div className="bg-[#0f3358] border-t border-b-2 border-[#d4af37] lg:border-b lg:border-[#d4af37]/40 text-xs sm:text-sm flex items-center shadow-inner overflow-hidden relative z-20">
+            <div className="bg-primary border-t border-b-2 border-[#d4af37] lg:border-b lg:border-[#d4af37]/40 text-xs sm:text-sm flex items-center shadow-inner overflow-hidden relative z-20">
               <div className="bg-[#7d311f] text-white px-2.5 sm:px-4 py-1.5 font-bold uppercase tracking-wider flex items-center gap-2 z-30 shadow-md flex-shrink-0 border-r border-[#d4af37]/50">
                 <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
                 <span className="text-[10px] sm:text-xs font-cinzel text-[#fce8b2]">Announcements</span>
               </div>
 
-              <div className="overflow-hidden whitespace-nowrap py-1.5 flex-1 relative bg-[#0f3358]">
+              <div className="overflow-hidden whitespace-nowrap py-1.5 flex-1 relative bg-primary">
                 <div className="inline-flex animate-marquee hover:[animation-play-state:paused] items-center">
                   {notices.length > 0 ? (
                     [...notices, ...notices].map((n, idx) => (
@@ -729,7 +729,7 @@ const Navbar = () => {
       </div>
 
       {/* ── Navigation Bar (desktop only, lg and up) ── */}
-      <nav className="bg-[#0f3358] px-2 xl:px-4 border-b-2 border-[#d4af37] shadow-lg">
+      <nav className="bg-primary px-2 xl:px-4 border-b-2 border-[#d4af37] shadow-lg">
         <div className="hidden lg:flex relative flex-wrap justify-end items-center">
           <Link to="/home" className={navLinkClass}>Home</Link>
           <Link to="/about" className={navLinkClass}>About MMV</Link>
