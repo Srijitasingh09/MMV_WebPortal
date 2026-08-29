@@ -5,12 +5,17 @@ const AboutSarthi = () => {
   return (
     <main className="relative min-h-screen bg-white text-gray-800 overflow-x-hidden font-sans">
 
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Eczar&display=swap');
+        .font-yatra { font-family: 'Eczar', serif; }
+      `}</style>
+
       {/* ── Background Watermark (Fixed behind content) ── */}
       <img
         src="/bhu/SarthiWatermark.jpeg"
         alt="Mahila Mahavidyalaya Emblem Watermark"
         aria-hidden="true"
-        className="pointer-events-none select-none fixed inset-0 m-auto h-auto w-[85%] sm:w-[70%] md:w-[55%] max-w-3xl opacity-[0.16] object-contain z-0"
+        className="pointer-events-none select-none fixed inset-0 m-auto h-auto w-[85%] sm:w-[70%] md:w-[55%] max-w-3xl opacity-[0.2] object-contain z-0 scale-120"
       />
 
       {/* ── Official Institutional Top Bar Header ── */}
@@ -33,7 +38,7 @@ const AboutSarthi = () => {
       {/* ── Floating / Scrolling Right Glassy Button ── */}
       <Link
         to="/home"
-        aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
+        aria-label="Enter MMV सारथी Portal — Click to proceed to main site"
         className="fixed top-12 sm:top-20 md:top-16 right-3 sm:right-6 md:right-10 lg:right-12 z-40 group flex flex-col items-center justify-center bg-[#0f3358]/80 hover:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-2xl sm:rounded-3xl border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
       >
         <span className="text-amber-200 font-bold text-sm sm:text-base tracking-wide drop-shadow-sm">
@@ -50,30 +55,30 @@ const AboutSarthi = () => {
 
         {/* Header Section */}
         <section className="space-y-1.5 pb-1">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#0f3358] tracking-tight">
-            About MMV Sarthi
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-[#0f3358] tracking-tight text-center">
+            About MMV <span className="font-yatra">सारथी</span>
           </h1>
-          <div className="h-0.5 w-24 sm:w-32 bg-gradient-to-r from-[#0f3358] via-[#D4AF37] to-transparent rounded-full" />
+          <div className="h-0.5 w-24 sm:w-32 bg-gradient-to-r from-[#0f3358] via-[#D4AF37] to-transparent rounded-full mx-auto" />
         </section>
 
         {/* Intro Narrative */}
         <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-          <strong className="font-semibold text-[#0f3358]">MMV Sarthi</strong> is a student-focused website created to make life at Mahila Mahavidyalaya easier and more informed. It brings essential information about <strong className="font-semibold text-[#0f3358]">academics, administration, facilities, departments, and services</strong> together in one place, while keeping students updated with the latest <strong className="font-semibold text-[#0f3358]">college news and notices</strong>.
+          <strong className="font-semibold text-[#0f3358]">MMV <span className="font-yatra">सारथी</span></strong> is a student-focused website created to make life at Mahila Mahavidyalaya easier and more informed. It brings essential information about <strong className="font-semibold text-[#0f3358]">academics, administration, facilities, departments, and services</strong> together in one place, while keeping students updated with the latest <strong className="font-semibold text-[#0f3358]">college news and notices</strong>.
         </p>
 
         {/* The Purpose Behind "Sarthi" */}
         <div className="space-y-1">
           <h2 className="text-base sm:text-lg md:text-xl font-serif font-bold text-[#0f3358]">
-            The Purpose Behind "Sarthi"
+            The Purpose Behind "<span className="font-yatra">सारथी</span>"
           </h2>
           <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            The name <strong className="font-semibold text-[#0f3358]">“Sarthi”</strong> represents a guide and companion. Just as a Sarthi guides a traveller through their journey, MMV Sarthi supports students from helping freshers understand their new college to assisting existing students with everyday information.
+            The name <strong className="font-semibold text-[#0f3358]">"<span className="font-yatra">सारथी</span>"</strong> represents a guide and companion. Just as a <span className="font-yatra">सारथी</span> guides a traveller through their journey, MMV <span className="font-yatra">सारथी</span> supports students from helping freshers understand their new college to assisting existing students with everyday information.
           </p>
         </div>
 
         {/* Closing Promise Quote */}
         <p className="text-[#0f3358] text-sm sm:text-base md:text-lg font-serif font-semibold italic py-2 text-center border-y border-amber-900/15">
-          More than just a website, MMV Sarthi is a guide, a companion, and a reliable source of information so that no student has to navigate her MMV journey alone.
+          More than just a website, MMV <span className="font-yatra">सारथी</span> is a guide, a companion, and a reliable source of information so that no student has to navigate her MMV journey alone.
         </p>
 
         {/* Dedicated Team Blurb */}
@@ -82,7 +87,7 @@ const AboutSarthi = () => {
             सह-सृजन: Our Team
           </h3>
           <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            Behind MMV Sarthi is a dedicated team that brings together <strong className="font-semibold text-[#0f3358]">creativity, technical skills, and fresh ideas</strong>, working together to create a platform that makes every student’s MMV journey <strong className="font-semibold text-[#0f3358]">simpler, smoother, and more informed</strong>.
+            Behind MMV <span className="font-yatra">सारथी</span> is a dedicated team that brings together <strong className="font-semibold text-[#0f3358]">creativity, technical skills, and fresh ideas</strong>, working together to create a platform that makes every student's MMV journey <strong className="font-semibold text-[#0f3358]">simpler, smoother, and more informed</strong>.
           </p>
         </div>
 
@@ -94,7 +99,7 @@ const AboutSarthi = () => {
           >
             <img
               src="/bhu/teamphoto.jpeg"
-              alt="MMV Sarthi Team and Mahila Mahavidyalaya Campus"
+              alt="MMV सारथी Team and Mahila Mahavidyalaya Campus"
               className="w-full h-full object-cover rounded-full"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -109,7 +114,7 @@ const AboutSarthi = () => {
         {/* Official Footer Strip */}
         <footer className="pt-4 sm:pt-6 border-t border-gray-200 text-center text-[11px] sm:text-xs md:text-sm text-gray-500 space-y-1">
           <p>&copy; {new Date().getFullYear()} Mahila Mahavidyalaya, Banaras Hindu University. All rights reserved.</p>
-          <p>MMV Sarthi - Official Student Advisory & Information Portal</p>
+          <p>MMV <span className="font-yatra">सारथी</span> - Official Student Advisory & Information Portal</p>
         </footer>
 
       </div>
