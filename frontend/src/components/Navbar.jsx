@@ -643,7 +643,7 @@ const Navbar = () => {
                   src="/bhu/mmv_saarthi_logo.png"
                   alt="MMV Sarthi Logo"
                   // className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
-                  className="h-8 xl:h-10 rounded-2xl object-contain scale-150"
+                  className="h-8 xl:h-10 rounded-2xl object-contain scale-200"
 
                 />
               </div>
