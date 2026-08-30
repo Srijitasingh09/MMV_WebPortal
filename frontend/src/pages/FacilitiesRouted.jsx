@@ -51,7 +51,7 @@ const pages = {
   // ── Library ───────────────────────────────────────────────────────────────
   
    'library': {
-    title: 'Libraries',
+    title: 'Library',
     pageType: 'slideshow-description',
     
   },
@@ -136,7 +136,7 @@ const pages = {
   // ── Medical ───────────────────────────────────────────────────────────────
   
 'medical': {
-    title: 'Medical',
+    title: 'Medical Facilities',
     pageType: 'slideshow-description',
     
   },

@@ -62,7 +62,7 @@ const facilitiesItems = [
     { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
     { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
   ]},
-  { label: "Libraries", path: "/facilities/library" },
+  { label: "Library", path: "/facilities/library" },
   { label: "Sports", children: [
     { label: "University Sports Board", path: "https://www.bhu.ac.in/site/UnitHomeTemplate/1_3281_4800_Main-Site-University-Sports-Boards", target: "_blank" },
     { label: "MMV Sports Board", path: "/facilities/sports/mmvsports" },
