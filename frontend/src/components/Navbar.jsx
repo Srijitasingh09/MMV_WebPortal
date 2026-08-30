@@ -62,7 +62,7 @@ const facilitiesItems = [
     { label: "Pragya Kunj Hostel", path: "/facilities/hostels/pragyakunj" },
     { label: "Jyoti Kunj Hostel", path: "/facilities/hostels/jyotikunj" },
   ]},
-  { label: "Libraries", path: "/facilities/library" },
+  { label: "Library", path: "/facilities/library" },
   { label: "Sports", children: [
     { label: "University Sports Board", path: "https://www.bhu.ac.in/site/UnitHomeTemplate/1_3281_4800_Main-Site-University-Sports-Boards", target: "_blank" },
     { label: "MMV Sports Board", path: "/facilities/sports/mmvsports" },
@@ -415,11 +415,11 @@ const MobileMenu = ({ isOpen, onClose }) => {
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[1299] transition-opacity duration-200 lg:hidden
+        className={`fixed inset-0 bg-black/50 backdrop-blur-xs z-[1299] transition-opacity duration-200 lg:hidden
           ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-[#081a2f] z-[1300] shadow-2xl
+        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-primary/70 z-[1300] shadow-2xl
           overflow-y-auto transition-transform duration-300 lg:hidden border-l-2 border-[#d4af37]
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
@@ -637,10 +637,10 @@ const Navbar = () => {
                 </a>
               </div>
 
-              {/* Sarthi Logo -centered ONLY on large screens */}
+              {/* Saarthi Logo -centered ONLY on large screens */}
               <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="/mmv_saarthi_logo2.png"
+                  src="/bhu/mmv-saarthi-logo.png"
                   alt="MMV Sarthi Logo"
                   // className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
                   className="h-8 xl:h-10 rounded-2xl object-contain scale-200"
@@ -673,17 +673,19 @@ const Navbar = () => {
                 </a>
               </div>
 
-              {/* Mobile / Tablet / Small Screen (< 1024px) Right Side: ONLY MMV Sarthi Logo + Hamburger Button */}
+              {/* Mobile / Tablet / Small Screen (< 1024px) At Center: MMV Saarthi Logo & At Right side : Hamburger Button */}
               <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
                 <img
-                  src="/bhu/mmv_saarthi_logo.png"
+                  src="mmv-saarthi-logo.png"
                   alt="MMV Sarthi Logo"
                   className="h-8 sm:h-11 w-auto rounded-xl object-contain"
                 />
+              </div>
+              <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={() => setMobileOpen(true)}
                   aria-label="Open menu"
-                  className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 text-[#353375] border border-[#353375]/20 cursor-pointer flex flex-col justify-center gap-1"
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 text-[#353375] cursor-pointer flex flex-col justify-center gap-1"
                 >
                   <span className="block w-5 sm:w-6 h-0.5 bg-[#353375]" />
                   <span className="block w-5 sm:w-6 h-0.5 bg-[#353375]" />
