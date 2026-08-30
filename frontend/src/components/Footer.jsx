@@ -96,7 +96,7 @@ const Footer = () => {
       </div>
 
       <div className="border-t border-[#174873] py-4 text-center text-slate-400 text-xs px-4 font-sans-official">
-        © 2026 Mahila Maha Vidyalaya, Banaras Hindu University. All rights reserved.
+        © 2026 Mahila Mahavidyalaya, Banaras Hindu University. All rights reserved.
       </div>
     </footer>
   );

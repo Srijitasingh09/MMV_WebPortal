@@ -19,7 +19,7 @@ const AboutSarthi = () => {
       />
 
       {/* ── Official Institutional Top Bar Header ── */}
-      <header className="relative z-20 bg-primary text-white py-2.5 sm:py-3 px-3 sm:px-6 lg:px-10 border-b-2 border-[#D4AF37]/80 shadow-md">
+      <header className="touch-manipulation fixed top-0 left-0 right-0 z-20 bg-primary text-white py-2.5 sm:py-2 px-3 sm:px-6 lg:px-10 mb-5 border-b-2 border-[#D4AF37]/80 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-center sm:text-left text-xs sm:text-sm">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
             <span className="font-semibold tracking-wide text-amber-200 uppercase text-[11px] sm:text-xs md:text-sm">
@@ -32,11 +32,20 @@ const AboutSarthi = () => {
         </div>
       </header>
 
-      {/* ── Floating / Scrolling Right Glassy Button ── */}
+      {/*
+        ── Floating / Fixed Jigyasa Button ──
+        Position kept exactly as before on mobile (fixed, top-right — it's
+        fine for it to sit over content there). On sm/md/lg (tablet & laptop
+        widths) the content column below gets extra right padding so this
+        fixed button clears the text instead of sitting on top of it.
+        Hover effects are mirrored with `active:` / `group-active:` variants
+        so tapping on touch screens gives the same feedback as a mouse hover.
+      */}
       <Link
         to="/home"
         aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
-        className="fixed top-12 md:top-16 right-2 sm:right-4 md:right-5 lg:right-5 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-lg hover:shadow-xl active:shadow-xl transition-all duration-300 hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20">
+        className="touch-manipulation fixed top-12 sm:top-20 md:top-14 right-3 sm:right-6 md:right-10 lg:right-5 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-xl hover:shadow-2xl active:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
+      >
         {/* ── Fixed Size Circle Wrapper (overflow-hidden clips zoomed image) ── */}
         <div className="w-10 h-10 sm:w-12 sm:h-12 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
           <img
@@ -59,10 +68,10 @@ const AboutSarthi = () => {
       </Link>
 
       {/* ── Main Content Flow (Full Width on Mobile, Covers Whole Page) ── */}
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 md:px-12 lg:px-16 py-6 sm:py-10 space-y-4 sm:space-y-6">
+      <div className="relative z-10 max-w-8xl mx-auto pl-4 sm:pl-8 md:pl-12 lg:pl-32 pr-4 sm:pr-8 md:pr-12 lg:pr-32 py-6 sm:py-10 space-y-4 sm:space-y-6">
 
         {/* Header Section */}
-        <section className="space-y-1.5 pb-1">
+        <section className="space-y-1.5 pb-1 pt-8">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-primary tracking-tight">
             About MMV <span className="font-yatra">सारथी</span>
           </h1>
@@ -95,9 +104,9 @@ const AboutSarthi = () => {
             सह-सृजन
           </h3>
            <h3 className="text-xl sm:text-2xl md:text-2xl font-serif font-bold text-primary tracking-tight">
-            (Team)
+            (Our Team)
           </h3>
-          <div className="h-0.5 w-24 sm:w-32 mx-auto bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full mt-2" />
+          <div className="h-0.5 w-24 sm:w-42 mx-auto bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full mt-2" />
           
         </div>
 
@@ -125,7 +134,7 @@ const AboutSarthi = () => {
 
         <div className="space-y-1">
           <p className="text-gray-800 text-sm sm:text-base md:text-lg leading-snug sm:leading-relaxed text-justify">
-            Behind MMV <span className="font-yatra">सारथी</span> is a dedicated team that brings together <strong className="font-semibold text-primary">creativity, technical skills, and fresh ideas</strong>, working together to create a platform that makes every student’s MMV journey <strong className="font-semibold text-primary">simpler, smoother, and more informed</strong>.
+            Behind MMV <span className="font-yatra">सारथी</span> is a dedicated team that brings together <strong className="font-semibold text-primary">creativity, technical skills, and fresh ideas</strong>, working together to create a platform that makes every student's MMV journey <strong className="font-semibold text-primary">simpler, smoother, and more informed</strong>.
           </p>
         </div>
 

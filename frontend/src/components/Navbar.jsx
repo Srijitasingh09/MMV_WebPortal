@@ -289,8 +289,8 @@ const DropdownMenu = ({ title, path, items }) => {
 // ============================================
 const depthStyles = [
   { bg: "bg-primary", text: "text-white", weight: "font-bold", hover: "hover:bg-[#174873] hover:text-[#d4af37]" },
-  { bg: "bg-[#133a63]", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-[#1b4d7e] hover:text-[#f4d580]" },
-  { bg: "bg-[#091f38]", text: "text-amber-200", weight: "font-medium", hover: "hover:bg-[#12314f] hover:text-[#fce8b2]" },
+  { bg: "bg-primary", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-[#174873] hover:text-white" },
+  { bg: "bg-primary", text: "text-slate-100", weight: "font-medium", hover: "hover:bg-[#174873] hover:text-white" },
 ];
 
 const highlightStyle = {
@@ -415,11 +415,11 @@ const MobileMenu = ({ isOpen, onClose }) => {
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 bg-black/60 backdrop-blur-xs z-[1299] transition-opacity duration-200 lg:hidden
+        className={`fixed inset-0 bg-black/50 backdrop-blur-xs z-[1299] transition-opacity duration-200 lg:hidden
           ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-[#081a2f] z-[1300] shadow-2xl
+        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-primary/70 z-[1300] shadow-2xl
           overflow-y-auto transition-transform duration-300 lg:hidden border-l-2 border-[#d4af37]
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
