@@ -51,6 +51,7 @@ const AboutSarthi = () => {
           <img
             src="/bhu/sarthi1.jpeg"
             alt="Jigyasa Icon"
+          
             className="w-full h-full object-cover scale-125 group-hover:scale-135 group-active:scale-135 transition-transform duration-200"
             onError={(e) => {
               e.currentTarget.style.display = 'none';
@@ -72,10 +73,9 @@ const AboutSarthi = () => {
 
         {/* Header Section */}
         <section className="space-y-1.5 pb-1">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-primary tracking-tight text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-primary tracking-tight">
             About MMV <span className="font-yatra">सारथी</span>
           </h1>
-          <div className="h-0.5 w-24 sm:w-32 bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full mx-auto" />
         </section>
 
         {/* Intro Narrative */}

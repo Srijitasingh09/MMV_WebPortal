@@ -270,7 +270,7 @@ const NoticesAndNews = () => {
         </div>
 
         {/* Dual Card Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* Left Column: NOTICES CARD */}
           <div className="bg-white rounded-xl border-2 border-primary/20 p-5 sm:p-6 shadow-xs flex flex-col justify-between min-h-[420px]">
@@ -415,7 +415,7 @@ const About = () => (
         </h2>
         <div className="w-12 h-0.5 bg-[#d4af37] mx-auto mb-5" />
         <p className="font-lato text-xs sm:text-[17px] text-[#1A1A1A] leading-relaxed max-w-2xl mx-auto">
-          The MMV Student Portal is the centralized information hub for all students of
+          MMV <span className="font-yatra">सारथी</span> is the centralized information hub for all students of
           Mahila Mahavidyalaya. Whether you need your syllabus, hostel details,
           administrative contacts, or the latest notices - it is all organized here.
         </p>

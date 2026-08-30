@@ -147,7 +147,7 @@ const SubSubMenu = ({ label, path, children }) => {
               href={item.path || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xl xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </a>

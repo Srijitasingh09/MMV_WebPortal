@@ -229,7 +229,7 @@ const renderInlineFormatting = (text) => {
 // The MMV Sarthi pointer badge (public/icons/sarthi-pointer.jpeg), used in
 // place of the plain dot marker whenever a bullet line is a link, so
 // clickable list items read as "go here" at a glance.
-const SARTHI_POINTER_SRC = '/bhu/SarthiPointer.jpeg';
+const SARTHI_POINTER_SRC = '/bhu/sarthi1.jpeg';
 
 const SarthiPointerIcon = ({ className = '' }) => (
   <img
@@ -261,9 +261,9 @@ const SarthiBulletList = ({ items, className = '', spacing = 'space-y-1.5', keyP
       return (
         <li key={`${keyPrefix}-${i}`} className="flex items-center gap-2.5">
           {isLink ? (
-            <SarthiPointerIcon className="w-10 h-10 sm:w-12 sm:h-12" />
+            <SarthiPointerIcon className="w-14 h-14 sm:w-16 sm:h-16" />
           ) : (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
+            <span className="w-3.5 h-3.5 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
           )}
           <span>{renderInlineFormatting(item)}</span>
         </li>
