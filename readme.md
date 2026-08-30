@@ -33,23 +33,32 @@ MMV_WebPortal/
         ├── app.jsx                        # Route definitions
         ├── main.jsx                       # React entry point
         ├── app.css / index.css            # Global styles
+        ├── utils/
+        │   └── auth.js                    # Token/session helpers (getToken, isAdmin, etc.)
         ├── data/
         │   └── mmvInfo.js                 # Static reference data
         ├── components/
-        │   ├── NAVBAR.JSX                 # Navigation bar (all 57 links)
+        │   ├── Navbar.jsx                 # Navigation bar (all 57 links)
         │   ├── Layout.jsx                 # Wraps navbar + footer around pages
-        │   └── footer.jsx                 # Site footer
+        │   ├── Footer.jsx                 # Site footer
+        │   └── WelcomeSplash.jsx          # Full-screen welcome splash shown on first load
         └── pages/
             ├── home.jsx                       # Home page
             ├── about.jsx                       # About MMV page
+            ├── AboutSarthi.jsx                 # About MMV सारथी (portal itself) page
             ├── contact.jsx                      # Contact page
             ├── notice.jsx                        # Notices page (reads from /notices)
+            ├── News.jsx                            # College news page (reads from /news)
+            ├── Feedback.jsx                          # Student feedback form
             ├── generic.jsx                        # ★ Single template for all 57 content pages
             ├── SlideshowBlock.jsx                  # Reusable photo slideshow component
-            ├── administrationrouted.jsx            # Route config for Administration section
-            ├── academicsrouted.jsx                 # Route config for Academics section
-            ├── facilitiesrouted.jsx                # Route config for Facilities section
+            ├── ProfileCardsBlock.jsx               # Reusable staff/warden profile card carousel
+            ├── AdministrationRouted.jsx            # Route config for Administration section
+            ├── AcademicsRouted.jsx                 # Route config for Academics section
+            ├── FacilitiesRouted.jsx                # Route config for Facilities section
             ├── AdminDashboard.jsx                  # Admin control panel
+            ├── adminreadme.jsx                     # ★ In-portal formatting/syntax guide, shown as a tab in
+            │                                          AdminDashboard and standalone at /admin/content-guide
             └── LoginPage.jsx                       # Admin login
 ```
 
@@ -66,7 +75,7 @@ URL → Router File → generic.jsx (template) → Backend API → Database
 ```
 
 1. A navbar link sends the user to a URL like `/facilities/hostels/kirtikunj`
-2. The matching router file (`facilitiesrouted.jsx`) looks up that URL in its config table and reads the `pageType`
+2. The matching router file (`FacilitiesRouted.jsx`) looks up that URL in its config table and reads the `pageType`
 3. `generic.jsx` receives the config as props and renders accordingly
 4. It fetches the actual content (text, photo, PDF, table data) from the backend API
 
@@ -87,7 +96,7 @@ Example combos: `'description'`, `'photo-description'`, `'description-table'`, `
 
 ### Adding or changing a page
 
-To change what a page shows (e.g. remove a table, add a photo), edit **only the router file** for that section. Example in `facilitiesrouted.jsx`:
+To change what a page shows (e.g. remove a table, add a photo), edit **only the router file** for that section. Example in `FacilitiesRouted.jsx`:
 
 ```js
 // Change this page from a table to just a description:
@@ -111,13 +120,15 @@ To change what a page shows (e.g. remove a table, add a photo), edit **only the 
 },
 ```
 
-To add a brand new page, add one line to the router file and add its link to `NAVBAR.JSX`.
+To add a brand new page, add one line to the router file and add its link to `Navbar.jsx`.
 
 ---
 
 ## Content Formatting (for Admins)
 
-When editing any page's description in the admin controls, use this simple shorthand:
+When editing any page's description in the admin controls, `generic.jsx` parses a small custom shorthand (not full Markdown). The same guide is also available live inside the app for admins — see **Admin Panel → Content Guide** below.
+
+### Basic text & links
 
 | What you type              | How it appears |
 |---|---|
@@ -125,14 +136,65 @@ When editing any page's description in the admin controls, use this simple short
 | `## Section Title`         | Navy subheading |
 | `### Smaller Title`        | Smaller dark subheading |
 | `- Item`                   | Bullet point |
-| `**Bold text**`            | Bold emphasized line |
-| `> Some note`              | Highlighted callout box with left border |
+| `**Bold text**`            | Bold |
+| `*Italic text*` or `_Italic text_` | Italic |
+| `[link text](url)`         | Clickable link — internal (`/...`) links open in the same tab, external links open in a new tab |
 | `---`                      | Horizontal divider |
 | Blank line                 | Vertical spacing |
-| `[link text](url)`         | Clickable link (URL itself stays hidden) |
 | Anything else              | Normal left-aligned paragraph |
 
-Example:
+### Callout notes (`>` ... `<`)
+
+Start a line with `> ` to open a highlighted note box; close it by ending a line with `<`. A single-line note can open and close on the same line. Notes support their own nested `##`, `###`, `---`, and `- ` bullets.
+
+```
+> Visitors allowed only between 4 PM and 6 PM on weekdays. <
+```
+
+```
+> **Hostel Rules**
+- Curfew is 8:00 PM
+- Guests must sign in at the gate <
+```
+
+### In-description tables (`| Col 1 | Col 2 |`)
+
+Pipe-delimited rows render as a styled data table. The first row is the header; the second row must be a divider (`| --- | --- |`); every row after that is data. Cells support bold, italic, and links.
+
+```
+| Warden Name | Hostel | Contact Number |
+| --- | --- | --- |
+| Dr. Moumita Das | Swasti Kunj | +91 8967064498 |
+| Dr. Rana Noor | Swasti Kunj | +91 9451735063 |
+```
+
+### Full-width accordion (`+++ Title` ... `+++`)
+
+```
++++ Fee Refund Policy
+Refunds are processed within 15 working days of the withdrawal request.
++++
+```
+
+### 3-column grid accordions (`:::grid [theme]` ... `:::`)
+
+Renders up to 3 cards side-by-side; each card expands on click. Cards inside the block are separated with `=== Card Title`. Optional theme keyword after `:::grid` — one of `blue`, `green`, `slate`, `crimson`, `purple`, `amber` (omit for the default gold/navy theme).
+
+```
+:::grid blue
+=== Hostel Rules
+- Curfew time is **8:00 PM**
+- Check [Hostel Guidelines](/facilities/hostels) for details
+=== Mess Timings
+- Breakfast: **7:30 AM - 9:00 AM**
+:::
+```
+
+### Staff / warden profile cards
+
+Not text shorthand — added from the **Admin Controls** bar on the live page via the **+ Profile Card** button (needs `profile` in the page's `pageType`). Captures full name, designation, hostel/department, university, phone, email, and a photo avatar.
+
+### Full example
 
 ```
 Kirti Kunj Hostel
@@ -144,10 +206,14 @@ Established in 1985, one of the oldest hostels on campus.
 - 24-hour hot water
 - Wi-Fi on all floors
 
-> Visitors allowed only between 4 PM and 6 PM on weekdays.
+> Visitors allowed only between 4 PM and 6 PM on weekdays. <
 
 **Warden:** Dr. Anita Singh — 9876543210
 ```
+
+### Admin Panel → Content Guide
+
+The formatting rules above are also documented in-app for non-technical admins: `frontend/src/pages/adminreadme.jsx` renders a live "Administrator Operating & Syntax Guide" — visible as a tab inside `/admin` (`AdminDashboard.jsx`) and standalone at `/admin/content-guide`. Update that file alongside this section whenever `generic.jsx`'s parsing rules change, so the two stay in sync.
 
 ---
 
@@ -231,12 +297,15 @@ Navigate to `/login` to access the admin login page.
 After logging in, the navbar top bar shows an **Admin Panel** link and a **Logout** button on every page. The admin panel (`/admin`) allows managing:
 
 - Notices and announcements (`/notices` — also used by the public Notices page)
+- News posts, including attachments (`/news` — also used by the public News page)
 - Contact info and emergency contacts
 - College info cards
 - Administration section content
 - Academics: NEP info, syllabus uploads, electives, incharges, SWAYAM
 - Facility content (description, photos, PDFs, tables, profiles) across all 57 pages
+- Student feedback submissions (from the public `/feedback` form)
 - MMV Knowledge Base — content intended for a planned AI assistant (not yet built; see below)
+- **Content Guide** — the live formatting/syntax reference for admins, also reachable directly at `/admin/content-guide` (see [Content Formatting](#content-formatting-for-admins) above)
 
 Content on any of the 57 pages can be edited by visiting that page while logged in as admin — an **Admin Controls** bar appears at the top with Edit, Upload Photo, and Upload PDF options. Pages with a profile section show an additional **Edit Profile** option.
 
