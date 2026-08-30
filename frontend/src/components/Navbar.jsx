@@ -640,7 +640,7 @@ const Navbar = () => {
               {/* Saarthi Logo -centered ONLY on large screens */}
               <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex-shrink-0">
                 <img
-                  src="/mmv-saarthi-logo.png"
+                  src="/bhu/mmv-saarthi-logo.png"
                   alt="MMV Sarthi Logo"
                   // className="h-12 xl:h-14 rounded-2xl object-contain scale-100"
                   className="h-8 xl:h-10 rounded-2xl object-contain scale-200"
