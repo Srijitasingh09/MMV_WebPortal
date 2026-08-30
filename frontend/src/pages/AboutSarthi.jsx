@@ -49,7 +49,7 @@ const AboutSarthi = () => {
         {/* ── Fixed Size Circle Wrapper (overflow-hidden clips zoomed image) ── */}
         <div className="w-10 h-10 sm:w-12 sm:h-12 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
           <img
-            src="/bhu/Sarthi1.jpeg"
+            src="/bhu/Saarthi01.jpeg"
             alt="Jigyasa Icon"
           
             className="w-full h-full object-cover scale-125 group-hover:scale-135 group-active:scale-135 transition-transform duration-200"
