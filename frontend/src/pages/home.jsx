@@ -438,9 +438,9 @@ const About = () => (
 // ─── FACILITIES HIGHLIGHT (Alternating Warm Ivory #FAF7F2) ───────────────────
 const facilities = [
   { label: 'Hostels',       detail: 'Five on-campus hostels with mess, security & Wi-Fi.', link: '/facilities/hostels' },
-  { label: 'Libraries',     detail: 'MMV, Central & Cyber Library - 1 lakh+ books & digital access.', link: '/facilities/library/mmvlibrary' },
+  { label: 'Libraries',     detail: 'MMV, Central & Cyber Library - 1 lakh+ books & digital access.', link: '/facilities/library' },
   { label: 'Sports',        detail: 'Courts, athletics track, gymnasium & sports ground', link: '/facilities/sports/mmvsports' },
-  { label: 'Health Centre', detail: 'On-campus medical facilities, Sir Sundarlal Hospital & Trauma Centre.', link: '/facilities/medical/health' },
+  { label: 'Medical',       detail: 'On-campus medical facilities, Student Health Care Complex, Sir Sundarlal Hospital & Trauma Centre.', link: '/facilities/medical' },
   { label: 'Canteen',       detail: 'Access to affordable, hygienic meals and snacks within the campus.', link: '/facilities/canteen/mmvcanteen' },
   { label: 'MMV Pahal',     detail: 'Assist students in addressing academic, personal, and social challenges.', link: '/facilities/wellbeing/mmvwell' },
   { label: 'Auditorium',    detail: 'Spacious halls and facilities for seminars, cultural programmes, and guest lectures.', link: '/facilities/other/auditorium' },
