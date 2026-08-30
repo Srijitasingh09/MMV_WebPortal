@@ -29,9 +29,6 @@ const AboutSarthi = () => {
              | Mahila Mahavidyalaya 
             </span>
           </div>
-          {/* <div className="text-gray-300 text-[10px] sm:text-xs tracking-wider uppercase font-medium">
-            Official Student Guidance & Information Portal
-          </div> */}
         </div>
       </header>
 
@@ -39,9 +36,9 @@ const AboutSarthi = () => {
       <Link
         to="/home"
         aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
-        className="fixed top-12 sm:top-20 md:top-16 right-3 sm:right-6 md:right-10 lg:right-12 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-xl hover:shadow-2xl active:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20" >
+        className="fixed top-12 md:top-16 right-2 sm:right-4 md:right-5 lg:right-5 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-2 sm:px-6 py-2 sm:py-3 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-lg hover:shadow-xl active:shadow-xl transition-all duration-300 hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20">
         {/* ── Fixed Size Circle Wrapper (overflow-hidden clips zoomed image) ── */}
-        <div className="w-12 h-12 sm:w-16 sm:h-16 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
           <img
             src="/bhu/sarthi1.jpeg"
             alt="Jigyasa Icon"
@@ -53,12 +50,11 @@ const AboutSarthi = () => {
           />
         </div>
 
-        <span className="text-amber-200 font-bold text-sm sm:text-base tracking-wide drop-shadow-sm">
+        <span className="text-amber-200 font-bold text-xs sm:text-sm tracking-wide drop-shadow-sm">
           जिज्ञासा
         </span>
-        <span className="text-xs sm:text-sm font-semibold text-gray-100 flex items-center gap-0.5">
+        <span className="text-[10px] sm:text-xs font-semibold text-gray-100">
           Click Here!!
-          <span className="group-hover:translate-x-1 group-active:translate-x-1 transition-transform duration-200 text-amber-300">→</span>
         </span>
       </Link>
 
@@ -70,6 +66,7 @@ const AboutSarthi = () => {
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-primary tracking-tight">
             About MMV <span className="font-yatra">सारथी</span>
           </h1>
+          <div className="h-0.5 w-32 sm:w-56 bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full ml" />
         </section>
 
         {/* Intro Narrative */}
@@ -98,7 +95,7 @@ const AboutSarthi = () => {
             सह-सृजन
           </h3>
            <h3 className="text-xl sm:text-2xl md:text-2xl font-serif font-bold text-primary tracking-tight">
-            Our Team
+            (Team)
           </h3>
           <div className="h-0.5 w-24 sm:w-32 mx-auto bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full mt-2" />
           
@@ -121,8 +118,8 @@ const AboutSarthi = () => {
           </div>
           {/* Center-aligned caption */}
           <figcaption className="mt-2.5 text-xs sm:text-sm md:text-base text-gray-600 text-center italic font-medium max-w-2xl mx-auto leading-normal">
-            <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Student); Prof. Rakhi Garg (Professor); Roshni Kumari Kushwaha (B.Sc. Student); Varsha Kumari (B.Sc. Student); Srijita Singh (B.Sc. Student).
-            <br/>Department of Computer Science, MMV, BHU.
+            <b>From Left to Right:</b> Anutosh Shikher Saroj (Research Scholar); Supriya Mishra (B.Sc. Computer Science); Prof. Rakhi Garg (Professor); Roshni Kumari Kushwaha (B.Sc. Computer Science); Varsha Kumari (B.Sc. Computer Science); Srijita Singh (B.Sc. Computer Science).
+            <br/><b>Department of Computer Science, MMV, BHU.</b>
           </figcaption>
         </figure>
 

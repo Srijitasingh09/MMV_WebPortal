@@ -263,7 +263,7 @@ const SarthiBulletList = ({ items, className = '', spacing = 'space-y-1.5', keyP
           {isLink ? (
             <SarthiPointerIcon className="w-14 h-14 sm:w-16 sm:h-16" />
           ) : (
-            <span className="w-3.5 h-3.5 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
+            <span className="w-2 h-2 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
           )}
           <span>{renderInlineFormatting(item)}</span>
         </li>
