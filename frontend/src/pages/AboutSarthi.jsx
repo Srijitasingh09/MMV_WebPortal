@@ -36,7 +36,7 @@ const AboutSarthi = () => {
       <Link
         to="/home"
         aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
-        className="fixed top-12 md:top-16 right-2 sm:right-4 md:right-5 lg:right-5 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-2 sm:px-6 py-2 sm:py-3 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-lg hover:shadow-xl active:shadow-xl transition-all duration-300 hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20">
+        className="fixed top-12 md:top-16 right-2 sm:right-4 md:right-5 lg:right-5 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-lg hover:shadow-xl active:shadow-xl transition-all duration-300 hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20">
         {/* ── Fixed Size Circle Wrapper (overflow-hidden clips zoomed image) ── */}
         <div className="w-10 h-10 sm:w-12 sm:h-12 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
           <img
