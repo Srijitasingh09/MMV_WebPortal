@@ -289,8 +289,8 @@ const DropdownMenu = ({ title, path, items }) => {
 // ============================================
 const depthStyles = [
   { bg: "bg-primary", text: "text-white", weight: "font-bold", hover: "hover:bg-[#174873] hover:text-[#d4af37]" },
-  { bg: "bg-[#133a63]", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-[#1b4d7e] hover:text-[#f4d580]" },
-  { bg: "bg-[#091f38]", text: "text-amber-200", weight: "font-medium", hover: "hover:bg-[#12314f] hover:text-[#fce8b2]" },
+  { bg: "bg-primary", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-[#174873] hover:text-white" },
+  { bg: "bg-primary", text: "text-slate-100", weight: "font-medium", hover: "hover:bg-[#174873] hover:text-white" },
 ];
 
 const highlightStyle = {

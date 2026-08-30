@@ -28,7 +28,7 @@ const Footer = () => {
         {/* Col 1 -College blurb (Spans full width on mobile) */}
         <div className="col-span-2 md:col-span-1">
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">
-            Mahila Maha Vidyalaya
+            Mahila Mahavidyalaya
           </h3>
           <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans-official">
             Women's College, Banaras Hindu University.
@@ -96,7 +96,7 @@ const Footer = () => {
       </div>
 
       <div className="border-t border-[#174873] py-4 text-center text-slate-400 text-xs px-4 font-sans-official">
-        © 2026 Mahila Maha Vidyalaya, Banaras Hindu University. All rights reserved.
+        © 2026 Mahila Mahavidyalaya, Banaras Hindu University. All rights reserved.
       </div>
     </footer>
   );
