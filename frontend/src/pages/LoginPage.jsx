@@ -211,6 +211,12 @@ const LoginPage = () => {
             </button>
           </form>
 
+           <p className="mt-4 text-center">
+             <a href="/forgot-password" className="text-xs font-semibold" style={{ color: '#174873' }}>
+               Forgot your password?
+             </a>
+           </p>
+
           <p className="mt-10 text-[11px] text-center uppercase tracking-[0.2em]" style={{ color: '#A89B7C' }}>
             MMV Web Portal &middot; Restricted Access
           </p>
