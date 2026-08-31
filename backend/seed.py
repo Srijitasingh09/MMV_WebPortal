@@ -13,14 +13,14 @@ def seed():
     db = SessionLocal()
 
     # Only create the admin account if it doesn't already exist
-    if db.query(models.User).filter(models.User.email == "admin@bhu.ac.in").first():
+    if db.query(models.User).filter(models.User.email == "supriyamishra.mmv.2024@bhu.ac.in").first():
         print("Admin already exists.")
         db.close()
         return
 
     admin = models.User(
         full_name="Portal Admin",
-        email="admin@bhu.ac.in",
+        email="supriyamishra.mmv.2024@bhu.ac.in",
         hashed_password=auth.get_password_hash("admin123"),
         is_admin=True,
     )

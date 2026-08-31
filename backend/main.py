@@ -1,5 +1,7 @@
 import sys
 import os
+import secrets
+import hashlib
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Request
@@ -9,7 +11,8 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func, inspect
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timedelta
+from pydantic import BaseModel, Field
 import os
 import shutil
 import uuid
@@ -39,6 +42,7 @@ async def validate_upload(file: UploadFile, allowed_types: set):
 
 import models, database, auth
 from database import engine, get_db
+import email_utils
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -74,6 +78,11 @@ def serialize_news(n: "models.News"):
         ],
     }
 
+
+def ensure_password_reset_tokens_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.PasswordResetToken.__table__,
+    ], checkfirst=True)
 
 def ensure_notice_attachment_columns():
     # Uses SQLAlchemy's Inspector instead of raw information_schema SQL so this
@@ -128,6 +137,7 @@ ensure_facility_content_table()
 ensure_news_table()
 ensure_profile_cards_table()
 ensure_feedback_table()
+ensure_password_reset_tokens_table()
 
 app = FastAPI(title="MMV WebPortal")
 
@@ -190,6 +200,19 @@ def ensure_admin(user: models.User):
         raise HTTPException(status_code=403, detail="Admin only")
 
 
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8)
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+ 
+ 
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
 # ===================== AUTH =====================
 
 @app.post("/login")
@@ -228,6 +251,94 @@ def get_current_user_info(user: models.User = Depends(get_current_user)):
         "is_admin": user.is_admin,
     }
 
+@app.put("/admin/change-password")
+def change_password(
+    payload: ChangePasswordRequest,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    ensure_admin(user)
+ 
+    if not auth.verify_password(payload.current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+ 
+    if payload.new_password == payload.current_password:
+        raise HTTPException(
+            status_code=400,
+            detail="New password must be different from the current password",
+        )
+ 
+    user.hashed_password = auth.get_password_hash(payload.new_password)
+    db.commit()
+ 
+    return {"detail": "Password updated successfully"}
+
+RESET_TOKEN_EXPIRE_MINUTES = 30
+ 
+ 
+def _hash_reset_token(raw_token: str) -> str:
+    return hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+ 
+ 
+@app.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    generic_response = {
+        "detail": "If that email is registered, a reset link has been sent."
+    }
+ 
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if not user:
+        return generic_response  # don't reveal whether the email exists
+ 
+    raw_token = secrets.token_urlsafe(32)
+    token_row = models.PasswordResetToken(
+        user_id=user.id,
+        token_hash=_hash_reset_token(raw_token),
+        expires_at=datetime.utcnow() + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES),
+    )
+    db.add(token_row)
+    db.commit()
+ 
+    try:
+        email_utils.send_password_reset_email(user.email, raw_token)
+    except Exception:
+        # Don't leak SMTP/delivery errors to the caller - same reasoning as
+        # not confirming whether the email exists. Log it server-side
+        # (swap this for your actual logger) so you can debug delivery
+        # issues without exposing them to whoever is hitting the endpoint.
+        print(f"[forgot-password] failed to send reset email to user {user.id}")
+ 
+    return generic_response
+ 
+ 
+@app.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    token_hash = _hash_reset_token(payload.token)
+    token_row = (
+        db.query(models.PasswordResetToken)
+        .filter(models.PasswordResetToken.token_hash == token_hash)
+        .first()
+    )
+ 
+    if (
+        not token_row
+        or token_row.used
+        or token_row.expires_at < datetime.utcnow()
+    ):
+        raise HTTPException(status_code=400, detail="This reset link is invalid or has expired")
+ 
+    user = db.query(models.User).filter(models.User.id == token_row.user_id).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="This reset link is invalid or has expired")
+ 
+    user.hashed_password = auth.get_password_hash(payload.new_password)
+    token_row.used = True
+    db.commit()
+ 
+    return {"detail": "Password has been reset. You can now log in with your new password."}
+ 
+ 
+ 
 # ====================contacts=======================
 
 @app.get("/contact-info")

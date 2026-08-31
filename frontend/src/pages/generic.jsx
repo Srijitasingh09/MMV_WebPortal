@@ -226,10 +226,10 @@ const renderInlineFormatting = (text) => {
 };
 
 // ─── Signature "Sarthi pointer" bullet ──────────────────────────────────────
-// The MMV Sarthi pointer badge (public/icons/sarthi-pointer.png), used in
+// The MMV Sarthi pointer badge (public/icons/sarthi-pointer.jpeg), used in
 // place of the plain dot marker whenever a bullet line is a link, so
 // clickable list items read as "go here" at a glance.
-const SARTHI_POINTER_SRC = '/bhu/Sarthi1.png';
+const SARTHI_POINTER_SRC = '/bhu/sarthi1.jpeg';
 
 const SarthiPointerIcon = ({ className = '' }) => (
   <img
@@ -263,7 +263,7 @@ const SarthiBulletList = ({ items, className = '', spacing = 'space-y-1.5', keyP
           {isLink ? (
             <SarthiPointerIcon className="w-14 h-14 sm:w-16 sm:h-16" />
           ) : (
-            <span className="w-2 h-2 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
+            <span className="w-3.5 h-3.5 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
           )}
           <span>{renderInlineFormatting(item)}</span>
         </li>
@@ -313,10 +313,12 @@ const GenericContentPage = ({
 
   // table state
   const [columns,      setColumns]      = useState(tableColumns);
+  const [columnTypes,  setColumnTypes]  = useState({}); // { [colName]: 'text' | 'pdf' }
   const [rows,         setRows]         = useState([]);
   const [newRow,       setNewRow]       = useState({});
   const [addingCol,    setAddingCol]    = useState(false);
   const [newColName,   setNewColName]   = useState('');
+  const [newColType,   setNewColType]   = useState('text');
   const [tableHeading,     setTableHeading]     = useState('');
   const [isEditingHeading, setIsEditingHeading] = useState(false);
   const [editTableHeading, setEditTableHeading] = useState('');
@@ -365,6 +367,18 @@ const GenericContentPage = ({
   const allPdfs    = data.pdfs || [];
   const galleryPdfs = allPdfs.filter(p => !p.pdf_name?.startsWith(TABLE_PDF_TAG));
 
+  // A column counts as a "PDF column" if it was explicitly marked as such
+  // (columnTypes[col] === 'pdf'), OR — for tables created before column
+  // types existed — if its name matches the old naming heuristic. This
+  // keeps existing tables working without a migration while letting new
+  // columns of any name opt in to PDF-upload behaviour explicitly.
+  const isPdfCol = useCallback((col) => {
+    const explicit = columnTypes[col];
+    if (explicit) return explicit === 'pdf';
+    const name = col.toLowerCase();
+    return name.includes('pdf') || name.includes('document') || name.includes('syllabus');
+  }, [columnTypes]);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
@@ -386,6 +400,7 @@ const GenericContentPage = ({
 
       if (hasTable) {
         setColumns(parsed.columns || tableColumns);
+        setColumnTypes(parsed.columnTypes || {});
         setRows(parsed.rows || []);
         const heading = parsed.tableHeading || '';
         setTableHeading(heading);
@@ -404,7 +419,7 @@ const GenericContentPage = ({
       setEditSlideSettings(mergedPhotoSettings);
     } catch {
       setData({});
-      if (hasTable)   { setColumns(tableColumns); setRows([]); setTableHeading(''); setEditTableHeading(''); }
+      if (hasTable)   { setColumns(tableColumns); setColumnTypes({}); setRows([]); setTableHeading(''); setEditTableHeading(''); }
       if (hasProfile) { setProfile(blankProfile); setEditProfile(blankProfile); }
       setOpenSections({});
       setOpenGridCards({});
@@ -418,6 +433,36 @@ const GenericContentPage = ({
   }, [section, subsection]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Lightweight refresh used after a table-cell PDF upload: pulls the
+  // latest `photos`/`pdfs` arrays from the backend without resetting any
+  // other page state (open accordions, in-progress row edits, etc.) the
+  // way a full fetchData() would.
+  const refreshMediaLists = useCallback(async () => {
+    try {
+      const res = await axios.get(
+        `${API}/facility-content`,
+        { params: { section, category: subsection } }
+      );
+      const match = (res.data || [])[0] || {};
+      setData(prev => ({ ...prev, photos: match.photos, pdfs: match.pdfs }));
+    } catch { /* non-critical — table cell already has the URL it needs */ }
+  }, [section, subsection]);
+
+  // Deletes the backend PDF record matching a table-cell's stored URL, if
+  // any, so removing/replacing a PDF in a table cell doesn't leave an
+  // orphaned file behind. Silent/best-effort — the cell's own value is
+  // already cleared by the caller regardless of whether this succeeds.
+  const deleteTablePdfByUrl = useCallback(async (url) => {
+    if (!url) return;
+    const match = (data.pdfs || []).find(p => p.pdf_url === url);
+    if (!match) return;
+    try {
+      await axios.delete(`${API}/admin/facility-content/pdf/${match.id}`,
+        { headers: { Authorization: `Bearer ${token}` } });
+      setData(prev => ({ ...prev, pdfs: (prev.pdfs || []).filter(p => p.id !== match.id) }));
+    } catch { /* non-critical cleanup */ }
+  }, [data.pdfs, token]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -508,14 +553,14 @@ const GenericContentPage = ({
     const updated = [...rows];
     [updated[idx], updated[targetIdx]] = [updated[targetIdx], updated[idx]];
     setRows(updated);
-    saveTable(columns, updated);
+    saveTable(columns, updated, columnTypes);
   };
 
-  const saveTable = async (cols, tableRows) => {
+  const saveTable = async (cols, tableRows, colTypes = columnTypes) => {
     try {
       let existing = {};
       try { existing = data.details ? JSON.parse(data.details) : {}; } catch { existing = {}; }
-      const merged = { ...existing, columns: cols, rows: tableRows };
+      const merged = { ...existing, columns: cols, rows: tableRows, columnTypes: colTypes };
       await axios.put(`${API}/admin/facility-content`,
         {
           section,
@@ -624,7 +669,7 @@ const GenericContentPage = ({
     const updated = [...rows, { ...newRow }];
     setRows(updated);
     setNewRow({});
-    saveTable(columns, updated);
+    saveTable(columns, updated, columnTypes);
   };
 
   const handleDeleteRow = (idx) => {
@@ -632,9 +677,19 @@ const GenericContentPage = ({
       setEditingRowIdx(null);
       setEditingRowData({});
     }
+    // Clean up any PDFs that lived only in this row's cells so we don't
+    // leave orphaned files behind on the backend.
+    const removedRow = rows[idx];
+    if (removedRow) {
+      columns.forEach(col => {
+        if (isPdfCol(col) && removedRow[col]) {
+          deleteTablePdfByUrl(removedRow[col]);
+        }
+      });
+    }
     const updated = rows.filter((_, i) => i !== idx);
     setRows(updated);
-    saveTable(columns, updated);
+    saveTable(columns, updated, columnTypes);
   };
 
   const handleStartEditRow = (idx) => {
@@ -650,20 +705,24 @@ const GenericContentPage = ({
   const handleSaveEditRow = () => {
     const updated = rows.map((r, i) => i === editingRowIdx ? { ...editingRowData } : r);
     setRows(updated);
-    saveTable(columns, updated);
+    saveTable(columns, updated, columnTypes);
     setEditingRowIdx(null);
     setEditingRowData({});
   };
 
   const handleAddColumn = () => {
     if (!newColName.trim()) return;
-    const updatedCols = [...columns, newColName.trim()];
-    const updatedRows = rows.map(r => ({ ...r, [newColName.trim()]: '' }));
+    const trimmedName = newColName.trim();
+    const updatedCols = [...columns, trimmedName];
+    const updatedRows = rows.map(r => ({ ...r, [trimmedName]: '' }));
+    const updatedTypes = { ...columnTypes, [trimmedName]: newColType };
     setColumns(updatedCols);
     setRows(updatedRows);
+    setColumnTypes(updatedTypes);
     setNewColName('');
+    setNewColType('text');
     setAddingCol(false);
-    saveTable(updatedCols, updatedRows);
+    saveTable(updatedCols, updatedRows, updatedTypes);
   };
 
   const handleDeleteColumn = (col) => {
@@ -671,11 +730,27 @@ const GenericContentPage = ({
       setEditingRowIdx(null);
       setEditingRowData({});
     }
+    // Clean up any PDFs living in this column's cells before dropping it.
+    if (isPdfCol(col)) {
+      rows.forEach(r => {
+        if (r[col]) deleteTablePdfByUrl(r[col]);
+      });
+    }
     const updatedCols = columns.filter(c => c !== col);
     const updatedRows = rows.map(r => { const c = { ...r }; delete c[col]; return c; });
+    const updatedTypes = { ...columnTypes };
+    delete updatedTypes[col];
     setColumns(updatedCols);
     setRows(updatedRows);
-    saveTable(updatedCols, updatedRows);
+    setColumnTypes(updatedTypes);
+    saveTable(updatedCols, updatedRows, updatedTypes);
+  };
+
+  const handleToggleColumnType = (col) => {
+    const nextType = isPdfCol(col) ? 'text' : 'pdf';
+    const updatedTypes = { ...columnTypes, [col]: nextType };
+    setColumnTypes(updatedTypes);
+    saveTable(columns, rows, updatedTypes);
   };
 
   const handleStartEditColName = (col) => {
@@ -707,9 +782,15 @@ const GenericContentPage = ({
       }
       return nr;
     });
+    const updatedTypes = { ...columnTypes };
+    if (editingColName in updatedTypes) {
+      updatedTypes[trimmed] = updatedTypes[editingColName];
+      delete updatedTypes[editingColName];
+    }
     setColumns(updatedCols);
     setRows(updatedRows);
-    saveTable(updatedCols, updatedRows);
+    setColumnTypes(updatedTypes);
+    saveTable(updatedCols, updatedRows, updatedTypes);
     handleCancelEditColName();
   };
 
@@ -720,7 +801,7 @@ const GenericContentPage = ({
     const updated = [...columns];
     [updated[idx], updated[targetIdx]] = [updated[targetIdx], updated[idx]];
     setColumns(updated);
-    saveTable(updated, rows);
+    saveTable(updated, rows, columnTypes);
   };
 
   const handleImageUpload = async (e) => {
@@ -1061,13 +1142,14 @@ const GenericContentPage = ({
                   const flushCardBullets = () => {
                     if (cardBullets.length > 0) {
                       cardContentElements.push(
-                        <SarthiBulletList
-                          key={`card-ul-${cardContentElements.length}`}
-                          keyPrefix={`card-ul-${cardContentElements.length}`}
-                          items={cardBullets}
-                          spacing="space-y-2"
-                          className="text-xs sm:text-sm md:text-base text-slate-700 my-2"
-                        />
+                        <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm md:text-base text-slate-700 my-2">
+                          {cardBullets.map((b, bi) => (
+                            <li key={bi} className="flex items-start gap-2.5">
+                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
+                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
+                            </li>
+                          ))}
+                        </ul>
                       );
                       cardBullets = [];
                     }
@@ -2273,12 +2355,7 @@ const GenericContentPage = ({
           )}
 
           {(() => {
-            const isPdfCol = (col) =>
-              col.toLowerCase().includes('pdf') ||
-              col.toLowerCase().includes('document') ||
-              col.toLowerCase().includes('syllabus');
-
-            const uploadPdf = async (onSet) => {
+            const uploadPdf = (onSet) => {
               return async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
@@ -2294,8 +2371,15 @@ const GenericContentPage = ({
                     { headers: { Authorization: `Bearer ${token}` } }
                   );
                   const pdfUrl = res.data.pdf_url || res.data.pdfs?.[0]?.pdf_url;
-                  if (pdfUrl) onSet(pdfUrl);
-                  else alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                  if (pdfUrl) {
+                    onSet(pdfUrl);
+                    // Keep data.pdfs in sync so Downloads (galleryPdfs) and
+                    // any orphan-cleanup logic see this file right away —
+                    // it stays out of Downloads because it's tagged.
+                    await refreshMediaLists();
+                  } else {
+                    alert('Upload succeeded but URL not returned: ' + JSON.stringify(res.data));
+                  }
                 } catch (err) {
                   alert('Upload failed: ' + JSON.stringify(err.response?.data));
                 }
@@ -2311,7 +2395,7 @@ const GenericContentPage = ({
                       className="text-xs text-[#174873] hover:underline truncate max-w-[100px]">
                       Current PDF
                     </a>
-                    <button onClick={() => onChange('')}
+                    <button onClick={() => { deleteTablePdfByUrl(value); onChange(''); }}
                       className="text-red-400 text-xs hover:text-red-600 min-w-[24px] min-h-[24px]">✕</button>
                   </div>
                 ) : (
@@ -2332,9 +2416,15 @@ const GenericContentPage = ({
               </div>
             );
 
-            const renderViewValue = (val) =>
+            // Only a real PDF column gets the "View PDF" icon treatment.
+            // Every other column — even one containing a raw http(s) link —
+            // renders through renderInlineFormatting, which already turns
+            // bare URLs and [label](url) markdown into normal clickable
+            // links, so links work correctly everywhere without being
+            // mislabeled as PDFs.
+            const renderViewValue = (val, isPdf) =>
               val
-                ? val.startsWith('/uploads/') || val.startsWith('http')
+                ? isPdf && (val.startsWith('/uploads/') || val.startsWith('http'))
                   ? (
                     <a href={val.startsWith('http') ? val : `${API}${val}`}
                       target="_blank" rel="noopener noreferrer"
@@ -2435,6 +2525,11 @@ const GenericContentPage = ({
                                     className="text-blue-200 hover:text-white text-[10px] sm:text-xs"
                                   >✎</button>
                                   <button
+                                    onClick={() => handleToggleColumnType(col)}
+                                    title={isPdfCol(col) ? 'Currently a PDF column — click to make it a text/link column' : 'Currently a text column — click to make it a PDF upload column'}
+                                    className={`text-[9px] sm:text-[10px] font-bold px-1 rounded border ${isPdfCol(col) ? 'text-amber-300 border-amber-300 hover:bg-amber-300 hover:text-primary' : 'text-blue-200 border-blue-200 hover:bg-blue-200 hover:text-primary'}`}
+                                  >{isPdfCol(col) ? 'PDF' : 'TXT'}</button>
+                                  <button
                                     onClick={() => handleDeleteColumn(col)}
                                     title="Delete column"
                                     className="text-red-300 hover:text-white text-xs"
@@ -2448,12 +2543,23 @@ const GenericContentPage = ({
                         {isAdmin && (
                           <th className="px-1.5 sm:px-3 py-1.5 sm:py-2.5 bg-primary text-[#fce8b2] font-bold text-[10px] sm:text-xs">
                             {addingCol ? (
-                              <div className="flex gap-1">
-                                <input value={newColName} onChange={e => setNewColName(e.target.value)}
-                                  placeholder="Column name"
-                                  className="px-1.5 py-0.5 text-black rounded text-[10px] sm:text-xs w-16 sm:w-24" />
-                                <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
-                                <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
+                              <div className="flex flex-col gap-1 normal-case font-sans font-normal">
+                                <div className="flex gap-1">
+                                  <input value={newColName} onChange={e => setNewColName(e.target.value)}
+                                    placeholder="Column name"
+                                    className="px-1.5 py-0.5 text-black rounded text-[10px] sm:text-xs w-16 sm:w-24" />
+                                  <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
+                                  <button onClick={() => setAddingCol(false)} className="text-gray-300 text-xs">✕</button>
+                                </div>
+                                <select
+                                  value={newColType}
+                                  onChange={e => setNewColType(e.target.value)}
+                                  className="px-1 py-0.5 text-black rounded text-[10px] sm:text-xs w-full"
+                                  title="Column type"
+                                >
+                                  <option value="text">Text / link column</option>
+                                  <option value="pdf">PDF upload column</option>
+                                </select>
                               </div>
                             ) : (
                               <button onClick={() => setAddingCol(true)}
@@ -2499,7 +2605,7 @@ const GenericContentPage = ({
                                       />
                                     )
                                 ) : (
-                                  <span className="break-words leading-tight">{renderViewValue(row[col])}</span>
+                                  <span className="break-words leading-tight">{renderViewValue(row[col], isPdfCol(col))}</span>
                                 )}
                               </td>
                             ))}
@@ -2530,7 +2636,7 @@ const GenericContentPage = ({
                                   ) : (
                                     <div className="flex items-center gap-1">
                                       <span className="text-[10px] sm:text-xs text-green-600">✓ Uploaded</span>
-                                      <button onClick={() => setNewRow({ ...newRow, [col]: '' })}
+                                      <button onClick={() => { deleteTablePdfByUrl(newRow[col]); setNewRow({ ...newRow, [col]: '' }); }}
                                         className="text-red-400 text-xs hover:text-red-600 min-w-[24px] min-h-[24px]">✕</button>
                                     </div>
                                   )}

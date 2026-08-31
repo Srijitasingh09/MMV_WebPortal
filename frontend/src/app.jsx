@@ -15,18 +15,11 @@ import Contact from './pages/contact';
 import AdminContentGuide from './pages/adminreadme'; 
 import Feedback from './pages/Feedback';
 import News from './pages/News';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import { getToken, isAdmin as isAdminSession, verifySessionWithServer } from './utils/auth';
 
-// Protected Route Component
-//
-// - token/role now come from utils/auth, which reads sessionStorage
-//   (per-tab, not shared across the whole browser) and decodes the role
-//   out of the signed JWT rather than a separately-editable flag.
-// - For adminOnly routes we additionally re-check with the backend
-//   (/user/me) before rendering, so a token that *looks* admin from its
-//   claims but belongs to a user who was demoted/deactivated since it was
-//   issued still gets bounced. This runs once per visit to an admin
-//   route, not on every click.
+
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const token = getToken();
   const claimsAdmin = isAdminSession();
@@ -82,6 +75,8 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Gate page: About Us, shown first with a link into the main site */}
         <Route path="/" element={<AboutSarthi />} />
