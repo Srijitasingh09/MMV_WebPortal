@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Bell, Send, Paperclip, Phone, FileText, Newspaper, X } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import AdminReadme from './adminreadme';
+import ChangePasswordForm from './ChangePasswordForm';
 import { getToken as getSessionToken, clearSession } from '../utils/auth';
 
 const AdminDashboard = () => {
@@ -201,6 +202,12 @@ const AdminDashboard = () => {
           className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'admin-readme' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <FileText size={18} className="mr-2 text-[#7d311f]" /> ADMIN README
+        </button>
+        <button
+          onClick={() => setActiveTab('change-password')}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'admin-readme' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+        >
+          <FileText size={18} className="mr-2 text-[#7d311f]" /> CHANGE PASSWORD
         </button>
       </div>
 
@@ -426,6 +433,8 @@ const AdminDashboard = () => {
           <AdminReadme />
         </div>
       )}
+
+      {activeTab === 'change-password' && <ChangePasswordForm />}
     </div>
   );
 };
