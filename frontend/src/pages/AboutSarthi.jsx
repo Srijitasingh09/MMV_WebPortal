@@ -1,13 +1,72 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+// ─── ABOUT PAGE CONFIG - tweak these freely ────────────────────────────
+// Once the page has loaded, how long to wait before automatically
+// navigating to /home (ms).
+const ABOUT_CONTENT_AUTO_REDIRECT_MS = 20000;
 
 const AboutSarthi = () => {
+  const navigate = useNavigate();
+
+  // Progress fraction (0 to 1) and seconds remaining for UI display
+  const [progressFraction, setProgressFraction] = useState(0);
+  const [secondsRemaining, setSecondsRemaining] = useState(
+    Math.ceil(ABOUT_CONTENT_AUTO_REDIRECT_MS / 1000)
+  );
+
+  const isNavigatingRef = useRef(false);
+
+  // Auto-redirect handler (can also be triggered manually via button)
+  const handleProceed = () => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    navigate('/home');
+  };
+
+  // ── Bulletproof Auto-redirect & continuous progress timer based on Date.now() ──
+  // Using Date.now() guarantees the loader NEVER freezes or stops even if the tab
+  // loses focus, drops frames, or undergoes re-renders.
+  useEffect(() => {
+    const startTime = Date.now();
+
+    const intervalId = setInterval(() => {
+      if (isNavigatingRef.current) return;
+
+      const elapsed = Date.now() - startTime;
+      const fraction = Math.min(elapsed / ABOUT_CONTENT_AUTO_REDIRECT_MS, 1);
+      
+      setProgressFraction(fraction);
+      setSecondsRemaining(Math.max(0, Math.ceil((ABOUT_CONTENT_AUTO_REDIRECT_MS - elapsed) / 1000)));
+
+      if (fraction >= 1) {
+        isNavigatingRef.current = true;
+        clearInterval(intervalId);
+        navigate('/home');
+      }
+    }, 25); // Continuous 40fps tick tied directly to wall-clock time
+
+    return () => clearInterval(intervalId);
+  }, [navigate]);
+
   return (
     <main className="relative min-h-screen bg-white text-gray-800 overflow-x-hidden font-sans">
-
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Eczar&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Eczar&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;600;700&display=swap');
         .font-yatra { font-family: 'Eczar', serif; }
+
+        @keyframes mmvHeaderShimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+
+        .header-loader-shimmer::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+          animation: mmvHeaderShimmer 1.4s ease-in-out infinite;
+        }
       `}</style>
 
       {/* ── Background Watermark (Fixed behind content) ── */}
@@ -18,9 +77,14 @@ const AboutSarthi = () => {
         className="pointer-events-none select-none fixed inset-0 m-auto h-auto w-[85%] sm:w-[70%] md:w-[55%] max-w-3xl opacity-[0.2] object-contain z-0 scale-120"
       />
 
-      {/* ── Official Institutional Top Bar Header ── */}
-      <header className="touch-manipulation fixed top-0 left-0 right-0 z-20 bg-primary text-white py-2.5 sm:py-2 px-3 sm:px-6 lg:px-10 mb-5 border-b-2 border-[#D4AF37]/80 shadow-md">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-center sm:text-left text-xs sm:text-sm">
+      {/*
+        ── Official Institutional Header Bar (Non-Sticky, Scrolls with page) ──
+        Integrated auto-redirect progress loader bar right inside the header!
+      */}
+      <header className="relative z-20 bg-primary text-white py-3 sm:py-3.5 px-3 sm:px-6 lg:px-10 border-b-2 border-[#D4AF37]/80 shadow-md">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-4 text-center sm:text-left text-xs sm:text-sm">
+          
+          {/* Left: Institutional Title */}
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2">
             <span className="font-semibold tracking-wide text-amber-200 uppercase text-[11px] sm:text-xs md:text-sm">
               Banaras Hindu University 
@@ -29,49 +93,48 @@ const AboutSarthi = () => {
              | Mahila Mahavidyalaya 
             </span>
           </div>
-        </div>
-      </header>
 
-      {/*
-        ── Floating / Fixed Jigyasa Button ──
-        Position kept exactly as before on mobile (fixed, top-right — it's
-        fine for it to sit over content there). On sm/md/lg (tablet & laptop
-        widths) the content column below gets extra right padding so this
-        fixed button clears the text instead of sitting on top of it.
-        Hover effects are mirrored with `active:` / `group-active:` variants
-        so tapping on touch screens gives the same feedback as a mouse hover.
-      */}
-      <Link
-        to="/home"
-        aria-label="Enter MMV Sarthi Portal — Click to proceed to main site"
-        className="touch-manipulation fixed top-12 sm:top-20 md:top-14 right-3 sm:right-6 md:right-10 lg:right-5 z-40 group flex flex-col items-center justify-center bg-primary/80 hover:bg-[#7d311f]/90 active:bg-[#7d311f]/90 backdrop-blur-lg text-white px-5 sm:px-7 py-2.5 sm:py-3.5 rounded-full border-2 border-[#D4AF37]/80 hover:border-[#D4AF37] active:border-[#D4AF37] shadow-xl hover:shadow-2xl active:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-105 whitespace-nowrap text-center leading-tight ring-1 ring-white/20"
-      >
-        {/* ── Fixed Size Circle Wrapper (overflow-hidden clips zoomed image) ── */}
-        <div className="w-10 h-10 sm:w-12 sm:h-12 mb-0.5 rounded-full overflow-hidden flex items-center justify-center">
-          <img
-            src="/bhu/Saarthi01.jpeg"
-            alt="Jigyasa Icon"
-          
-            className="w-full h-full object-cover scale-125 group-hover:scale-135 group-active:scale-135 transition-transform duration-200"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
+          {/* Right: Header Integrated Loader Widget with Progress Bar & Skip Button */}
+          <div className="flex items-center gap-2 sm:gap-3 bg-black/25 px-3 sm:px-4 py-1.5 rounded-full border border-[#D4AF37]/60 shadow-inner">
+            <span className="text-amber-200 text-[11px] sm:text-xs font-bold flex items-center gap-1.5 whitespace-nowrap">
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              MMV सारथी ({secondsRemaining}s)
+            </span>
+
+            {/* Embedded Header Loading Bar (Continuous time-synced width) */}
+            <div className="w-20 sm:w-32 h-2 sm:h-2.5 rounded-full bg-white/20 overflow-hidden relative header-loader-shimmer">
+              <div
+                className="h-full bg-gradient-to-r from-amber-400 via-[#D4AF37] to-amber-200 transition-all duration-75 ease-linear rounded-full"
+                style={{ width: `${progressFraction * 100}%` }}
+              />
+            </div>
+
+            {/* Skip Button */}
+            <button
+              onClick={handleProceed}
+              aria-label="Skip timer and go directly to home"
+              className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-[#D4AF37] hover:bg-amber-300 text-primary font-extrabold text-[10px] sm:text-xs rounded-full shadow transition-all duration-150 active:scale-95 cursor-pointer uppercase tracking-wider whitespace-nowrap"
+            >
+              Skip →
+            </button>
+          </div>
+
+        </div>
+
+        {/* Header Bottom Edge Full-Width Animated Loading Bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-amber-400 via-[#D4AF37] to-amber-100 transition-all duration-75 ease-linear shadow-[0_0_10px_#D4AF37]"
+            style={{ width: `${progressFraction * 100}%` }}
           />
         </div>
-
-        <span className="text-amber-200 font-bold text-xs sm:text-sm tracking-wide drop-shadow-sm">
-          जिज्ञासा
-        </span>
-        <span className="text-[10px] sm:text-xs font-semibold text-gray-100">
-          Click Here!!
-        </span>
-      </Link>
+      </header>
 
       {/* ── Main Content Flow (Full Width on Mobile, Covers Whole Page) ── */}
       <div className="relative z-10 max-w-8xl mx-auto pl-4 sm:pl-8 md:pl-12 lg:pl-32 pr-4 sm:pr-8 md:pr-12 lg:pr-32 py-6 sm:py-10 space-y-4 sm:space-y-6">
 
         {/* Header Section */}
-        <section className="space-y-1.5 pb-1 pt-8">
+        <section className="space-y-1.5 pb-1">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-primary tracking-tight">
             About MMV <span className="font-yatra">सारथी</span>
           </h1>
@@ -103,11 +166,10 @@ const AboutSarthi = () => {
           <h3 className="text-3xl sm:text-4xl md:text-4xl font-serif font-bold text-primary tracking-tight">
             सह-सृजन
           </h3>
-           <h3 className="text-xl sm:text-2xl md:text-2xl font-serif font-bold text-primary tracking-tight">
+          <h3 className="text-xl sm:text-2xl md:text-2xl font-serif font-bold text-primary tracking-tight">
             (Our Team)
           </h3>
           <div className="h-0.5 w-24 sm:w-42 mx-auto bg-gradient-to-r from-primary via-[#D4AF37] to-transparent rounded-full mt-2" />
-          
         </div>
 
         {/* ── Closing Institutional Photo Feature (4:3 Aspect Ratio) ── */}
