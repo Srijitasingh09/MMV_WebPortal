@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import WelcomeSplash from '../components/WelcomeSplash';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 // Navy   #0D1F3C / #0F3358 — institution authority, headings, dark surfaces
@@ -89,7 +88,7 @@ const Hero = () => (
     <div className="relative min-h-[95vh] sm:min-h-[115vh] md:min-h-[130vh] lg:min-h-[140vh] flex flex-col justify-center items-center p-6 sm:p-16 md:p-24 lg:p-32">
       <div className="absolute inset-0 w-full h-full">
         <img
-          src="/bhu/web (1).png"
+          src="/bhu/mmv-saarthi-collage.png"
           alt="Mahila Mahavidyalaya BHU Campus"
           className="w-full h-full object-cover object-center"
         />
@@ -487,7 +486,7 @@ const Academics = () => (
   <section id="academics" className="bg-[#EAEFF5] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row gap-3 sm:gap-8 items-center">
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/academic2.jpeg" alt="Academics" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
+        <img src="/bhu/academicsnew.jpeg" alt="Academics" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
@@ -528,7 +527,7 @@ const Administration = () => (
   <section id="administration" className="bg-[#FAF7F2] py-10 sm:py-16 px-4 sm:px-6 border-b border-slate-200/60">
     <div className="max-w-5xl mx-auto flex flex-row-reverse gap-3 sm:gap-8 items-center">
       <div className="w-1/3 sm:w-5/12 flex-shrink-0 rounded-xl overflow-hidden shadow-sm border border-slate-200">
-        <img src="/bhu/administration2.jpg" alt="Administration" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
+        <img src="/bhu/administrationnew.jpeg" alt="Administration" className="w-full h-36 sm:h-72 md:h-80 object-cover object-center" />
       </div>
 
       <div className="w-2/3 sm:w-7/12 min-w-0 flex-1">
@@ -573,7 +572,6 @@ const Administration = () => (
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const Home = () => (
   <div className="font-lato">
-    <WelcomeSplash />
     <Hero />
     <NoticesAndNews />
     <About />
