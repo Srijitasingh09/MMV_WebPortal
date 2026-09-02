@@ -263,7 +263,7 @@ const SarthiBulletList = ({ items, className = '', spacing = 'space-y-1.5', keyP
           {isLink ? (
             <SarthiPointerIcon className="w-14 h-14 sm:w-16 sm:h-16" />
           ) : (
-            <span className="w-3.5 h-3.5 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
+            <span className="w-2 h-2 rounded-full bg-[#7d311f] shrink-0" aria-hidden="true" />
           )}
           <span>{renderInlineFormatting(item)}</span>
         </li>
@@ -1143,19 +1143,12 @@ const GenericContentPage = ({
                     if (cardBullets.length > 0) {
                       cardContentElements.push(
                         <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm md:text-base text-slate-700 my-2">
-                          {cardBullets.map((b, bi) => {
-                            const isLink = isLinkOnlyBullet(b);
-                            return (
-                              <li key={bi} className="flex items-start gap-2.5">
-                                {isLink ? (
-                                  <SarthiPointerIcon className="w-10 h-10 sm:w-12 sm:h-12 -mt-0.5" />
-                                ) : (
-                                  <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
-                                )}
-                                <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
-                              </li>
-                            );
-                          })}
+                          {cardBullets.map((b, bi) => (
+                            <li key={bi} className="flex items-start gap-2.5">
+                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
+                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
+                            </li>
+                          ))}
                         </ul>
                       );
                       cardBullets = [];
