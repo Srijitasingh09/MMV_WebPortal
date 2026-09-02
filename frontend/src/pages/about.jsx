@@ -31,7 +31,7 @@ const slides = [
     position: 'center 90%',
     alt: 'inner building view from library',
     title: 'More Than a Campus',
-    subtitle: 'IA Journey of Knowledge, Courage, and Dreams'
+    subtitle: 'A Journey of Knowledge, Courage, and Dreams'
   },
 ];
 
