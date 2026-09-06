@@ -630,9 +630,9 @@ const Navbar = () => {
                   aria-label="Visit BHU Website"
                 >
                   <img
-                    src="/bhu/logo_bhu.png"
+                    src="/bhu/BHU_logo.png"
                     alt="BHU Logo"
-                    className="h-9 sm:h-12 xl:h-16 rounded-2xl object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    className="h-9 sm:h-14 xl:h-19  object-contain cursor-pointer hover:opacity-90 transition-opacity"
                   />
                 </a>
               </div>
@@ -674,7 +674,7 @@ const Navbar = () => {
               </div>
 
               {/* Mobile / Tablet / Small Screen (< 1024px) At Center: MMV Saarthi Logo & At Right side : Hamburger Button */}
-              <div className="lg:hidden flex items-center gap-2 flex-shrink-0">
+              <div className="lg:hidden flex items-center gap-2 sm:gap-3 ml-auto shrink-0">
                 <img
                   src="mmv-saarthi-logo.png"
                   alt="MMV Sarthi Logo"
