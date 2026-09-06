@@ -23,19 +23,34 @@ const Footer = () => {
   return (
     <footer className="bg-primary text-slate-200 border-t-2 border-[#d4af37]">
       {/* Grid: 2 columns on mobile, 3 columns on tablet/desktop */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
+     <div
+      className="  max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 grid grid-cols-2  gap-6 sm:gap-8 md:grid-cols-[auto_1.4fr_1fr_1fr] ">
 
-        {/* Col 1 -College blurb (Spans full width on mobile) */}
-        <div className="col-span-2 md:col-span-1">
+      {/* First section - Logo + College Details */}
+      <div className="col-span-2 md:col-span-2 flex items-start gap-4 sm:gap-5">
+  
+        {/* Logo */}
+        <div className="shrink-0">
+          <img
+            src="/bhu/mmvlogo.jpeg"
+            alt="MMV Logo"
+            className="h-20 sm:h-20 w-auto rounded-lg object-contain"
+          />
+        </div>
+
+        {/* College Details */}
+        <div>
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">
-            Mahila Mahavidyalaya
+          Mahila Mahavidyalaya
           </h3>
-          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans-official">
-            Women's College, Banaras Hindu University.
-            Established in 1929 by Pandit Madan Mohan Malaviya.
+      
+          <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-sans-official max-w-sm">
+          Women's College, Banaras Hindu University.
+          Established in 1929 by Pandit Madan Mohan Malaviya.
           </p>
         </div>
 
+        </div>
         {/* Col 2 -Quick Links (Side-by-side with Contact Us on mobile) */}
         <div className="col-span-1">
           <h3 className="text-base sm:text-lg font-bold font-cinzel text-white mb-2 sm:mb-3 tracking-wide">Quick Links</h3>
