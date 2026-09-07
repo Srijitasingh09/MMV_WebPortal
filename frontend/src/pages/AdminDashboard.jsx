@@ -6,6 +6,10 @@ import AdminReadme from './adminreadme';
 import ChangePasswordForm from './ChangePasswordForm';
 import { getToken as getSessionToken, clearSession } from '../utils/auth';
 
+const NOTICE_TITLE_MAX = 100;
+const NOTICE_CONTENT_MAX = 1000;
+const NEWS_TEXT_MAX = 2000;
+
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('notice');
   const [loading, setLoading] = useState(false);
@@ -68,6 +72,11 @@ const AdminDashboard = () => {
 
   const handleSubmitNotice = async (e) => {
     e.preventDefault();
+    // To check charlimit
+    if (notice.title.length > NOTICE_TITLE_MAX || notice.content.length > NOTICE_CONTENT_MAX) {
+      alert(`Title must be within ${NOTICE_TITLE_MAX} chars and content within ${NOTICE_CONTENT_MAX} chars.`);
+      return;
+    }
     setLoading(true);
     try {
       const formData = new FormData();
@@ -115,6 +124,13 @@ const AdminDashboard = () => {
       alert('News text cannot be empty -the first line becomes the heading.');
       return;
     }
+
+    // ── To check charlimit of notice ──
+    if (newsText.length > NEWS_TEXT_MAX) {
+      alert(`News text exceeds the maximum allowed limit of ${NEWS_TEXT_MAX} characters.`);
+      return;
+    }
+    
     setLoading(true);
     try {
       const formData = new FormData();
@@ -215,11 +231,19 @@ const AdminDashboard = () => {
       {activeTab === 'notice' && (
         <form onSubmit={handleSubmitNotice} className="bg-white p-5 sm:p-8 md:p-10 rounded-2xl shadow-sm border border-gray-200 space-y-6 animate-in slide-in-from-bottom-4 duration-500">
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Notice Title</label>
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Notice Title
+              </label>
+              <span className={`text-xs ${notice.title.length >= NOTICE_TITLE_MAX ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                {notice.title.length}/{NOTICE_TITLE_MAX}
+              </span>
+            </div>
             <input
               required
+              maxLength={NOTICE_TITLE_MAX}
               value={notice.title}
-              onChange={(e) => setNotice({...notice, title: e.target.value})}
+              onChange={(e) => setNotice({ ...notice, title: e.target.value })}
               className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="e.g., End Semester Exam Schedule"
             />
@@ -259,11 +283,19 @@ const AdminDashboard = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Notice Details / Content</label>
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Notice Details / Content
+              </label>
+              <span className={`text-xs ${notice.content.length >= NOTICE_CONTENT_MAX ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                {notice.content.length}/{NOTICE_CONTENT_MAX}
+              </span>
+            </div>
             <textarea
               rows={5}
+              maxLength={NOTICE_CONTENT_MAX}
               value={notice.content}
-              onChange={(e) => setNotice({...notice, content: e.target.value})}
+              onChange={(e) => setNotice({ ...notice, content: e.target.value })}
               className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
               placeholder="Enter full notice announcement text..."
             />
@@ -291,12 +323,18 @@ const AdminDashboard = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-              News Text (first line = headline)
-            </label>
+            <div className="flex justify-between items-center">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                News Text (first line = headline)
+              </label>
+              <span className={`text-xs ${newsText.length >= NEWS_TEXT_MAX ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                {newsText.length}/{NEWS_TEXT_MAX}
+              </span>
+            </div>
             <textarea
               required
               rows={8}
+              maxLength={NEWS_TEXT_MAX}
               value={newsText}
               onChange={(e) => setNewsText(e.target.value)}
               className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"

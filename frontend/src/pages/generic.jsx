@@ -19,6 +19,14 @@ const CARD_PHOTO_TAG = '__profile_card_';
 // show up in the generic "Documents" viewer below the description.
 const TABLE_PDF_TAG = '__table_pdf__';
 
+// Character limit constants
+const CHAR_LIMITS = {
+  DESCRIPTION: 10000, // Main markdown description
+  TABLE_CELL: 150,   // Data table cell content
+  TABLE_TITLE: 80,   // Dynamic table title
+  PROFILE_FIELD: 100 // Name, designation, phone, email, etc.
+};
+
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
   heading:        'text-primary font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
@@ -2143,6 +2151,7 @@ const GenericContentPage = ({
                       <textarea
                         ref={descTextareaRef}
                         value={editDesc}
+                        maxLength={CHAR_LIMITS.DESCRIPTION}
                         onChange={e => {
                           setEditDesc(e.target.value);
                           adjustTextareaHeight(e.target);
@@ -2161,6 +2170,10 @@ const GenericContentPage = ({
                         style={{ minHeight: '260px' }}
                         placeholder="Enter description, contact info, about this section..."
                       />
+                      {/* Helper counter for admin */}
+                      <div className="text-right text-xs text-gray-500 mt-1">
+                        {editDesc.length} / {CHAR_LIMITS.DESCRIPTION} characters
+                      </div>
 
                       {/* Floating format icon -sits directly above the cursor. */}
                       <div
