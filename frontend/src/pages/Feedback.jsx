@@ -74,7 +74,7 @@ const Feedback = () => {
         {/* ── PAGE HEADING (matches Notices & other portal pages) ── */}
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
             <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               Feedback & Suggestions
             </h1>
@@ -82,7 +82,7 @@ const Feedback = () => {
           <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
             <span className="text-slate-400">Home</span>
             <span className="text-slate-300">/</span>
-            <span className="text-[#7d311f] font-semibold">Feedback</span>
+            <span className="text-crimson font-semibold">Feedback</span>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ const Feedback = () => {
             <p className="text-sm text-slate-500 mb-5">It has been sent to the college administration.</p>
             <button
               onClick={() => setStatus('idle')}
-              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-[#174873] text-white hover:bg-primary transition-colors"
+              className="px-6 py-2.5 text-sm font-semibold rounded-full bg-secondary text-white hover:bg-primary transition-colors"
             >
               Submit another response
             </button>
@@ -124,11 +124,12 @@ const Feedback = () => {
                 </label>
                 <input
                   type="text"
+                  maxLength="100"
                   required
                   value={form.name}
                   onChange={handleChange('name')}
                   placeholder="Enter your full name"
-                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent"
+                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
                 />
               </div>
               <div>
@@ -137,11 +138,12 @@ const Feedback = () => {
                 </label>
                 <input
                   type="email"
+                  maxLength="200"
                   required
                   value={form.email}
                   onChange={handleChange('email')}
                   placeholder="you@example.com"
-                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent"
+                  className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent"
                 />
               </div>
             </div>
@@ -151,7 +153,7 @@ const Feedback = () => {
               <select
                 value={form.category}
                 onChange={handleChange('category')}
-                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent bg-white"
+                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent bg-white"
               >
                 {FEEDBACK_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -168,8 +170,9 @@ const Feedback = () => {
                 onChange={handleChange('message')}
                 required
                 rows={6}
+                maxLength="500"
                 placeholder="Tell us what's on your mind..."
-                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent resize-none"
+                className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
               />
             </div>
 
@@ -182,7 +185,7 @@ const Feedback = () => {
             <button
               type="submit"
               disabled={status === 'submitting'}
-              className="w-full sm:w-auto px-8 py-3 text-sm font-bold rounded-full bg-[#174873] text-white hover:bg-primary transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full sm:w-auto px-8 py-3 text-sm font-bold rounded-full bg-secondary text-white hover:bg-primary transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {status === 'submitting' ? 'Submitting...' : 'Submit Feedback'}
             </button>

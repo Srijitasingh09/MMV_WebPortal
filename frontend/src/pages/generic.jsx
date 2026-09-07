@@ -23,7 +23,7 @@ const TABLE_PDF_TAG = '__table_pdf__';
 const HEADING_STYLES = {
   heading:        'text-primary font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
   subheading:     'text-lg sm:text-xl md:text-2xl font-bold text-primary font-cinzel leading-snug',       // '## ' -description body, description notes, accordion notes
-  subSubheading:  'text-sm sm:text-base md:text-lg font-bold text-[#174873] font-sans-official leading-snug',    // '### ' -description body, description notes, accordion notes
+  subSubheading:  'text-sm sm:text-base md:text-lg font-bold text-secondary font-sans-official leading-snug',    // '### ' -description body, description notes, accordion notes
   accordionTitle: 'text-sm sm:text-base md:text-lg font-bold text-primary',    // accordion bar title ('+++ Title')
 };
 
@@ -898,7 +898,7 @@ const GenericContentPage = ({
 
   if (loading) return (
     <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#174873]" />
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-secondary" />
     </div>
   );
 
@@ -936,8 +936,8 @@ const GenericContentPage = ({
         cardBorder: 'border-slate-200/90 hover:border-[#d4af37]',
         cardBg: 'bg-white hover:bg-[#FAF7F2]/80',
         headerHoverBg: 'group-hover:bg-[#FAF7F2]',
-        headerText: 'text-primary group-hover:text-[#7d311f]',
-        badge: 'bg-[#d4af37] group-hover:bg-[#7d311f]',
+        headerText: 'text-primary group-hover:text-crimson',
+        badge: 'bg-[#d4af37] group-hover:bg-crimson',
         arrowBg: 'bg-slate-100 group-hover:bg-primary',
         arrowText: 'text-slate-500 group-hover:text-white',
         dividerBorder: 'border-[#d4af37]/40',
@@ -947,9 +947,9 @@ const GenericContentPage = ({
         cardBorder: 'border-blue-100 hover:border-blue-400',
         cardBg: 'bg-white hover:bg-blue-50/60',
         headerHoverBg: 'group-hover:bg-blue-50/50',
-        headerText: 'text-[#174873] group-hover:text-blue-900',
-        badge: 'bg-blue-500 group-hover:bg-[#174873]',
-        arrowBg: 'bg-blue-50 group-hover:bg-[#174873]',
+        headerText: 'text-secondary group-hover:text-blue-900',
+        badge: 'bg-blue-500 group-hover:bg-secondary',
+        arrowBg: 'bg-blue-50 group-hover:bg-secondary',
         arrowText: 'text-blue-500 group-hover:text-white',
         dividerBorder: 'border-blue-200',
         bodyBg: 'bg-white',
@@ -977,13 +977,13 @@ const GenericContentPage = ({
         bodyBg: 'bg-white',
       },
       crimson: {
-        cardBorder: 'border-rose-100 hover:border-[#7d311f]',
+        cardBorder: 'border-rose-100 hover:border-crimson',
         cardBg: 'bg-white hover:bg-rose-50/60',
         headerHoverBg: 'group-hover:bg-rose-50/40',
-        headerText: 'text-[#7d311f] group-hover:text-rose-900',
-        badge: 'bg-[#7d311f] group-hover:bg-rose-700',
-        arrowBg: 'bg-rose-50 group-hover:bg-[#7d311f]',
-        arrowText: 'text-[#7d311f] group-hover:text-white',
+        headerText: 'text-crimson group-hover:text-rose-900',
+        badge: 'bg-crimson group-hover:bg-rose-700',
+        arrowBg: 'bg-rose-50 group-hover:bg-crimson',
+        arrowText: 'text-crimson group-hover:text-white',
         dividerBorder: 'border-rose-200',
         bodyBg: 'bg-white',
       },
@@ -1050,7 +1050,7 @@ const GenericContentPage = ({
             flushNoteBullets();
             noteElements.push(
               <h4 key={`note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-primary font-bold text-xs sm:text-sm md:text-base">
-                <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                <span className="w-1.5 h-1.5 bg-crimson rotate-45 shrink-0" />
                 <span>{renderInlineFormatting(lineText.slice(4))}</span>
               </h4>
             );
@@ -1058,14 +1058,14 @@ const GenericContentPage = ({
             flushNoteBullets();
             noteElements.push(
               <h3 key={`note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-primary font-cinzel font-bold text-sm sm:text-base md:text-lg">
-                <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                <span className="w-1.5 h-4 bg-crimson rounded-full shrink-0" />
                 <span>{renderInlineFormatting(lineText.slice(3))}</span>
               </h3>
             );
           } else if (lineText === '---') {
             flushNoteBullets();
             noteElements.push(
-              <hr key={`note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
+              <hr key={`note-hr-${i}`} className="border-crimson/20 my-1" />
             );
           } else if (lineText.startsWith('- ')) {
             noteBulletBuffer.push(lineText.slice(2));
@@ -1078,7 +1078,7 @@ const GenericContentPage = ({
         });
         flushNoteBullets();
         elements.push(
-          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
+          <div key={`note-${elements.length}`} className="bg-[#FAF7F2] border-l-4 border-crimson border-r border-t border-b border-crimson/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
             {noteElements}
           </div>
         );
@@ -1143,12 +1143,19 @@ const GenericContentPage = ({
                     if (cardBullets.length > 0) {
                       cardContentElements.push(
                         <ul key={`card-ul-${cardContentElements.length}`} className="space-y-2 text-xs sm:text-sm md:text-base text-slate-700 my-2">
-                          {cardBullets.map((b, bi) => (
-                            <li key={bi} className="flex items-start gap-2.5">
-                              <span className="text-[#7d311f] font-bold shrink-0 mt-0.5">✓</span>
-                              <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
-                            </li>
-                          ))}
+                          {cardBullets.map((b, bi) => {
+                            const isLink = isLinkOnlyBullet(b);
+                            return (
+                              <li key={bi} className="flex items-start gap-2.5">
+                                {isLink ? (
+                                  <SarthiPointerIcon className="w-10 h-10 sm:w-12 sm:h-12 -mt-0.5" />
+                                ) : (
+                                  <span className="text-crimson font-bold shrink-0 mt-0.5">✓</span>
+                                )}
+                                <span className="leading-relaxed">{renderInlineFormatting(b)}</span>
+                              </li>
+                            );
+                          })}
                         </ul>
                       );
                       cardBullets = [];
@@ -1180,7 +1187,7 @@ const GenericContentPage = ({
                           flushCardNoteBullets();
                           noteElements.push(
                             <h4 key={`card-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-primary font-bold text-xs sm:text-sm">
-                              <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                              <span className="w-1.5 h-1.5 bg-crimson rotate-45 shrink-0" />
                               <span>{renderInlineFormatting(lineText.slice(4))}</span>
                             </h4>
                           );
@@ -1188,13 +1195,13 @@ const GenericContentPage = ({
                           flushCardNoteBullets();
                           noteElements.push(
                             <h3 key={`card-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-primary font-cinzel font-bold text-sm sm:text-base">
-                              <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                              <span className="w-1.5 h-4 bg-crimson rounded-full shrink-0" />
                               <span>{renderInlineFormatting(lineText.slice(3))}</span>
                             </h3>
                           );
                         } else if (lineText === '---') {
                           flushCardNoteBullets();
-                          noteElements.push(<hr key={`card-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />);
+                          noteElements.push(<hr key={`card-note-hr-${i}`} className="border-crimson/20 my-1" />);
                         } else if (lineText.startsWith('- ')) {
                           cardNoteBulletBuffer.push(lineText.slice(2));
                         } else {
@@ -1207,7 +1214,7 @@ const GenericContentPage = ({
                       flushCardNoteBullets();
 
                       cardContentElements.push(
-                        <div key={`card-note-${cardContentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-2 text-xs sm:text-sm leading-relaxed">
+                        <div key={`card-note-${cardContentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-crimson border-r border-t border-b border-crimson/20 p-3 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-2 text-xs sm:text-sm leading-relaxed">
                           {noteElements}
                         </div>
                       );
@@ -1351,7 +1358,7 @@ const GenericContentPage = ({
               flushLocalNoteBullets();
               noteElements.push(
                 <h4 key={`acc-note-h4-${i}`} className="mt-2 not-italic flex items-center gap-2 text-primary font-bold text-xs sm:text-sm md:text-base">
-                  <span className="w-1.5 h-1.5 bg-[#7d311f] rotate-45 shrink-0" />
+                  <span className="w-1.5 h-1.5 bg-crimson rotate-45 shrink-0" />
                   <span>{renderInlineFormatting(lineText.slice(4))}</span>
                 </h4>
               );
@@ -1359,14 +1366,14 @@ const GenericContentPage = ({
               flushLocalNoteBullets();
               noteElements.push(
                 <h3 key={`acc-note-h3-${i}`} className="mt-2.5 not-italic flex items-center gap-2 text-primary font-cinzel font-bold text-sm sm:text-base md:text-lg">
-                  <span className="w-1.5 h-4 bg-[#7d311f] rounded-full shrink-0" />
+                  <span className="w-1.5 h-4 bg-crimson rounded-full shrink-0" />
                   <span>{renderInlineFormatting(lineText.slice(3))}</span>
                 </h3>
               );
             } else if (lineText === '---') {
               flushLocalNoteBullets();
               noteElements.push(
-                <hr key={`acc-note-hr-${i}`} className="border-[#7d311f]/20 my-1" />
+                <hr key={`acc-note-hr-${i}`} className="border-crimson/20 my-1" />
               );
             } else if (lineText.startsWith('- ')) {
               localNoteBulletBuffer.push(lineText.slice(2));
@@ -1380,7 +1387,7 @@ const GenericContentPage = ({
           flushLocalNoteBullets();
 
           contentElements.push(
-            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-[#7d311f] border-r border-t border-b border-[#7d311f]/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
+            <div key={`acc-note-${contentElements.length}`} className="bg-[#FAF7F2] border-l-4 border-crimson border-r border-t border-b border-crimson/20 p-3.5 sm:p-5 rounded-r-xl shadow-xs text-slate-800 space-y-1.5 my-3 text-xs sm:text-sm md:text-base leading-relaxed">
               {noteElements}
             </div>
           );
@@ -1447,12 +1454,12 @@ const GenericContentPage = ({
             <span className="text-sm sm:text-base md:text-lg font-bold text-primary font-cinzel tracking-wide">
               {renderInlineFormatting(accordionTitle)}
             </span>
-            <span className={`text-[#7d311f] text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
+            <span className={`text-crimson text-xs font-bold transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-90' : ''}`}>
               ►
             </span>
           </button>
           {isOpen && (
-            <div className="px-4 sm:px-5 py-3.5 sm:py-4 space-y-2 border-t-2 border-[#174873] bg-[#E6F0F5]/80 shadow-inner">
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 space-y-2 border-t-2 border-secondary bg-[#E6F0F5]/80 shadow-inner">
               {contentElements}
             </div>
           )}
@@ -1583,7 +1590,7 @@ const GenericContentPage = ({
         flushTable();
         elements.push(
           <div key={idx} className="mb-4 sm:mb-6 text-center">
-            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-primary tracking-wide inline-block pb-2 border-b-2 border-[#7d311f] leading-normal py-0.5">
+            <h2 className="font-cinzel text-2xl sm:text-2xl md:text-2xl lg:text-4xl font-bold text-primary tracking-wide inline-block pb-2 border-b-2 border-crimson leading-normal py-0.5">
               {trimmed}
             </h2>
           </div>
@@ -1598,7 +1605,7 @@ const GenericContentPage = ({
         elements.push(
           <div key={idx} className="mt-5 mb-2.5">
             <h3 className={`${HEADING_STYLES.subheading} flex items-center gap-2.5 text-primary font-cinzel font-bold text-lg sm:text-xl md:text-2xl tracking-wide leading-snug py-0.5`}>
-              <span className="w-1.5 h-5 sm:h-6 bg-[#7d311f] rounded-full shrink-0" />
+              <span className="w-1.5 h-5 sm:h-6 bg-crimson rounded-full shrink-0" />
               <span>{trimmed.slice(3)}</span>
             </h3>
           </div>
@@ -1612,7 +1619,7 @@ const GenericContentPage = ({
         currentBodyLevel = 'subSubheading';
         elements.push(
           <h4 key={idx} className={`${HEADING_STYLES.subSubheading} mt-3.5 mb-1.5 text-primary font-cinzel font-bold text-sm sm:text-base md:text-lg flex items-center gap-2.5 leading-snug py-0.5`}>
-            <span className="w-2 h-2 bg-[#7d311f] rotate-45 shrink-0" />
+            <span className="w-2 h-2 bg-crimson rotate-45 shrink-0" />
             <span>{trimmed.slice(4)}</span>
           </h4>
         );
@@ -1682,7 +1689,7 @@ const GenericContentPage = ({
       {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
       <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex items-end">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+          <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
           <h1 className="text-primary font-cinzel font-bold text-lg sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-normal sm:leading-tight py-0.5 truncate sm:whitespace-normal">
             {title}
           </h1>
@@ -1730,7 +1737,7 @@ const GenericContentPage = ({
                   <div className="flex flex-wrap gap-2 justify-center sm:justify-start pt-1">
                     <button
                       onClick={() => profileImageRef.current?.click()}
-                      className="px-3.5 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-[#174873] transition-colors"
+                      className="px-3.5 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-secondary transition-colors"
                     >
                       {profilePhoto ? 'Change Photo' : 'Upload Photo'}
                     </button>
@@ -1776,7 +1783,7 @@ const GenericContentPage = ({
                   Cancel
                 </button>
                 <button onClick={handleSaveProfile} disabled={savingProfile}
-                  className="px-5 py-2 bg-primary text-white rounded-lg text-xs font-bold hover:bg-[#174873] disabled:opacity-50 shadow-md">
+                  className="px-5 py-2 bg-primary text-white rounded-lg text-xs font-bold hover:bg-secondary disabled:opacity-50 shadow-md">
                   {savingProfile ? 'Saving Profile...' : 'Save Profile Changes'}
                 </button>
               </div>
@@ -1891,7 +1898,7 @@ const GenericContentPage = ({
             <>
               <input type="file" accept="image/*" multiple ref={imageRef} className="hidden" onChange={handleImageUpload} />
               <button onClick={() => imageRef.current?.click()}
-                className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium">
+                className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-medium">
                 Upload Photo
               </button>
             </>
@@ -1900,19 +1907,19 @@ const GenericContentPage = ({
             <>
               <input type="file" accept=".pdf" multiple ref={pdfRef} className="hidden" onChange={handlePdfUpload} />
               <button onClick={() => pdfRef.current?.click()}
-                className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium">
+                className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-medium">
                 Upload PDF
               </button>
             </>
           )}
           {hasDesc && !isEditing && (
             <button onClick={() => setIsEditing(true)}
-              className="px-4 py-2 border-2 border-[#174873] text-[#174873] rounded-lg text-sm font-medium">
+              className="px-4 py-2 border-2 border-secondary text-secondary rounded-lg text-sm font-medium">
               Edit Description
             </button>
           )}
           <button onClick={() => profileCardsRef.current?.openAddForm()}
-            className="px-4 py-2 border-2 border-[#174873] text-[#174873] rounded-lg text-sm font-medium">
+            className="px-4 py-2 border-2 border-secondary text-secondary rounded-lg text-sm font-medium">
             Add Profile Card
           </button>
         </div>
@@ -1940,7 +1947,7 @@ const GenericContentPage = ({
                       min={100}
                       value={editSlideSettings.slideshowHeight}
                       onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowHeight: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                      className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                     />
                   </div>
                   <div>
@@ -1949,12 +1956,12 @@ const GenericContentPage = ({
                       type="text"
                       value={editSlideSettings.slideshowMaxWidth}
                       onChange={e => setEditSlideSettings(prev => ({ ...prev, slideshowMaxWidth: e.target.value }))}
-                      className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                      className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                     />
                   </div>
                   <div className="flex gap-2 justify-end pt-1">
                     <button onClick={handleSaveSlideshowSettings} disabled={savingPhotoSettings}
-                      className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium disabled:opacity-50">
+                      className="px-3 py-1.5 bg-secondary text-white rounded-lg text-xs font-medium disabled:opacity-50">
                       {savingPhotoSettings ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={() => setIsEditingSlideSize(false)}
@@ -2023,7 +2030,7 @@ const GenericContentPage = ({
                         <select
                           value={editPhotoSettings.align}
                           onChange={e => setEditPhotoSettings(prev => ({ ...prev, align: e.target.value }))}
-                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20 bg-white"
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-secondary/20 bg-white"
                         >
                           <option value="left">Beside text (left)</option>
                           <option value="right">Beside text (right)</option>
@@ -2038,7 +2045,7 @@ const GenericContentPage = ({
                           max={3}
                           value={editPhotoSettings.cols}
                           onChange={e => setEditPhotoSettings(prev => ({ ...prev, cols: e.target.value }))}
-                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                         />
                       </div>
                       <div>
@@ -2048,7 +2055,7 @@ const GenericContentPage = ({
                           min={50}
                           value={editPhotoSettings.width}
                           onChange={e => setEditPhotoSettings(prev => ({ ...prev, width: e.target.value }))}
-                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                         />
                       </div>
                       <div>
@@ -2058,12 +2065,12 @@ const GenericContentPage = ({
                           min={50}
                           value={editPhotoSettings.height}
                           onChange={e => setEditPhotoSettings(prev => ({ ...prev, height: e.target.value }))}
-                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                          className="w-full px-2 py-1 border border-gray-200 rounded text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                         />
                       </div>
                       <div className="flex gap-2 justify-end pt-1">
                         <button onClick={handleSavePhotoGridSettings} disabled={savingPhotoSettings}
-                          className="px-3 py-1.5 bg-[#174873] text-white rounded-lg text-xs font-medium disabled:opacity-50">
+                          className="px-3 py-1.5 bg-secondary text-white rounded-lg text-xs font-medium disabled:opacity-50">
                           {savingPhotoSettings ? 'Saving...' : 'Save'}
                         </button>
                         <button onClick={() => setIsEditingPhotoSize(false)}
@@ -2119,7 +2126,7 @@ const GenericContentPage = ({
             }`}>
 
               {/* Description Container */}
-              <div className="bg-white rounded-2xl border-2 border-[#7d311f]/30 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
+              <div className="bg-white rounded-2xl border-2 border-crimson/30 shadow-md p-6 sm:p-10 w-full min-h-[180px]">
                 {isEditing ? (
                   <div className="space-y-3">
                     {/* Formatting toolbar */}
@@ -2131,7 +2138,7 @@ const GenericContentPage = ({
                           title={btn.title}
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => { e.preventDefault(); applyDescFormat(btn.apply); }}
-                          className="px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-[#174873] bg-white border border-gray-200 rounded-lg hover:bg-[#174873] hover:text-white transition-colors"
+                          className="px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-secondary bg-white border border-gray-200 rounded-lg hover:bg-secondary hover:text-white transition-colors"
                         >
                           {btn.label}
                         </button>
@@ -2156,11 +2163,17 @@ const GenericContentPage = ({
                         onKeyUp={updateCaretMenuPosition}
                         onSelect={updateCaretMenuPosition}
                         onScroll={updateCaretMenuPosition}
+                        maxLength={10000}
                         rows={8}
-                        className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-y outline-none focus:ring-2 focus:ring-[#174873]/20 overflow-hidden"
+                        className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-y outline-none focus:ring-2 focus:ring-secondary/20 overflow-hidden"
                         style={{ minHeight: '260px' }}
                         placeholder="Enter description, contact info, about this section..."
                       />
+
+                      {/* Counter for characters in description*/}
+                      <div 
+                        className="text-right text-xs text-grey-500 mt-1">{editDesc.length}/10000
+                      </div>
 
                       {/* Floating format icon -sits directly above the cursor. */}
                       <div
@@ -2172,7 +2185,7 @@ const GenericContentPage = ({
                           title="Insert formatting"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={(e) => { e.preventDefault(); setCaretMenuMode(caretMenuMode ? null : 'menu'); }}
-                          className="w-7 h-7 flex items-center justify-center rounded-full bg-[#174873] text-white shadow-md hover:bg-primary transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center rounded-full bg-secondary text-white shadow-md hover:bg-primary transition-colors cursor-pointer"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
@@ -2190,7 +2203,7 @@ const GenericContentPage = ({
                                 onClick={(e) => { e.preventDefault(); applyDescFormat(btn.apply); setCaretMenuMode(null); }}
                                 className="w-full flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-gray-50 text-left cursor-pointer"
                               >
-                                <span className="w-5 text-[#174873] font-bold text-center">{btn.label}</span>
+                                <span className="w-5 text-secondary font-bold text-center">{btn.label}</span>
                                 <span className="text-slate-500">{btn.title}</span>
                               </button>
                             ))}
@@ -2201,7 +2214,7 @@ const GenericContentPage = ({
                               onClick={(e) => { e.preventDefault(); openLinkForm(); }}
                               className="w-full flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm text-slate-700 hover:bg-gray-50 text-left cursor-pointer"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#174873]">
+                              <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-secondary">
                                 <path d="M9 17H7A5 5 0 0 1 7 7h2" />
                                 <path d="M15 7h2a5 5 0 0 1 0 10h-2" />
                                 <line x1="8" y1="12" x2="16" y2="12" />
@@ -2218,13 +2231,13 @@ const GenericContentPage = ({
                               value={linkLabel}
                               onChange={e => setLinkLabel(e.target.value)}
                               placeholder="Text to display"
-                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                             />
                             <input
                               value={linkUrl}
                               onChange={e => setLinkUrl(e.target.value)}
                               placeholder="https://example.com"
-                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#174873]/20"
+                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:ring-2 focus:ring-secondary/20"
                             />
                             <div className="flex gap-2 justify-end pt-1">
                               <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.preventDefault(); setCaretMenuMode(null); }}
@@ -2232,7 +2245,7 @@ const GenericContentPage = ({
                                 Cancel
                               </button>
                               <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.preventDefault(); insertLink(); }} disabled={!linkUrl.trim()}
-                                className="px-3 py-1 text-xs font-medium bg-[#174873] text-white rounded-lg disabled:opacity-50">
+                                className="px-3 py-1 text-xs font-medium bg-secondary text-white rounded-lg disabled:opacity-50">
                                 Insert
                               </button>
                             </div>
@@ -2243,7 +2256,7 @@ const GenericContentPage = ({
 
                     <div className="flex gap-4">
                       <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={handleSave} disabled={saving}
-                        className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                        className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-medium disabled:opacity-50">
                         {saving ? 'Saving...' : 'Save'}
                       </button>
                       <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { setIsEditing(false); setCaretMenuMode(null); }}
@@ -2264,7 +2277,7 @@ const GenericContentPage = ({
       {/* ── PDF VIEWER ── */}
       {galleryPdfs.length > 0 && (
         <div className="rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="bg-[#174873] px-4 sm:px-6 py-4">
+          <div className="bg-secondary px-4 sm:px-6 py-4">
             <h2 className="text-lg font-semibold text-white">📄 Downloads</h2>
           </div>
 
@@ -2284,7 +2297,7 @@ const GenericContentPage = ({
                     <a href={`${API}${pdf.pdf_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#174873] font-medium hover:text-[#406BC7] hover:underline break-all"
+                      className="text-secondary font-medium hover:text-[#406BC7] hover:underline break-all"
                     >
                       {pdf.pdf_name}
                     </a>
@@ -2320,12 +2333,12 @@ const GenericContentPage = ({
                     value={editTableHeading}
                     onChange={e => setEditTableHeading(e.target.value)}
                     placeholder="Table heading, e.g. Faculty List"
-                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-base font-semibold outline-none focus:ring-2 focus:ring-[#174873]/20"
+                    className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-base font-semibold outline-none focus:ring-2 focus:ring-secondary/20"
                     autoFocus
                   />
                   <div className="flex gap-2">
                     <button onClick={handleSaveTableHeading} disabled={savingHeading}
-                      className="px-3 py-2 bg-[#174873] text-white rounded-lg text-xs sm:text-sm font-medium disabled:opacity-50">
+                      className="px-3 py-2 bg-secondary text-white rounded-lg text-xs sm:text-sm font-medium disabled:opacity-50">
                       {savingHeading ? 'Saving...' : 'Save'}
                     </button>
                     <button onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(false); }}
@@ -2337,14 +2350,14 @@ const GenericContentPage = ({
               ) : (
                 <>
                   {tableHeading ? (
-                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-[#174873]">{tableHeading}</h3>
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-secondary">{tableHeading}</h3>
                   ) : (
                     <span className="italic text-gray-400 text-xs sm:text-sm">No table heading yet.</span>
                   )}
                   {isAdmin && (
                     <button
                       onClick={() => { setEditTableHeading(tableHeading); setIsEditingHeading(true); }}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-medium shrink-0 self-start"
+                      className="px-3 py-1.5 border-2 border-secondary text-secondary rounded-lg text-xs font-medium shrink-0 self-start"
                     >
                       {tableHeading ? 'Edit Heading' : '+ Add Heading'}
                     </button>
@@ -2392,14 +2405,14 @@ const GenericContentPage = ({
                   <div className="flex items-center gap-1">
                     <a href={value.startsWith('http') ? value : `${API}${value}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="text-xs text-[#174873] hover:underline truncate max-w-[100px]">
+                      className="text-xs text-secondary hover:underline truncate max-w-[100px]">
                       Current PDF
                     </a>
                     <button onClick={() => { deleteTablePdfByUrl(value); onChange(''); }}
                       className="text-red-400 text-xs hover:text-red-600 min-w-[24px] min-h-[24px]">✕</button>
                   </div>
                 ) : (
-                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-white rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
+                  <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-secondary text-white rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
                     <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                     </svg>
@@ -2411,7 +2424,7 @@ const GenericContentPage = ({
                   value={value || ''}
                   onChange={e => onChange(e.target.value)}
                   placeholder="or paste URL"
-                  className="w-full px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-[#174873]"
+                  className="w-full px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-secondary"
                 />
               </div>
             );
@@ -2428,7 +2441,7 @@ const GenericContentPage = ({
                   ? (
                     <a href={val.startsWith('http') ? val : `${API}${val}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-[#174873] hover:underline font-medium text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                      className="inline-flex items-center gap-1 text-secondary hover:underline font-medium text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
                       <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                       </svg>
@@ -2459,9 +2472,9 @@ const GenericContentPage = ({
                 </div>
               ) : (
                 <div className="flex gap-0.5">
-                  <IconBtn onClick={() => handleMoveRow(idx, 'up')} disabled={idx === 0} title="Move up" colorClass="text-[#174873]">▲</IconBtn>
-                  <IconBtn onClick={() => handleMoveRow(idx, 'down')} disabled={idx === rows.length - 1} title="Move down" colorClass="text-[#174873]">▼</IconBtn>
-                  <IconBtn onClick={() => handleStartEditRow(idx)} title="Edit" colorClass="text-[#174873]">
+                  <IconBtn onClick={() => handleMoveRow(idx, 'up')} disabled={idx === 0} title="Move up" colorClass="text-secondary">▲</IconBtn>
+                  <IconBtn onClick={() => handleMoveRow(idx, 'down')} disabled={idx === rows.length - 1} title="Move down" colorClass="text-secondary">▼</IconBtn>
+                  <IconBtn onClick={() => handleStartEditRow(idx)} title="Edit" colorClass="text-secondary">
                     <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
                     </svg>
@@ -2601,7 +2614,7 @@ const GenericContentPage = ({
                                         value={editingRowData[col] || ''}
                                         onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
                                         placeholder={col}
-                                        className="w-full min-w-[70px] px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-[#174873]"
+                                        className="w-full min-w-[70px] px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-secondary"
                                       />
                                     )
                                 ) : (
@@ -2625,7 +2638,7 @@ const GenericContentPage = ({
                               {isPdfCol(col) ? (
                                 <div className="space-y-1 min-w-[120px]">
                                   {!newRow[col] ? (
-                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-[#174873] text-[#fce8b2] rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
+                                    <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-secondary text-[#fce8b2] rounded text-[10px] sm:text-xs whitespace-nowrap min-h-[28px]">
                                       <svg className="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 1.5L18.5 9H13V3.5zM6 20V4h5v7h7v9H6z"/>
                                       </svg>
@@ -2659,7 +2672,7 @@ const GenericContentPage = ({
                           ))}
                           <td className="px-1.5 sm:px-2.5 py-1.5 sticky right-0 z-10 bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
                             <button onClick={handleAddRow}
-                              className="min-w-[32px] min-h-[32px] px-2.5 py-1 bg-[#174873] text-white rounded text-[10px] sm:text-xs font-bold whitespace-nowrap">
+                              className="min-w-[32px] min-h-[32px] px-2.5 py-1 bg-secondary text-white rounded text-[10px] sm:text-xs font-bold whitespace-nowrap">
                               Add
                             </button>
                           </td>
