@@ -190,7 +190,7 @@ const NoticesAndNews = () => {
                 id: n.id,
                 title: n.title,
                 date: isValid
-                  ? dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                  ? dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
                   : 'Recent',
                 isNew: isValid
                   ? (new Date() - dateObj) / (1000 * 60 * 60 * 24) <= 14
@@ -227,7 +227,7 @@ const NoticesAndNews = () => {
                 id: n.id,
                 title: n.title,
                 date: isValid
-                  ? dateObj.toLocaleDateString('en-US', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })
+                  ? dateObj.toLocaleDateString('en-US', {  month: 'short', year: 'numeric' })
                   : 'Recent',
                 isNew: isValid
                   ? (new Date() - dateObj) / (1000 * 60 * 60 * 24) <= 14

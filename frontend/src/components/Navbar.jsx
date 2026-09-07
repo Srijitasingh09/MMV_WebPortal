@@ -115,7 +115,7 @@ const SubSubMenu = ({ label, path, children }) => {
             href={path}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
           >
             <span>{label}</span>
             <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
@@ -123,20 +123,20 @@ const SubSubMenu = ({ label, path, children }) => {
         ) : (
           <Link
             to={path}
-            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
           >
             <span>{label}</span>
             <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
           </Link>
         )
       ) : (
-        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
+        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
           <span>{label}</span>
           <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
         </div>
       )}
 
-      <div className="absolute top-0 left-full bg-primary shadow-2xl min-w-52 xl:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
+      <div className="absolute top-0 left-full bg-primary shadow-2xl min-w-52 xl:min-w-60 z-1000 border-2 border-[#d4af37] rounded-xl hidden group-hover/subsub:block">
         {children.map((item, idx) => {
           const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
           return item.children ? (
@@ -147,7 +147,7 @@ const SubSubMenu = ({ label, path, children }) => {
               href={item.path || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block px-3.5 py-1.5 text-xl xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xl xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </a>
@@ -156,7 +156,7 @@ const SubSubMenu = ({ label, path, children }) => {
               key={item.path || idx}
               to={item.path || "#"}
               onClick={(e) => { if (!item.path) e.preventDefault(); }}
-              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </Link>
@@ -180,7 +180,7 @@ const SubMenu = ({ label, path, children }) => {
             href={path}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
           >
             <span>{label}</span>
             <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
@@ -188,20 +188,20 @@ const SubMenu = ({ label, path, children }) => {
         ) : (
           <Link
             to={path}
-            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
+            className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 cursor-pointer whitespace-nowrap font-medium transition-colors"
           >
             <span>{label}</span>
             <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
           </Link>
         )
       ) : (
-        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
+        <div className="flex items-center justify-between px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 cursor-default whitespace-nowrap font-medium transition-colors">
           <span>{label}</span>
           <span className="text-[10px] ml-2.5 text-[#d4af37]">►</span>
         </div>
       )}
 
-      <div className="absolute top-0 left-full bg-primary shadow-2xl min-w-52 xl:min-w-60 z-[1000] border-2 border-[#d4af37] rounded-xl hidden group-hover/sub:block">
+      <div className="absolute top-0 left-full bg-primary shadow-2xl min-w-52 xl:min-w-60 z-1000 border-2 border-[#d4af37] rounded-xl hidden group-hover/sub:block">
         {children.map((item, idx) => {
           const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
           return item.children ? (
@@ -212,7 +212,7 @@ const SubMenu = ({ label, path, children }) => {
               href={item.path || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </a>
@@ -221,7 +221,7 @@ const SubMenu = ({ label, path, children }) => {
               key={item.path || idx}
               to={item.path || "#"}
               onClick={(e) => { if (!item.path) e.preventDefault(); }}
-              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === 0 ? "rounded-t-lg" : ""} ${idx === children.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </Link>
@@ -238,7 +238,7 @@ const SubMenu = ({ label, path, children }) => {
 const DropdownMenu = ({ title, path, items }) => {
   const isExt = isExternalUrl(path);
   const triggerClass =
-    "flex items-center gap-1 px-2 xl:px-4 py-2 xl:py-2.5 text-white text-[11px] xl:text-sm font-bold hover:bg-[#174873] hover:text-[#d4af37] transition-all duration-200 h-full whitespace-nowrap cursor-pointer";
+    "flex items-center gap-1 px-2 xl:px-4 py-2 xl:py-2.5 text-white text-[11px] xl:text-sm font-bold hover:bg-secondary hover:text-[#d4af37] transition-all duration-200 h-full whitespace-nowrap cursor-pointer";
   return (
     <div className="relative group/main">
       {isExt ? (
@@ -253,7 +253,7 @@ const DropdownMenu = ({ title, path, items }) => {
         </Link>
       )}
 
-      <div className="absolute top-full left-0 bg-primary shadow-2xl min-w-52 xl:min-w-60 z-[999] border-2 border-[#d4af37] rounded-b-xl hidden group-hover/main:block">
+      <div className="absolute top-full left-0 bg-primary shadow-2xl min-w-52 xl:min-w-60 z-999 border-2 border-[#d4af37] rounded-b-xl hidden group-hover/main:block">
         {items.map((item, idx) => {
           const isItemExt = isExternalUrl(item.path) || item.target === '_blank';
           return item.children ? (
@@ -264,7 +264,7 @@ const DropdownMenu = ({ title, path, items }) => {
               href={item.path || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </a>
@@ -273,7 +273,7 @@ const DropdownMenu = ({ title, path, items }) => {
               key={item.path || idx}
               to={item.path || "#"}
               onClick={(e) => { if (!item.path) e.preventDefault(); }}
-              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-[#174873] hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
+              className={`block px-3.5 py-1.5 text-xs xl:text-[13px] text-slate-100 hover:bg-secondary hover:text-white border-b border-blue-900/50 whitespace-nowrap transition-colors ${idx === items.length - 1 ? "rounded-b-lg border-b-0" : ""}`}
             >
               {item.label}
             </Link>
@@ -288,9 +288,9 @@ const DropdownMenu = ({ title, path, items }) => {
 // MOBILE MENU ITEM
 // ============================================
 const depthStyles = [
-  { bg: "bg-primary", text: "text-white", weight: "font-bold", hover: "hover:bg-[#174873] hover:text-[#d4af37]" },
-  { bg: "bg-primary", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-[#174873] hover:text-white" },
-  { bg: "bg-primary", text: "text-slate-100", weight: "font-medium", hover: "hover:bg-[#174873] hover:text-white" },
+  { bg: "bg-primary", text: "text-white", weight: "font-bold", hover: "hover:bg-secondary hover:text-[#d4af37]" },
+  { bg: "bg-primary", text: "text-slate-100", weight: "font-semibold", hover: "hover:bg-secondary hover:text-white" },
+  { bg: "bg-primary", text: "text-slate-100", weight: "font-medium", hover: "hover:bg-secondary hover:text-white" },
 ];
 
 const highlightStyle = {
@@ -415,11 +415,11 @@ const MobileMenu = ({ isOpen, onClose }) => {
     <>
       <div
         onClick={onClose}
-        className={`fixed inset-0 bg-black/50 backdrop-blur-xs z-[1299] transition-opacity duration-200 lg:hidden
+        className={`fixed inset-0 bg-black/50 backdrop-blur-xs z-1299 transition-opacity duration-200 lg:hidden
           ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       />
       <div
-        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-primary/70 z-[1300] shadow-2xl
+        className={`fixed top-0 right-0 h-full w-[85%] max-w-sm bg-primary/70 z-1300 shadow-2xl
           overflow-y-auto transition-transform duration-300 lg:hidden border-l-2 border-[#d4af37]
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
       >
@@ -573,13 +573,13 @@ const Navbar = () => {
   };
 
   const navLinkClass =
-    "px-2 xl:px-4 py-2 xl:py-2.5 text-white text-[11px] xl:text-sm font-bold hover:bg-[#174873] hover:text-[#d4af37] transition-all duration-200 whitespace-nowrap";
+    "px-2 xl:px-4 py-2 xl:py-2.5 text-white text-[11px] xl:text-sm font-bold hover:bg-secondary hover:text-[#d4af37] transition-all duration-200 whitespace-nowrap";
 
   return (
     <div
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
-      className="w-full sticky top-0 z-[990] bg-primary"
+      className="w-full sticky top-0 z-990 bg-primary"
     >
       {/* Collapsible Header Container */}
       <div
@@ -606,12 +606,12 @@ const Navbar = () => {
 
               {token && isAdmin && (
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                  <Link to="/admin" className="bg-[#174873] text-[#d4af37] px-2.5 py-0.5 rounded text-[10px] sm:text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
+                  <Link to="/admin" className="bg-secondary text-[#d4af37] px-2.5 py-0.5 rounded text-[10px] sm:text-xs font-semibold hover:bg-[#1b5385] border border-[#d4af37]/40 transition-colors">
                     Admin Panel
                   </Link>
                   <button
                     onClick={handleLogout}
-                    className="bg-[#7d311f] text-white px-2.5 py-0.5 rounded text-[10px] sm:text-xs hover:bg-red-800 transition-colors"
+                    className="bg-crimson text-white px-2.5 py-0.5 rounded text-[10px] sm:text-xs hover:bg-red-800 transition-colors"
                   >
                     Logout
                   </button>
@@ -696,7 +696,7 @@ const Navbar = () => {
 
             {/* Announcements Bar */}
             <div className="bg-primary border-t border-b-2 border-[#d4af37] lg:border-b lg:border-[#d4af37]/40 text-xs sm:text-sm flex items-center shadow-inner overflow-hidden relative z-20">
-              <div className="bg-[#7d311f] text-white px-2.5 sm:px-4 py-1.5 font-bold uppercase tracking-wider flex items-center gap-2 z-30 shadow-md flex-shrink-0 border-r border-[#d4af37]/50">
+              <div className="bg-crimson text-white px-2.5 sm:px-4 py-1.5 font-bold uppercase tracking-wider flex items-center gap-2 z-30 shadow-md flex-shrink-0 border-r border-[#d4af37]/50">
                 <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-ping" />
                 <span className="text-[10px] sm:text-xs font-cinzel text-[#fce8b2]">Announcements</span>
               </div>
@@ -710,7 +710,7 @@ const Navbar = () => {
                         to={`/notices?id=${n.id}`}
                         className="inline-flex items-center gap-2 mx-6 text-slate-100 hover:text-[#d4af37] transition-colors font-medium cursor-pointer"
                       >
-                        <span className="bg-[#174873] text-[#d4af37] px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#d4af37]/30 shadow-xs">
+                        <span className="bg-secondary text-[#d4af37] px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#d4af37]/30 shadow-xs">
                           {n.category || 'Notice'}
                         </span>
                         <span className="hover:underline">{n.title}</span>

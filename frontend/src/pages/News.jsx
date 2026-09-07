@@ -10,7 +10,7 @@ function formatDate(dateString) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
+    
     month: 'short',
     year: 'numeric',
   });
@@ -21,8 +21,7 @@ function formatNewsDate(dateString) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
+    
     month: 'short',
     year: 'numeric',
   });

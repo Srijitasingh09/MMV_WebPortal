@@ -25,8 +25,8 @@ function formatDate(dateString) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
+    
+    month: 'long',
     year: 'numeric',
   });
 }
@@ -36,9 +36,7 @@ function formatNoticeDate(dateString) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
+    month: 'long',
     year: 'numeric',
   });
 }
@@ -81,7 +79,7 @@ const AttachmentLink = ({ notice }) => {
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-[#174873] hover:text-[#406BC7] hover:underline transition-colors"
+      className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-secondary hover:text-[#406BC7] hover:underline transition-colors"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -180,7 +178,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
                 <select
                   value={editForm.category}
                   onChange={(e) => setEditForm((f) => ({ ...f, category: e.target.value }))}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-[#174873]"
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-secondary"
                 >
                   {EDITABLE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -193,7 +191,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
                 <input
                   value={editForm.title}
                   onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-primary outline-none focus:ring-2 focus:ring-[#174873]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-primary outline-none focus:ring-2 focus:ring-secondary"
                   placeholder="Notice title"
                 />
               </div>
@@ -204,7 +202,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
                   value={editForm.content}
                   onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
                   rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[#174873] resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-secondary resize-y"
                   placeholder="Notice content"
                 />
               </div>
@@ -222,7 +220,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
+                  className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -236,7 +234,7 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
                   <div className="flex gap-2 shrink-0 -mt-3">
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-semibold hover:bg-[#174873] hover:text-white transition-colors"
+                      className="px-3 py-1.5 border-2 border-secondary text-secondary rounded-lg text-xs font-semibold hover:bg-secondary hover:text-white transition-colors"
                     >
                       Edit
                     </button>
@@ -303,12 +301,12 @@ const NoticeRow = ({ notice, isAdmin, onExpand, onDelete }) => {
   return (
     <div
       onClick={() => onExpand(notice)}
-      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-[#174873] hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
+      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
     >
       {/* Top Row: Title + Category Tag on Right */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-[#174873] leading-snug transition-colors flex flex-wrap items-center gap-1.5">
+          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors flex flex-wrap items-center gap-1.5">
             <span>{notice.title}</span>
             {isNew && (
               <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
@@ -329,7 +327,7 @@ const NoticeRow = ({ notice, isAdmin, onExpand, onDelete }) => {
               <button
                 onClick={(e) => { e.stopPropagation(); onExpand(notice); }}
                 title="Edit notice"
-                className="p-1 rounded text-[#174873] hover:bg-[#174873]/10 transition-colors"
+                className="p-1 rounded text-secondary hover:bg-secondary/10 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
@@ -357,7 +355,7 @@ const NoticeRow = ({ notice, isAdmin, onExpand, onDelete }) => {
         </time>
 
         {notice.attachment_url && (
-          <span className="inline-flex items-center gap-1 text-[#174873] font-semibold text-[11px] group-hover:underline">
+          <span className="inline-flex items-center gap-1 text-secondary font-semibold text-[11px] group-hover:underline">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
@@ -472,7 +470,7 @@ const Notices = () => {
         {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
             <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               Notices &amp; Announcements
             </h1>
@@ -480,7 +478,7 @@ const Notices = () => {
           <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
             <span className="text-slate-400">Home</span>
             <span className="text-slate-300">/</span>
-            <span className="text-[#7d311f] font-semibold">Notices</span>
+            <span className="text-crimson font-semibold">Notices</span>
           </div>
         </div>
 
@@ -499,8 +497,8 @@ const Notices = () => {
                 onClick={() => setActiveCategory(cat)}
                 className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
                   ${activeCategory === cat
-                    ? 'bg-[#174873] text-white border-[#174873]'
-                    : 'bg-[#FAF7F2] text-primary border-primary/20 hover:border-[#174873] hover:text-[#174873]'
+                    ? 'bg-secondary text-white border-secondary'
+                    : 'bg-[#FAF7F2] text-primary border-primary/20 hover:border-secondary hover:text-secondary'
                   }`}
               >
                 {cat}
@@ -512,14 +510,14 @@ const Notices = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search notices..."
-            className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent w-full sm:w-56"
+            className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
           />
         </div>
 
         {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-[#174873] rounded-full animate-spin mb-3" />
+            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-secondary rounded-full animate-spin mb-3" />
             <p className="text-sm">Loading notices...</p>
           </div>
         )}
@@ -550,8 +548,8 @@ const Notices = () => {
             {Object.entries(groupedNotices).map(([monthYear, items]) => (
               <section key={monthYear} className="space-y-2">
                 {/* Month Header Banner matching BHU figure */}
-                <div className="border-b border-[#174873]/30 pb-1 flex items-center justify-between">
-                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-[#174873] tracking-wide">
+                <div className="border-b border-secondary/30 pb-1 flex items-center justify-between">
+                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide">
                     {monthYear}
                   </h2>
                   <span className="text-[11px] text-slate-400 font-medium">
@@ -580,7 +578,7 @@ const Notices = () => {
                 <div className="flex flex-col items-center gap-2">
                   <button
                     onClick={() => setVisibleCount((prev) => prev + 20)}
-                    className="px-6 py-2.5 bg-primary hover:bg-[#174873] active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
+                    className="px-6 py-2.5 bg-primary hover:bg-secondary active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
                   >
                     <span>View More Notices</span>
                     <span className="text-xs bg-[#d4af37] text-primary font-bold px-2 py-0.5 rounded-full group-hover:bg-amber-300 transition-colors">
