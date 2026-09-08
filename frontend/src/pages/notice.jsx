@@ -4,6 +4,8 @@ import axios from 'axios';
 import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const TITLE_MAX_LENGTH = 100;
+const CONTENT_MAX_LENGTH = 1000;
 
 const CATEGORIES = ['All', 'Exam', 'Holiday', 'Admission', 'Event', 'General'];
 const EDITABLE_CATEGORIES = CATEGORIES.filter((c) => c !== 'All');
@@ -120,6 +122,12 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
 
   const handleSave = async () => {
     if (!editForm.title.trim() || !editForm.content.trim()) return;
+
+    if (editForm.title.length > TITLE_MAX_LENGTH || editForm.content.length > CONTENT_MAX_LENGTH) {
+      alert(`Title must be within ${TITLE_MAX_LENGTH} characters and content within ${CONTENT_MAX_LENGTH} characters.`);
+      return;
+    }
+
     setSaving(true);
     try {
       await onSave(notice.id, editForm);
@@ -187,9 +195,15 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Title</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">Title</label>
+                  <span className={`text-xs ${editForm.title.length >= TITLE_MAX_LENGTH ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                    {editForm.title.length}/{TITLE_MAX_LENGTH}
+                  </span>
+                </div>
                 <input
                   value={editForm.title}
+                  maxLength={TITLE_MAX_LENGTH}
                   onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-primary outline-none focus:ring-2 focus:ring-secondary"
                   placeholder="Notice title"
@@ -197,9 +211,15 @@ const NoticeModal = ({ notice, isAdmin, onClose, onDelete, onSave }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Content</label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">Content</label>
+                  <span className={`text-xs ${editForm.content.length >= CONTENT_MAX_LENGTH ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                    {editForm.content.length}/{CONTENT_MAX_LENGTH}
+                  </span>
+                </div>
                 <textarea
                   value={editForm.content}
+                  maxLength={CONTENT_MAX_LENGTH}
                   onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
                   rows={8}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-secondary resize-y"

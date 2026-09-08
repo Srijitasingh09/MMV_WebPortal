@@ -5,6 +5,8 @@ import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+const NEWS_TEXT_MAX_LENGTH = 2000;
+
 function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -140,6 +142,10 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
 
   const handleSave = async () => {
     if (!editText.trim()) return;
+    if (editText.length > NEWS_TEXT_MAX_LENGTH) {
+      alert(`News text cannot exceed ${NEWS_TEXT_MAX_LENGTH} characters.`);
+      return;
+    } 
     setSaving(true);
     try {
       await onSave(news.id, editText);
@@ -191,11 +197,17 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
           {isEditing ? (
             <div className="space-y-4 pr-8">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
-                  News Text (first line becomes the heading)
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">
+                    News Text (first line becomes the heading)
+                  </label>
+                  <span className={`text-xs ${editText.length >= NEWS_TEXT_MAX_LENGTH ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                    {editText.length}/{NEWS_TEXT_MAX_LENGTH}
+                  </span>
+                </div>
                 <textarea
                   value={editText}
+                  maxLength={NEWS_TEXT_MAX_LENGTH}
                   onChange={(e) => setEditText(e.target.value)}
                   rows={10}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[#174873] resize-y"

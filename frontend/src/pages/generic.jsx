@@ -19,6 +19,16 @@ const CARD_PHOTO_TAG = '__profile_card_';
 // show up in the generic "Documents" viewer below the description.
 const TABLE_PDF_TAG = '__table_pdf__';
 
+// Character limit constants
+const CHAR_LIMITS = {
+  DESCRIPTION: 10000, // Main markdown description
+  TABLE_CELL: 250,   // Data table cell content
+  TABLE_TITLE: 80,   // Dynamic table title
+  TABLE_COLUMN: 80,  // Dynamic table column
+  PROFILE_FIELD: 100, // Name, designation, phone, email, etc.
+  URL: 500 //for url in columns of table
+};
+
 // ─── Shared heading / subheading styles ─────────────────────────────────────
 const HEADING_STYLES = {
   heading:        'text-primary font-cinzel font-bold tracking-wide pb-2 py-0.5 leading-normal',   // main page-level heading
@@ -1769,6 +1779,7 @@ const GenericContentPage = ({
                     </label>
                     <input
                       value={editProfile[field.key] || ''}
+                      maxLength={CHAR_LIMITS.PROFILE_FIELD}
                       onChange={e => setEditProfile({ ...editProfile, [field.key]: e.target.value })}
                       placeholder={field.label}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white shadow-xs"
@@ -2150,6 +2161,7 @@ const GenericContentPage = ({
                       <textarea
                         ref={descTextareaRef}
                         value={editDesc}
+                        maxLength={CHAR_LIMITS.DESCRIPTION}
                         onChange={e => {
                           setEditDesc(e.target.value);
                           adjustTextareaHeight(e.target);
@@ -2169,6 +2181,10 @@ const GenericContentPage = ({
                         style={{ minHeight: '260px' }}
                         placeholder="Enter description, contact info, about this section..."
                       />
+                      {/* Helper counter for admin */}
+                      <div className="text-right text-xs text-gray-500 mt-1">
+                        {editDesc.length} / {CHAR_LIMITS.DESCRIPTION} characters
+                      </div>
 
                       {/* Counter for characters in description*/}
                       <div 
@@ -2331,6 +2347,7 @@ const GenericContentPage = ({
                 <div className="flex-1 flex flex-col sm:flex-row gap-2 sm:items-center">
                   <input
                     value={editTableHeading}
+                    maxLength={CHAR_LIMITS.TABLE_TITLE}
                     onChange={e => setEditTableHeading(e.target.value)}
                     placeholder="Table heading, e.g. Faculty List"
                     className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-xs sm:text-base font-semibold outline-none focus:ring-2 focus:ring-secondary/20"
@@ -2558,7 +2575,10 @@ const GenericContentPage = ({
                             {addingCol ? (
                               <div className="flex flex-col gap-1 normal-case font-sans font-normal">
                                 <div className="flex gap-1">
-                                  <input value={newColName} onChange={e => setNewColName(e.target.value)}
+                                  <input 
+                                    value={newColName} 
+                                    maxLength={CHAR_LIMITS.TABLE_COLUMN}
+                                    onChange={e => setNewColName(e.target.value)}
                                     placeholder="Column name"
                                     className="px-1.5 py-0.5 text-black rounded text-[10px] sm:text-xs w-16 sm:w-24" />
                                   <button onClick={handleAddColumn} className="text-green-300 text-xs font-bold">✓</button>
@@ -2612,6 +2632,7 @@ const GenericContentPage = ({
                                     : (
                                       <input
                                         value={editingRowData[col] || ''}
+                                        maxLength={CHAR_LIMITS.TABLE_CELL}
                                         onChange={e => setEditingRowData(prev => ({ ...prev, [col]: e.target.value }))}
                                         placeholder={col}
                                         className="w-full min-w-[70px] px-1.5 py-1 border border-blue-300 rounded text-[10px] sm:text-xs outline-none focus:ring-1 focus:ring-secondary"
@@ -2655,6 +2676,7 @@ const GenericContentPage = ({
                                   )}
                                   <input
                                     value={newRow[col] || ''}
+                                    maxLength={CHAR_LIMITS.URL}
                                     onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
                                     placeholder="or paste URL"
                                     className="w-full px-1.5 py-1 border border-blue-200 rounded text-[10px] sm:text-xs outline-none"
@@ -2663,6 +2685,7 @@ const GenericContentPage = ({
                               ) : (
                                 <input
                                   value={newRow[col] || ''}
+                                  maxLength={CHAR_LIMITS.TABLE_CELL}
                                   onChange={e => setNewRow({ ...newRow, [col]: e.target.value })}
                                   placeholder={col}
                                   className="w-full min-w-[80px] px-1.5 py-1 border border-blue-200 rounded text-[10px] sm:text-xs outline-none"

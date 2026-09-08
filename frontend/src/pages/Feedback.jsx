@@ -4,6 +4,11 @@ import { useLocation } from 'react-router-dom';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const FEEDBACK_CATEGORIES = ['General', 'Facilities', 'Academics', 'Hostel', 'Website Issue', 'Suggestion'];
+const CHAR_LIMITS = {
+  NAME: 100,
+  EMAIL: 100,
+  MESSAGE: 1000,
+};
 
 const Feedback = () => {
   const location = useLocation();
@@ -126,6 +131,7 @@ const Feedback = () => {
                   type="text"
                   maxLength="100"
                   required
+                  maxLength={CHAR_LIMITS.NAME}
                   value={form.name}
                   onChange={handleChange('name')}
                   placeholder="Enter your full name"
@@ -140,6 +146,7 @@ const Feedback = () => {
                   type="email"
                   maxLength="200"
                   required
+                  maxLength={CHAR_LIMITS.EMAIL}
                   value={form.email}
                   onChange={handleChange('email')}
                   placeholder="you@example.com"
@@ -162,12 +169,18 @@ const Feedback = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-primary mb-1.5">
-                Your Feedback / Message <span className="text-red-500">*</span>
-              </label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs font-semibold text-primary">
+                  Your Feedback / Message <span className="text-red-500">*</span>
+                </label>
+                <span className={`text-xs ${form.message.length >= CHAR_LIMITS.MESSAGE ? 'text-red-500 font-semibold' : 'text-slate-400'}`}>
+                  {form.message.length} / {CHAR_LIMITS.MESSAGE}
+                </span>
+              </div>
               <textarea
                 value={form.message}
                 onChange={handleChange('message')}
+                maxLength={CHAR_LIMITS.MESSAGE}
                 required
                 rows={6}
                 maxLength="500"
