@@ -25,6 +25,7 @@ const administrationItems = [
     { label: "MMV", path: "/administration/examination/mmvexam" },
   ]},
   { label: "MMV Office Staff", path: "/administration/staff" },
+  { label: "MMV Committee", path: "/administration/committee" },
 ];
 
 const academicsItems = [
