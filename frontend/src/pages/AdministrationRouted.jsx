@@ -7,24 +7,16 @@ const pages = {
     title: 'Administration', 
     pageType: 'description' 
   },
-  // 'vc': { 
-  //   title: 'Vice Chancellor', 
-  //   pageType: 'profile-description' 
-  // },  
-
-  // 'principal': { 
-  //   title: 'MMV Principal',                                 
-  //   pageType: 'profile-description'
-  // },
-
-  // 'dean': { 
-  //   title: 'Dean of Students',                              
-  //   pageType: 'profile-description' 
-  // },
 
   'advisor': { 
     title: 'Student Advisor',                               
     pageType: 'profile-description' 
+  },
+  
+  'examination/mmvexam': { 
+    title: 'Controller of Examination - MMV',       
+    pageType: 'table',
+    tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
   },
 
   'staff': { 
@@ -33,32 +25,12 @@ const pages = {
     tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work'] 
   },
 
-  
-
-  // 'proctorial/chief': { 
-  //   title: 'Chief Proctor', 
-  //   pageType: 'profile-description'
-  // },
-
-  // 'proctorial/uniboard': { 
-  //   title: 'University Proctorial Board',           
-  //   pageType: 'table-description',
-  //   tableColumns: ['Name', 'Department', 'Position in Board', 'Contact'] 
-  // },
-
-
-
-  // 'examination/universityexam': {  
-  //   title: 'Controller of Examination -University', 
-  //   pageType: 'description' 
-    
-  // },
-  
-  'examination/mmvexam': { 
-    title: 'Controller of Examination -MMV',       
-    pageType: 'table',
-    tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
+  'committee': { 
+    title: 'MMV Committee', 
+    pageType: 'description' 
   },
+
+
 };
 
 const AdministrationRouted = () => {
