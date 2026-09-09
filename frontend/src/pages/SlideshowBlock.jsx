@@ -27,7 +27,7 @@ const SlideshowBlock = ({ photos, isAdmin, onDelete, height = 360, maxWidth = '1
     </div>
   );
 
-  return (
+   return (
     <div
       className="slideshow-box relative w-full rounded-2xl overflow-hidden border border-slate-200 shadow-xs transition-all duration-300 mx-auto"
       style={{
@@ -36,9 +36,19 @@ const SlideshowBlock = ({ photos, isAdmin, onDelete, height = 360, maxWidth = '1
       }}
     >
       <style>{`
-        @media (max-width: 767px) {
+        @media (max-width: 480px) {
           .slideshow-box {
-            height: clamp(200px, 45vh, ${numHeight}px) !important;
+            height: clamp(180px, 60vw, ${numHeight}px) !important;
+          }
+        }
+        @media (min-width: 481px) and (max-width: 767px) {
+          .slideshow-box {
+            height: clamp(220px, 50vw, ${numHeight}px) !important;
+          }
+        }
+        @media (min-width: 768px) and (max-width: 1024px) {
+          .slideshow-box {
+            height: clamp(260px, 40vw, ${numHeight}px) !important;
           }
         }
       `}</style>
@@ -53,7 +63,6 @@ const SlideshowBlock = ({ photos, isAdmin, onDelete, height = 360, maxWidth = '1
           style={{ opacity: i === current ? 1 : 0 }}
         />
       ))}
-
       {/* Admin delete button for current photo */}
       {isAdmin && onDelete && photos[current] && (
         <button

@@ -129,7 +129,6 @@ const Feedback = () => {
                 </label>
                 <input
                   type="text"
-                  maxLength="100"
                   required
                   maxLength={CHAR_LIMITS.NAME}
                   value={form.name}
@@ -144,7 +143,6 @@ const Feedback = () => {
                 </label>
                 <input
                   type="email"
-                  maxLength="200"
                   required
                   maxLength={CHAR_LIMITS.EMAIL}
                   value={form.email}
@@ -183,7 +181,6 @@ const Feedback = () => {
                 maxLength={CHAR_LIMITS.MESSAGE}
                 required
                 rows={6}
-                maxLength="500"
                 placeholder="Tell us what's on your mind..."
                 className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent resize-none"
               />

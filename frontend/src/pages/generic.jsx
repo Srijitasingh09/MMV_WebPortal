@@ -2175,7 +2175,6 @@ const GenericContentPage = ({
                         onKeyUp={updateCaretMenuPosition}
                         onSelect={updateCaretMenuPosition}
                         onScroll={updateCaretMenuPosition}
-                        maxLength={10000}
                         rows={8}
                         className="w-full p-5 border border-gray-200 rounded-xl text-sm resize-y outline-none focus:ring-2 focus:ring-secondary/20 overflow-hidden"
                         style={{ minHeight: '260px' }}
@@ -2184,11 +2183,6 @@ const GenericContentPage = ({
                       {/* Helper counter for admin */}
                       <div className="text-right text-xs text-gray-500 mt-1">
                         {editDesc.length} / {CHAR_LIMITS.DESCRIPTION} characters
-                      </div>
-
-                      {/* Counter for characters in description*/}
-                      <div 
-                        className="text-right text-xs text-grey-500 mt-1">{editDesc.length}/10000
                       </div>
 
                       {/* Floating format icon -sits directly above the cursor. */}
