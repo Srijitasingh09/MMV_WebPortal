@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-// ─── Design tokens ────────────────────────────────────────────────────────────
-// Navy   #0D1F3C / #0F3358 — institution authority, headings, dark surfaces
-// Ivory  #FAF7F2 / #EAEFF5 — warm background, alternating sections
-// Terra  #7D311F / #C4561A — BHU terracotta heritage accent, numbers, icons
-// Gold   #D4AF37 / #E8C97A — thin accent rules, subtle highlights
-// White  #FFFFFF — cards, clean surfaces
-// Body   #1A1A1A — near-black readable text
-
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // ─── ANIMATED STAT COUNTER ───────────────────────────────────────────────────
@@ -29,7 +21,7 @@ const CountUpStat = ({ targetStr, label, startFrom = 0 }) => {
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
           setHasAnimated(true);
-          const duration = 1800; // 1.8 seconds
+          const duration = 1800;
           let animationFrameId;
           const startTime = performance.now();
 
@@ -178,19 +170,20 @@ const NoticesAndNews = () => {
     const fetchNotices = async () => {
       try {
         setLoadingNotices(true);
-        const res = await fetch(`${API_BASE}/notices`);
+        const res = await fetch(`${API_BASE}/notices?home_only=true`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
             const formatted = data.map((n) => {
-              const rawDate = n.created_at || n.date || n.published_at;
+              // display_date gives the visible fake/back upload date
+              const rawDate = n.display_date || n.start_date || n.created_at || n.date;
               const dateObj = rawDate ? new Date(rawDate) : null;
               const isValid = dateObj && !isNaN(dateObj.getTime());
               return {
                 id: n.id,
                 title: n.title,
                 date: isValid
-                  ? dateObj.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                  ? dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
                   : 'Recent',
                 isNew: isValid
                   ? (new Date() - dateObj) / (1000 * 60 * 60 * 24) <= 14
@@ -215,19 +208,20 @@ const NoticesAndNews = () => {
     const fetchNews = async () => {
       try {
         setLoadingNews(true);
-        const res = await fetch(`${API_BASE}/news`);
+        const res = await fetch(`${API_BASE}/news?home_only=true`);
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data)) {
             const formatted = data.map((n) => {
-              const rawDate = n.created_at || n.date || n.published_at;
+              // display_date gives the visible fake/back upload date
+              const rawDate = n.display_date || n.start_date || n.created_at || n.date;
               const dateObj = rawDate ? new Date(rawDate) : null;
               const isValid = dateObj && !isNaN(dateObj.getTime());
               return {
                 id: n.id,
                 title: n.title,
                 date: isValid
-                  ? dateObj.toLocaleDateString('en-US', {  month: 'short', year: 'numeric' })
+                  ? dateObj.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
                   : 'Recent',
                 isNew: isValid
                   ? (new Date() - dateObj) / (1000 * 60 * 60 * 24) <= 14
@@ -276,8 +270,7 @@ const NoticesAndNews = () => {
             <div>
               <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-primary leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
                 <span>Notices & Circulars</span>
-                <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Live</span>
-              </h3>
+               </h3>
 
               {/* Notice Stream */}
               <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
@@ -340,8 +333,7 @@ const NoticesAndNews = () => {
             <div>
               <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-primary leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
                 <span>Latest Campus News</span>
-                <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Updates</span>
-              </h3>
+             </h3>
 
               {/* News Stream */}
               <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
@@ -571,16 +563,10 @@ const Administration = () => (
   </section>
 );
 
-
-
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
 const Home = () => {
   const location = useLocation();
 
-  // When arriving via a link that points at a specific section (e.g. the
-  // "Back to Home" link from a notice/news details page uses
-  // /home#live-notices-news), scroll straight to that section instead of
-  // the top of the page.
   useEffect(() => {
     if (location.hash) {
       const el = document.querySelector(location.hash);

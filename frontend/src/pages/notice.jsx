@@ -22,12 +22,17 @@ function getCategoryStyle(category) {
   return CATEGORY_STYLES[category] || CATEGORY_STYLES.General;
 }
 
+// User-facing display date resolver: fake/back-dated display_date takes first priority
+function getDisplayDate(notice) {
+  return notice.display_date || notice.start_date || notice.created_at;
+}
+
 function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-IN', {
-    
+    day: '2-digit',
     month: 'long',
     year: 'numeric',
   });
@@ -38,7 +43,8 @@ function formatNoticeDate(dateString) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-US', {
-    month: 'long',
+    day: '2-digit',
+    month: 'short',
     year: 'numeric',
   });
 }
@@ -55,6 +61,7 @@ function getNoticeMonthYear(dateString) {
 // ============================================
 const MetaRow = ({ notice }) => {
   const style = getCategoryStyle(notice.category);
+  const displayDate = getDisplayDate(notice);
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
       <div className="flex flex-wrap items-center gap-3">
@@ -62,47 +69,88 @@ const MetaRow = ({ notice }) => {
           <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
           {notice.category || 'General'}
         </span>
-        <time className="text-xs text-gray-500" dateTime={notice.created_at}>
-          {formatDate(notice.created_at)}
+        <time className="text-xs text-gray-500 font-medium" dateTime={displayDate}>
+          {formatDate(displayDate)}
         </time>
+        {notice.status === 'archived' && (
+          <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+            Archived
+          </span>
+        )}
+        {notice.status === 'scheduled' && (
+          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+            Scheduled
+          </span>
+        )}
       </div>
     </div>
   );
 };
 
 // ============================================
-// ATTACHMENT LINK
+// HIGHLIGHTED ATTACHMENT CARD
 // ============================================
 const AttachmentLink = ({ notice }) => {
   if (!notice.attachment_url) return null;
   return (
-    <a
-      href={`${API_BASE}${notice.attachment_url}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-secondary hover:text-[#406BC7] hover:underline transition-colors"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6" />
-      </svg>
-      {notice.attachment_name || 'View attachment'}
-    </a>
+    <div className="mt-6 pt-5 border-t border-slate-200/80">
+      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+        Attached Document
+      </div>
+      <a
+        href={`${API_BASE}${notice.attachment_url}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
+              {notice.attachment_name || 'Official Notice Document'}
+            </p>
+            <p className="text-[11px] text-slate-500">Click to view / download file</p>
+          </div>
+        </div>
+
+        <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
+          <span>Open</span>
+          <span>↗</span>
+        </span>
+      </a>
+    </div>
   );
 };
 
 // ============================================
-// NOTICE DETAILS CARD -full notice view (+ admin edit)
-// Rendered on its own dedicated page (/notices/:id), the way the official
-// BHU portal opens a full "Notice/Event Details" page instead of a popup.
+// NOTICE DETAILS CARD - full notice view (+ admin edit)
 // ============================================
 const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const toDateTimeLocal = (d) => {
+    if (!d) return '';
+    const dateObj = new Date(d);
+    if (isNaN(dateObj.getTime())) return '';
+    const offset = dateObj.getTimezoneOffset() * 60000;
+    return new Date(dateObj.getTime() - offset).toISOString().slice(0, 16);
+  };
+
   const [editForm, setEditForm] = useState({
     title: notice.title || '',
     content: notice.content || '',
     category: notice.category || 'General',
+    display_date: toDateTimeLocal(notice.display_date),
+    start_date: toDateTimeLocal(notice.start_date),
+    end_date: toDateTimeLocal(notice.end_date),
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -153,6 +201,45 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                 </select>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                    Upload Date (visible to users)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editForm.display_date}
+                    onChange={(e) => setEditForm((f) => ({ ...f, display_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
+                  />
+                  <span className="text-[10px] text-slate-400">Public fake/back date</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                    Start Date (Goes Live)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editForm.start_date}
+                    onChange={(e) => setEditForm((f) => ({ ...f, start_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
+                  />
+                  <span className="text-[10px] text-slate-400">Release scheduling</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                    End Date (Home Expiry)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={editForm.end_date}
+                    onChange={(e) => setEditForm((f) => ({ ...f, end_date: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
+                  />
+                  <span className="text-[10px] text-slate-400">Leaves home after date</span>
+                </div>
+              </div>
+
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">Title</label>
@@ -189,7 +276,14 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
               <div className="flex gap-3 justify-end pt-2 border-t">
                 <button
                   onClick={() => {
-                    setEditForm({ title: notice.title || '', content: notice.content || '', category: notice.category || 'General' });
+                    setEditForm({
+                      title: notice.title || '',
+                      content: notice.content || '',
+                      category: notice.category || 'General',
+                      display_date: toDateTimeLocal(notice.display_date),
+                      start_date: toDateTimeLocal(notice.start_date),
+                      end_date: toDateTimeLocal(notice.end_date),
+                    });
                     setIsEditing(false);
                   }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
@@ -251,7 +345,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
 };
 
 // ============================================
-// NOTICE DETAILS PAGE -dedicated route (/notices/:id)
+// NOTICE DETAILS PAGE - dedicated route (/notices/:id)
 // ============================================
 const NoticeDetails = () => {
   const { id } = useParams();
@@ -268,8 +362,6 @@ const NoticeDetails = () => {
   const isAdmin = isAdminSession();
   const token = getToken();
 
-  // Always open this page scrolled to the top, regardless of where the
-  // user scrolled to on the page they navigated from (e.g. the Home page).
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -279,7 +371,9 @@ const NoticeDetails = () => {
     const fetchNotice = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE}/notices`);
+        const res = await fetch(`${API_BASE}/notices`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         if (!res.ok) throw new Error('Failed to load notice');
         const data = await res.json();
         const found = data.find((n) => String(n.id) === String(id));
@@ -323,7 +417,6 @@ const NoticeDetails = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        {/* Page heading, consistent with the Notices list page */}
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
@@ -382,11 +475,12 @@ const NoticeDetails = () => {
 // LIGHT NOTICE ROW (reduced size, matching BHU portal figure)
 // ============================================
 const NoticeRow = ({ notice, isAdmin, onDelete }) => {
-  // Check if notice was posted recently (e.g., within last 14 days)
+  const displayDate = getDisplayDate(notice);
+
   const isNew = (() => {
-    if (!notice.created_at) return true;
-    const diffDays = (new Date() - new Date(notice.created_at)) / (1000 * 60 * 60 * 24);
-    return diffDays <= 14;
+    if (!displayDate) return true;
+    const diffDays = (new Date() - new Date(displayDate)) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 14;
   })();
 
   const style = getCategoryStyle(notice.category);
@@ -409,20 +503,28 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
       onClick={() => navigate(`/notices/${notice.id}`)}
       className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
     >
-      {/* Top Row: Title + Category Tag on Right */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors flex flex-wrap items-center gap-1.5">
             <span>{notice.title}</span>
-            {isNew && (
+            {isNew && notice.status !== 'scheduled' && (
               <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
                 new
+              </span>
+            )}
+            {notice.status === 'scheduled' && (
+              <span className="bg-blue-100 text-blue-700 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
+                scheduled
+              </span>
+            )}
+            {notice.status === 'archived' && (
+              <span className="bg-slate-100 text-slate-500 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
+                archived
               </span>
             )}
           </h3>
         </div>
 
-        {/* Section / Category badge + admin controls on top right */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${style.bg} ${style.text}`}>
             <span className={`w-1 h-1 rounded-full ${style.dot}`} />
@@ -454,18 +556,17 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
         </div>
       </div>
 
-      {/* Downside: Formatted Date */}
       <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-0.5">
-        <time dateTime={notice.created_at} className="font-normal text-slate-500">
-          {formatNoticeDate(notice.created_at)}
+        <time dateTime={displayDate} className="font-normal text-slate-500">
+          {formatNoticeDate(displayDate)}
         </time>
 
         {notice.attachment_url && (
-          <span className="inline-flex items-center gap-1 text-secondary font-semibold text-[11px] group-hover:underline">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            Attachment
+            Attachment Available
           </span>
         )}
       </div>
@@ -482,6 +583,8 @@ const Notices = () => {
   const [error, setError] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
 
   const location = useLocation();
@@ -490,16 +593,17 @@ const Notices = () => {
   const isAdmin = isAdminSession();
   const token   = getToken();
 
-
   useEffect(() => {
     setVisibleCount(20);
-  }, [activeCategory, searchTerm]);
+  }, [activeCategory, searchTerm, dateFrom, dateTo]);
 
   useEffect(() => {
     const fetchNotices = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE}/notices`);
+        const res = await fetch(`${API_BASE}/notices`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         if (!res.ok) throw new Error('Failed to load notices');
         const data = await res.json();
         setNotices(data);
@@ -513,8 +617,6 @@ const Notices = () => {
     fetchNotices();
   }, []);
 
-  // Legacy links used ?id=... to pop open a modal -now that a notice opens
-  // on its own dedicated page, send those straight to /notices/:id.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const targetId = params.get('id');
@@ -534,29 +636,46 @@ const Notices = () => {
     }
   };
 
+  const rangeStart = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+  const rangeEnd = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
   const filteredNotices = notices.filter((n) => {
     const matchesCategory = activeCategory === 'All' || n.category === activeCategory;
     const matchesSearch =
       searchTerm.trim() === '' ||
       n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       n.content.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+
+    let matchesDate = true;
+    if (rangeStart || rangeEnd) {
+      const noticeDate = new Date(getDisplayDate(n));
+      if (!isNaN(noticeDate.getTime())) {
+        if (rangeStart && noticeDate < rangeStart) matchesDate = false;
+        if (rangeEnd && noticeDate > rangeEnd) matchesDate = false;
+      }
+    }
+
+    return matchesCategory && matchesSearch && matchesDate;
   });
 
   const visibleNotices = filteredNotices.slice(0, visibleCount);
 
-  // Group visible notices month-wise as shown in the BHU official layout
   const groupedNotices = visibleNotices.reduce((acc, notice) => {
-    const key = getNoticeMonthYear(notice.created_at);
+    const key = getNoticeMonthYear(getDisplayDate(notice));
     if (!acc[key]) acc[key] = [];
     acc[key].push(notice);
     return acc;
   }, {});
 
+  const hasActiveDateFilter = Boolean(dateFrom || dateTo);
+  const clearDateFilter = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
+
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        {/* ── BHU OFFICIAL PORTAL PAGE HEADING ── */}
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
@@ -573,37 +692,71 @@ const Notices = () => {
 
         {isAdmin && (
           <div className="mb-6 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl text-xs font-bold text-yellow-700">
-            ADMIN MODE -hover a notice to edit or delete it, or open it for full edit controls.
+            ADMIN MODE - hover a notice to edit or delete it, or open it for full edit controls.
           </div>
         )}
 
-        {/* FILTER BAR */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-6">
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
-                  ${activeCategory === cat
-                    ? 'bg-secondary text-white border-secondary'
-                    : 'bg-[#FAF7F2] text-primary border-primary/20 hover:border-secondary hover:text-secondary'
-                  }`}
-              >
-                {cat}
-              </button>
-            ))}
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
+                    ${activeCategory === cat
+                      ? 'bg-secondary text-white border-secondary'
+                      : 'bg-[#FAF7F2] text-primary border-primary/20 hover:border-secondary hover:text-secondary'
+                    }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search notices..."
+              className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
+            />
           </div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search notices..."
-            className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
-          />
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Filter by date
+            </span>
+            <label className="flex items-center gap-1.5 text-xs text-slate-500">
+              From
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                max={dateTo || undefined}
+                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-slate-500">
+              To
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                min={dateFrom || undefined}
+                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              />
+            </label>
+            {hasActiveDateFilter && (
+              <button
+                onClick={clearDateFilter}
+                className="text-xs font-semibold text-crimson hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <div className="w-8 h-8 border-[3px] border-gray-200 border-t-secondary rounded-full animate-spin mb-3" />
@@ -611,7 +764,6 @@ const Notices = () => {
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="text-center py-20">
             <p className="text-red-600 font-medium mb-1">Something went wrong</p>
@@ -619,24 +771,21 @@ const Notices = () => {
           </div>
         )}
 
-        {/* Empty */}
         {!loading && !error && filteredNotices.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-500 font-medium mb-1">No notices found</p>
             <p className="text-gray-400 text-sm">
               {notices.length === 0
                 ? 'There are no notices posted yet. Check back soon.'
-                : 'Try a different category or search term.'}
+                : 'Try a different category, search term, or date range.'}
             </p>
           </div>
         )}
 
-        {/* Month-wise Notice Sections matching figure */}
         {!loading && !error && filteredNotices.length > 0 && (
           <div className="space-y-5">
             {Object.entries(groupedNotices).map(([monthYear, items]) => (
               <section key={monthYear} className="space-y-2">
-                {/* Month Header Banner matching BHU figure */}
                 <div className="border-b border-secondary/30 pb-1 flex items-center justify-between">
                   <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide">
                     {monthYear}
@@ -646,7 +795,6 @@ const Notices = () => {
                   </span>
                 </div>
 
-                {/* List of light notice rows */}
                 <div className="grid gap-2">
                   {items.map((notice) => (
                     <NoticeRow
@@ -660,7 +808,6 @@ const Notices = () => {
               </section>
             ))}
 
-            {/* Load More Button / Count Indicator */}
             <div className="pt-6 pb-2 text-center">
               {visibleCount < filteredNotices.length ? (
                 <div className="flex flex-col items-center gap-2">

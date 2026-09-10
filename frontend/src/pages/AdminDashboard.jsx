@@ -6,6 +6,7 @@ import AdminReadme from './adminreadme';
 import ChangePasswordForm from './ChangePasswordForm';
 import { getToken as getSessionToken, clearSession } from '../utils/auth';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const NOTICE_TITLE_MAX = 100;
 const NOTICE_CONTENT_MAX = 1000;
 const NEWS_TEXT_MAX = 2000;
@@ -16,15 +17,25 @@ const AdminDashboard = () => {
   const [success, setSuccess] = useState('');
   const [noticeAttachment, setNoticeAttachment] = useState(null);
 
-  const [notice, setNotice] = useState({ title: '', content: '', category: 'General' });
+  const [notice, setNotice] = useState({
+    title: '',
+    content: '',
+    category: 'General',
+    display_date: '',
+    start_date: '',
+    end_date: ''
+  });
   const navigate = useNavigate();
 
   const noticeAttachmentInputRef = useRef(null);
 
   // ── NEWS TAB STATE ──
-  // Backend expects one text block (first line = heading) plus any number
-  // of image/PDF attachments -same shape as /admin/news in main.py.
   const [newsText, setNewsText] = useState('');
+  const [newsDates, setNewsDates] = useState({
+    display_date: '',
+    start_date: '',
+    end_date: ''
+  });
   const [newsAttachments, setNewsAttachments] = useState([]);
   const newsAttachmentInputRef = useRef(null);
 
@@ -46,7 +57,7 @@ const AdminDashboard = () => {
 
   const fetchAdminData = async () => {
     try {
-      const contactInfoRes = await axios.get('/contact-info').catch(() => ({ data: null }));
+      const contactInfoRes = await axios.get(`${API_BASE}/contact-info`).catch(() => ({ data: null }));
       if (contactInfoRes?.data) {
         setContactInfoForm({
           address: contactInfoRes.data.address || '',
@@ -72,7 +83,6 @@ const AdminDashboard = () => {
 
   const handleSubmitNotice = async (e) => {
     e.preventDefault();
-    // To check charlimit
     if (notice.title.length > NOTICE_TITLE_MAX || notice.content.length > NOTICE_CONTENT_MAX) {
       alert(`Title must be within ${NOTICE_TITLE_MAX} chars and content within ${NOTICE_CONTENT_MAX} chars.`);
       return;
@@ -83,34 +93,50 @@ const AdminDashboard = () => {
       formData.append('title', notice.title);
       formData.append('content', notice.content);
       formData.append('category', notice.category);
+
+      // Only append dates if set, never pass empty strings
+      if (notice.display_date && notice.display_date.trim()) {
+        formData.append('display_date', notice.display_date.trim());
+      }
+      if (notice.start_date && notice.start_date.trim()) {
+        formData.append('start_date', notice.start_date.trim());
+      }
+      if (notice.end_date && notice.end_date.trim()) {
+        formData.append('end_date', notice.end_date.trim());
+      }
       if (noticeAttachment) {
         formData.append('attachment', noticeAttachment);
       }
 
-      await axios.post('/admin/notice', formData, {
+      await axios.post(`${API_BASE}/admin/notice`, formData, {
         headers: {
           ...authHeader(),
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      setNotice({ title: '', content: '', category: 'General' });
+      setNotice({
+        title: '',
+        content: '',
+        category: 'General',
+        display_date: '',
+        start_date: '',
+        end_date: ''
+      });
       setNoticeAttachment(null);
       if (noticeAttachmentInputRef.current) noticeAttachmentInputRef.current.value = '';
       showSuccess('Notice published successfully!');
     } catch (err) {
-      alert('Error creating notice. Check login session or fields.');
+      alert('Error creating notice: ' + (err.response?.data?.detail || err.message));
     } finally {
       setLoading(false);
     }
   };
 
-  // ── NEWS: file picker (append, don't replace, since input is multi) ──
   const handleNewsFilesChange = (e) => {
     const picked = Array.from(e.target.files || []);
     if (picked.length === 0) return;
     setNewsAttachments((prev) => [...prev, ...picked]);
-    // reset the input so picking the same file again still fires onChange
     if (newsAttachmentInputRef.current) newsAttachmentInputRef.current.value = '';
   };
 
@@ -121,11 +147,10 @@ const AdminDashboard = () => {
   const handleSubmitNews = async (e) => {
     e.preventDefault();
     if (!newsText.trim()) {
-      alert('News text cannot be empty -the first line becomes the heading.');
+      alert('News text cannot be empty — the first line becomes the heading.');
       return;
     }
 
-    // ── To check charlimit of notice ──
     if (newsText.length > NEWS_TEXT_MAX) {
       alert(`News text exceeds the maximum allowed limit of ${NEWS_TEXT_MAX} characters.`);
       return;
@@ -135,11 +160,20 @@ const AdminDashboard = () => {
     try {
       const formData = new FormData();
       formData.append('text', newsText);
+      if (newsDates.display_date && newsDates.display_date.trim()) {
+        formData.append('display_date', newsDates.display_date.trim());
+      }
+      if (newsDates.start_date && newsDates.start_date.trim()) {
+        formData.append('start_date', newsDates.start_date.trim());
+      }
+      if (newsDates.end_date && newsDates.end_date.trim()) {
+        formData.append('end_date', newsDates.end_date.trim());
+      }
       newsAttachments.forEach((file) => {
         formData.append('attachments', file);
       });
 
-      await axios.post('/admin/news', formData, {
+      await axios.post(`${API_BASE}/admin/news`, formData, {
         headers: {
           ...authHeader(),
           'Content-Type': 'multipart/form-data'
@@ -147,6 +181,7 @@ const AdminDashboard = () => {
       });
 
       setNewsText('');
+      setNewsDates({ display_date: '', start_date: '', end_date: '' });
       setNewsAttachments([]);
       if (newsAttachmentInputRef.current) newsAttachmentInputRef.current.value = '';
       showSuccess('News published successfully!');
@@ -161,7 +196,7 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.put('/admin/contact-info', contactInfoForm, { headers: authHeader() });
+      await axios.put(`${API_BASE}/admin/contact-info`, contactInfoForm, { headers: authHeader() });
       showSuccess('Contact info updated successfully!');
     } catch (err) {
       alert('Error updating contact info.');
@@ -221,7 +256,7 @@ const AdminDashboard = () => {
         </button>
         <button
           onClick={() => setActiveTab('change-password')}
-          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'admin-readme' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
+          className={`flex items-center px-4 py-3 text-sm font-bold transition-all rounded-xl border ${activeTab === 'change-password' ? 'border-primary text-primary bg-blue-50/40' : 'border-gray-200 text-slate-600 bg-white'}`}
         >
           <FileText size={18} className="mr-2 text-[#7d311f]" /> CHANGE PASSWORD
         </button>
@@ -282,6 +317,48 @@ const AdminDashboard = () => {
             </div>
           </div>
 
+          {/* Date Controls for Notice */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Display Date (Back-dating)
+              </label>
+              <input
+                type="datetime-local"
+                value={notice.display_date}
+                onChange={(e) => setNotice({ ...notice, display_date: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
+              />
+              <p className="text-[11px] text-slate-400">Date shown to users (defaults to Start Date)</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Start Date (Goes Live)
+              </label>
+              <input
+                type="datetime-local"
+                value={notice.start_date}
+                onChange={(e) => setNotice({ ...notice, start_date: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
+              />
+              <p className="text-[11px] text-slate-400">Hidden until this date (defaults to today)</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                End Date (Home Expiry)
+              </label>
+              <input
+                type="datetime-local"
+                value={notice.end_date}
+                onChange={(e) => setNotice({ ...notice, end_date: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
+              />
+              <p className="text-[11px] text-slate-400">Expires from home after this (defaults to 1 week)</p>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
@@ -317,7 +394,7 @@ const AdminDashboard = () => {
           <div>
             <h3 className="font-bold text-lg text-primary font-serif">Publish News</h3>
             <p className="text-slate-600 text-sm mt-1">
-              Type the story as one block of text -the first line becomes the headline,
+              Type the story as one block of text — the first line becomes the headline,
               everything after it becomes the body. Attach any number of photos or PDFs below.
             </p>
           </div>
@@ -342,9 +419,51 @@ const AdminDashboard = () => {
             />
           </div>
 
+          {/* Date Controls for News */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Display Date (Back-dating)
+              </label>
+              <input
+                type="datetime-local"
+                value={newsDates.display_date}
+                onChange={(e) => setNewsDates({ ...newsDates, display_date: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
+              />
+              <p className="text-[11px] text-slate-400">Date shown to users (defaults to Start Date)</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                Start Date (Goes Live)
+              </label>
+              <input
+                type="datetime-local"
+                value={newsDates.start_date}
+                onChange={(e) => setNewsDates({ ...newsDates, start_date: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
+              />
+              <p className="text-[11px] text-slate-400">Hidden until this date (defaults to today)</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                End Date (Home Expiry)
+              </label>
+              <input
+                type="datetime-local"
+                value={newsDates.end_date}
+                onChange={(e) => setNewsDates({ ...newsDates, end_date: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
+              />
+              <p className="text-[11px] text-slate-400">Expires from home after this (defaults to 1 week)</p>
+            </div>
+          </div>
+
           <div className="space-y-2">
             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
-              <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachments (Images / PDFs -any number)
+              <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachments (Images / PDFs — any number)
             </label>
             <input
               ref={newsAttachmentInputRef}
@@ -465,7 +584,6 @@ const AdminDashboard = () => {
         </form>
       )}
 
-      {/* Admin Readme Tab */}
       {activeTab === 'admin-readme' && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-in slide-in-from-bottom-4 duration-500">
           <AdminReadme />

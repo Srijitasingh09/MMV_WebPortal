@@ -4,15 +4,19 @@ import axios from 'axios';
 import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-
 const NEWS_TEXT_MAX_LENGTH = 2000;
+
+// User-facing display date resolver: fake/back-dated display_date takes first priority
+function getNewsDisplayDate(news) {
+  return news.display_date || news.start_date || news.created_at;
+}
 
 function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-IN', {
-    
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
   });
@@ -23,7 +27,7 @@ function formatNewsDate(dateString) {
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString;
   return date.toLocaleDateString('en-US', {
-    
+    day: '2-digit',
     month: 'short',
     year: 'numeric',
   });
@@ -36,8 +40,6 @@ function getNewsMonthYear(dateString) {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-// Turns a "title" + "content" pair back into one editable text block, since
-// the admin always edits a single block whose first line is the heading.
 function toEditableText(news) {
   const title = news.title || '';
   const content = news.content || '';
@@ -45,24 +47,37 @@ function toEditableText(news) {
 }
 
 // ============================================
-// SHARED: DATE ROW
+// SHARED: DATE & STATUS BADGE ROW
 // ============================================
-const MetaRow = ({ news }) => (
-  <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#eef3fa] text-[#174873]">
-        <span className="w-1.5 h-1.5 rounded-full bg-[#174873]" />
-        News
-      </span>
-      <time className="text-xs text-gray-500" dateTime={news.created_at}>
-        {formatDate(news.created_at)}
-      </time>
+const MetaRow = ({ news }) => {
+  const displayDate = getNewsDisplayDate(news);
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#eef3fa] text-[#174873]">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#174873]" />
+          News
+        </span>
+        <time className="text-xs text-gray-500 font-medium" dateTime={displayDate}>
+          {formatDate(displayDate)}
+        </time>
+        {news.status === 'scheduled' && (
+          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+            Scheduled
+          </span>
+        )}
+        {news.status === 'archived' && (
+          <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
+            Archived
+          </span>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ============================================
-// ATTACHMENTS -photo gallery + pdf links
+// HIGHLIGHTED NEWS ATTACHMENTS (PDF & PHOTOS)
 // ============================================
 const PdfLink = ({ pdf }) => (
   <a
@@ -70,13 +85,26 @@ const PdfLink = ({ pdf }) => (
     target="_blank"
     rel="noopener noreferrer"
     onClick={(e) => e.stopPropagation()}
-    className="inline-flex items-center gap-2 text-sm font-medium text-[#174873] hover:text-[#406BC7] hover:underline transition-colors"
+    className="group flex items-center justify-between p-3.5 rounded-xl bg-blue-50/70 border-2 border-[#174873]/30 hover:border-[#174873] hover:bg-blue-100/60 shadow-xs transition-all duration-200"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-    </svg>
-    {pdf.pdf_name || 'View attachment'}
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="w-9 h-9 rounded-lg bg-[#174873] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs sm:text-sm font-bold text-[#0F3358] truncate">
+          {pdf.pdf_name || 'Official Attached PDF'}
+        </p>
+        <p className="text-[11px] text-slate-500">Document Attachment</p>
+      </div>
+    </div>
+
+    <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#174873] px-2.5 py-1 rounded-lg border border-[#174873]/30 group-hover:bg-[#174873] group-hover:text-white transition-colors shadow-2xs">
+      View PDF ↗
+    </span>
   </a>
 );
 
@@ -86,32 +114,50 @@ const NewsAttachments = ({ news }) => {
   if (photos.length === 0 && pdfs.length === 0) return null;
 
   return (
-    <div className="mt-5 space-y-4">
-      {photos.length > 0 && (
-        <div className={`grid gap-2 ${photos.length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
-          {photos.map((p) => (
-            <a
-              key={p.id}
-              href={`${API_BASE}${p.photo_url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="block rounded-lg overflow-hidden border border-slate-200 bg-slate-50"
-            >
-              <img
-                src={`${API_BASE}${p.photo_url}`}
-                alt={p.photo_name || 'News attachment'}
-                className="w-full h-40 object-cover hover:scale-105 transition-transform duration-200"
-              />
-            </a>
-          ))}
+    <div className="mt-6 pt-5 border-t border-slate-200/80 space-y-4">
+      {/* Highlighted PDFs */}
+      {pdfs.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Attached Documents ({pdfs.length})
+          </div>
+          <div className="grid gap-2">
+            {pdfs.map((p) => (
+              <PdfLink key={p.id} pdf={p} />
+            ))}
+          </div>
         </div>
       )}
-      {pdfs.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {pdfs.map((p) => (
-            <PdfLink key={p.id} pdf={p} />
-          ))}
+
+      {/* Highlighted Photo Gallery */}
+      {photos.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Photo Gallery ({photos.length})
+          </div>
+          <div className={`grid gap-3 ${photos.length === 1 ? 'grid-cols-1 max-w-lg' : 'grid-cols-2 sm:grid-cols-3'}`}>
+            {photos.map((p) => (
+              <a
+                key={p.id}
+                href={`${API_BASE}${p.photo_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="group relative block rounded-xl overflow-hidden border-2 border-slate-200 hover:border-[#D4AF37] shadow-xs hover:shadow-lg transition-all duration-200 bg-slate-50"
+              >
+                <img
+                  src={`${API_BASE}${p.photo_url}`}
+                  alt={p.photo_name || 'News attachment'}
+                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
+                  <span className="text-[11px] font-bold text-white tracking-wide truncate">
+                    {p.photo_name || 'Enlarge Photo'} ↗
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -119,13 +165,26 @@ const NewsAttachments = ({ news }) => {
 };
 
 // ============================================
-// NEWS DETAILS CARD -full news view (+ admin edit)
-// Rendered on its own dedicated page (/news/:id), the way the official
-// BHU portal opens a full "Event/News Details" page instead of a popup.
+// NEWS DETAILS CARD - full news view (+ admin edit)
 // ============================================
 const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(toEditableText(news));
+
+  const toDateTimeLocal = (d) => {
+    if (!d) return '';
+    const dateObj = new Date(d);
+    if (isNaN(dateObj.getTime())) return '';
+    const offset = dateObj.getTimezoneOffset() * 60000;
+    return new Date(dateObj.getTime() - offset).toISOString().slice(0, 16);
+  };
+
+  const [dates, setDates] = useState({
+    display_date: toDateTimeLocal(news.display_date),
+    start_date: toDateTimeLocal(news.start_date),
+    end_date: toDateTimeLocal(news.end_date),
+  });
+
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -137,7 +196,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
     } 
     setSaving(true);
     try {
-      await onSave(news.id, editText);
+      await onSave(news.id, { text: editText, ...dates });
       setIsEditing(false);
     } finally {
       setSaving(false);
@@ -179,10 +238,54 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                 />
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                    Upload Date (visible to users)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={dates.display_date}
+                    onChange={(e) => setDates({ ...dates, display_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]"
+                  />
+                  <span className="text-[10px] text-slate-400">Public fake/back date</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                    Start Date (Goes Live)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={dates.start_date}
+                    onChange={(e) => setDates({ ...dates, start_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]"
+                  />
+                  <span className="text-[10px] text-slate-400">Release scheduling</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                    End Date (Home Expiry)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={dates.end_date}
+                    onChange={(e) => setDates({ ...dates, end_date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]"
+                  />
+                  <span className="text-[10px] text-slate-400">Leaves home after date</span>
+                </div>
+              </div>
+
               <div className="flex gap-3 justify-end pt-2 border-t">
                 <button
                   onClick={() => {
                     setEditText(toEditableText(news));
+                    setDates({
+                      display_date: toDateTimeLocal(news.display_date),
+                      start_date: toDateTimeLocal(news.start_date),
+                      end_date: toDateTimeLocal(news.end_date),
+                    });
                     setIsEditing(false);
                   }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
@@ -246,7 +349,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
 };
 
 // ============================================
-// NEWS DETAILS PAGE -dedicated route (/news/:id)
+// NEWS DETAILS PAGE - dedicated route (/news/:id)
 // ============================================
 const NewsDetails = () => {
   const { id } = useParams();
@@ -263,8 +366,6 @@ const NewsDetails = () => {
   const isAdmin = isAdminSession();
   const token = getToken();
 
-  // Always open this page scrolled to the top, regardless of where the
-  // user scrolled to on the page they navigated from (e.g. the Home page).
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -274,7 +375,9 @@ const NewsDetails = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE}/news`);
+        const res = await fetch(`${API_BASE}/news`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         if (!res.ok) throw new Error('Failed to load news');
         const data = await res.json();
         const found = data.find((n) => String(n.id) === String(id));
@@ -303,9 +406,9 @@ const NewsDetails = () => {
     }
   };
 
-  const handleSaveNews = async (newsId, text) => {
+  const handleSaveNews = async (newsId, payload) => {
     try {
-      const res = await axios.put(`${API_BASE}/admin/news/${newsId}`, { text }, {
+      const res = await axios.put(`${API_BASE}/admin/news/${newsId}`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const updated = res.data || {};
@@ -318,7 +421,6 @@ const NewsDetails = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        {/* Page heading, consistent with the News list page */}
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
@@ -377,10 +479,11 @@ const NewsDetails = () => {
 // LIGHT NEWS ROW (matches the Notices list styling)
 // ============================================
 const NewsRow = ({ news, isAdmin, onDelete }) => {
+  const displayDate = getNewsDisplayDate(news);
   const isNew = (() => {
-    if (!news.created_at) return true;
-    const diffDays = (new Date() - new Date(news.created_at)) / (1000 * 60 * 60 * 24);
-    return diffDays <= 14;
+    if (!displayDate) return true;
+    const diffDays = (new Date() - new Date(displayDate)) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 14;
   })();
 
   const [deleting, setDeleting] = useState(false);
@@ -408,9 +511,19 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
         <div className="flex-1 min-w-0">
           <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-[#174873] leading-snug transition-colors flex flex-wrap items-center gap-1.5">
             <span>{news.title}</span>
-            {isNew && (
+            {isNew && news.status !== 'scheduled' && (
               <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
                 new
+              </span>
+            )}
+            {news.status === 'scheduled' && (
+              <span className="bg-blue-100 text-blue-700 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
+                scheduled
+              </span>
+            )}
+            {news.status === 'archived' && (
+              <span className="bg-slate-100 text-slate-500 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
+                archived
               </span>
             )}
           </h3>
@@ -444,16 +557,16 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
       </div>
 
       <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-0.5">
-        <time dateTime={news.created_at} className="font-normal text-slate-500">
-          {formatNewsDate(news.created_at)}
+        <time dateTime={displayDate} className="font-normal text-slate-500">
+          {formatNewsDate(displayDate)}
         </time>
 
         {(hasPhotos || hasPdfs) && (
-          <span className="inline-flex items-center gap-1 text-[#174873] font-semibold text-[11px] group-hover:underline">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-[#174873] border border-[#174873]/30 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#174873] group-hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            {hasPhotos && hasPdfs ? 'Photos & PDF' : hasPhotos ? 'Photos' : 'Attachment'}
+            {hasPhotos && hasPdfs ? 'Photos & PDF' : hasPhotos ? 'Photos Attached' : 'PDF Attached'}
           </span>
         )}
       </div>
@@ -485,7 +598,9 @@ const News = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE}/news`);
+        const res = await fetch(`${API_BASE}/news`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         if (!res.ok) throw new Error('Failed to load news');
         const data = await res.json();
         setNewsItems(data);
@@ -499,8 +614,6 @@ const News = () => {
     fetchNews();
   }, []);
 
-  // Legacy links used ?id=... to pop open a modal -now that a news item
-  // opens on its own dedicated page, send those straight to /news/:id.
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const targetId = params.get('id');
@@ -531,7 +644,8 @@ const News = () => {
   const visibleNews = filteredNews.slice(0, visibleCount);
 
   const groupedNews = visibleNews.reduce((acc, item) => {
-    const key = getNewsMonthYear(item.created_at);
+    const rawDate = getNewsDisplayDate(item);
+    const key = getNewsMonthYear(rawDate);
     if (!acc[key]) acc[key] = [];
     acc[key].push(item);
     return acc;
@@ -540,7 +654,6 @@ const News = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        {/* ── PAGE HEADING ── */}
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
@@ -557,11 +670,10 @@ const News = () => {
 
         {isAdmin && (
           <div className="mb-6 px-4 py-2.5 bg-yellow-50 border border-yellow-200 rounded-xl text-xs font-bold text-yellow-700">
-            ADMIN MODE -hover a news item to edit or delete it, or open it for full edit controls.
+            ADMIN MODE - hover a news item to edit or delete it, or open it for full edit controls.
           </div>
         )}
 
-        {/* SEARCH BAR */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end mb-6">
           <input
             type="text"
@@ -572,7 +684,6 @@ const News = () => {
           />
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <div className="w-8 h-8 border-[3px] border-gray-200 border-t-[#174873] rounded-full animate-spin mb-3" />
@@ -580,7 +691,6 @@ const News = () => {
           </div>
         )}
 
-        {/* Error */}
         {!loading && error && (
           <div className="text-center py-20">
             <p className="text-red-600 font-medium mb-1">Something went wrong</p>
@@ -588,7 +698,6 @@ const News = () => {
           </div>
         )}
 
-        {/* Empty */}
         {!loading && !error && filteredNews.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-500 font-medium mb-1">No news found</p>
