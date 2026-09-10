@@ -37,6 +37,9 @@ class Notice(Base):
     category = Column(String)  # Exam, Holiday, Admission, Event, General
     attachment_url = Column(String)
     attachment_name = Column(String)
+    display_date = Column(DateTime, default=datetime.datetime.utcnow)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow)
+    end_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
 
@@ -48,7 +51,9 @@ class News(Base):
     title = Column(String, nullable=False)
     content = Column(Text, default="")
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-
+    display_date = Column(DateTime, default=datetime.datetime.utcnow)
+    start_date = Column(DateTime, default=datetime.datetime.utcnow)
+    end_date = Column(DateTime, nullable=True)
     photos = relationship(
         "NewsPhoto",
         back_populates="news",
