@@ -77,7 +77,7 @@ const MetaRow = ({ news }) => {
 };
 
 // ============================================
-// ATTACHMENTS - photo gallery + pdf links
+// HIGHLIGHTED NEWS ATTACHMENTS (PDF & PHOTOS)
 // ============================================
 const PdfLink = ({ pdf }) => (
   <a
@@ -85,13 +85,26 @@ const PdfLink = ({ pdf }) => (
     target="_blank"
     rel="noopener noreferrer"
     onClick={(e) => e.stopPropagation()}
-    className="inline-flex items-center gap-2 text-sm font-medium text-crimson hover:text-[#421A10] hover:underline transition-colors"
+    className="group flex items-center justify-between p-3.5 rounded-xl bg-blue-50/70 border-2 border-[#174873]/30 hover:border-[#174873] hover:bg-blue-100/60 shadow-xs transition-all duration-200"
   >
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-    </svg>
-    {pdf.pdf_name || 'View attachment'}
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="w-9 h-9 rounded-lg bg-[#174873] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs sm:text-sm font-bold text-[#0F3358] truncate">
+          {pdf.pdf_name || 'Official Attached PDF'}
+        </p>
+        <p className="text-[11px] text-slate-500">Document Attachment</p>
+      </div>
+    </div>
+
+    <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#174873] px-2.5 py-1 rounded-lg border border-[#174873]/30 group-hover:bg-[#174873] group-hover:text-white transition-colors shadow-2xs">
+      View PDF ↗
+    </span>
   </a>
 );
 
@@ -101,32 +114,50 @@ const NewsAttachments = ({ news }) => {
   if (photos.length === 0 && pdfs.length === 0) return null;
 
   return (
-    <div className="mt-5 space-y-4">
-      {photos.length > 0 && (
-        <div className={`grid gap-2 ${photos.length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
-          {photos.map((p) => (
-            <a
-              key={p.id}
-              href={`${API_BASE}${p.photo_url}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="block rounded-lg overflow-hidden border border-slate-200 bg-slate-50"
-            >
-              <img
-                src={`${API_BASE}${p.photo_url}`}
-                alt={p.photo_name || 'News attachment'}
-                className="w-full h-40 object-cover hover:scale-105 transition-transform duration-200"
-              />
-            </a>
-          ))}
+    <div className="mt-6 pt-5 border-t border-slate-200/80 space-y-4">
+      {/* Highlighted PDFs */}
+      {pdfs.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Attached Documents ({pdfs.length})
+          </div>
+          <div className="grid gap-2">
+            {pdfs.map((p) => (
+              <PdfLink key={p.id} pdf={p} />
+            ))}
+          </div>
         </div>
       )}
-      {pdfs.length > 0 && (
-        <div className="flex flex-col gap-2">
-          {pdfs.map((p) => (
-            <PdfLink key={p.id} pdf={p} />
-          ))}
+
+      {/* Highlighted Photo Gallery */}
+      {photos.length > 0 && (
+        <div className="space-y-2 pt-2">
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+            Photo Gallery ({photos.length})
+          </div>
+          <div className={`grid gap-3 ${photos.length === 1 ? 'grid-cols-1 max-w-lg' : 'grid-cols-2 sm:grid-cols-3'}`}>
+            {photos.map((p) => (
+              <a
+                key={p.id}
+                href={`${API_BASE}${p.photo_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="group relative block rounded-xl overflow-hidden border-2 border-slate-200 hover:border-[#D4AF37] shadow-xs hover:shadow-lg transition-all duration-200 bg-slate-50"
+              >
+                <img
+                  src={`${API_BASE}${p.photo_url}`}
+                  alt={p.photo_name || 'News attachment'}
+                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
+                  <span className="text-[11px] font-bold text-white tracking-wide truncate">
+                    {p.photo_name || 'Enlarge Photo'} ↗
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -531,11 +562,11 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
         </time>
 
         {(hasPhotos || hasPdfs) && (
-          <span className="inline-flex items-center gap-1 text-crimson font-semibold text-[11px] group-hover:underline">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-[#174873] border border-[#174873]/30 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#174873] group-hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            {hasPhotos && hasPdfs ? 'Photos & PDF' : hasPhotos ? 'Photos' : 'Attachment'}
+            {hasPhotos && hasPdfs ? 'Photos & PDF' : hasPhotos ? 'Photos Attached' : 'PDF Attached'}
           </span>
         )}
       </div>
@@ -567,7 +598,6 @@ const News = () => {
     const fetchNews = async () => {
       try {
         setLoading(true);
-        // Admin token ensures scheduled news items are fetched for admins
         const res = await fetch(`${API_BASE}/news`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });

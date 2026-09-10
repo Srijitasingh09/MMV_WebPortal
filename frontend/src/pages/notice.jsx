@@ -73,12 +73,12 @@ const MetaRow = ({ notice }) => {
           {formatDate(displayDate)}
         </time>
         {notice.status === 'archived' && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
             Archived
           </span>
         )}
         {notice.status === 'scheduled' && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
             Scheduled
           </span>
         )}
@@ -88,24 +88,46 @@ const MetaRow = ({ notice }) => {
 };
 
 // ============================================
-// ATTACHMENT LINK
+// HIGHLIGHTED ATTACHMENT CARD
 // ============================================
 const AttachmentLink = ({ notice }) => {
   if (!notice.attachment_url) return null;
   return (
-    <a
-      href={`${API_BASE}${notice.attachment_url}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={(e) => e.stopPropagation()}
-      className="inline-flex items-center gap-2 mt-4 text-sm font-medium text-secondary hover:text-[#406BC7] hover:underline transition-colors"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <path d="M14 2v6h6" />
-      </svg>
-      {notice.attachment_name || 'View attachment'}
-    </a>
+    <div className="mt-6 pt-5 border-t border-slate-200/80">
+      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+        Attached Document
+      </div>
+      <a
+        href={`${API_BASE}${notice.attachment_url}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}
+        className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
+              {notice.attachment_name || 'Official Notice Document'}
+            </p>
+            <p className="text-[11px] text-slate-500">Click to view / download file</p>
+          </div>
+        </div>
+
+        <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
+          <span>Open</span>
+          <span>↗</span>
+        </span>
+      </a>
+    </div>
   );
 };
 
@@ -540,11 +562,11 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
         </time>
 
         {notice.attachment_url && (
-          <span className="inline-flex items-center gap-1 text-secondary font-semibold text-[11px] group-hover:underline">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            Attachment
+            Attachment Available
           </span>
         )}
       </div>

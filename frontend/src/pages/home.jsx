@@ -270,8 +270,7 @@ const NoticesAndNews = () => {
             <div>
               <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-primary leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
                 <span>Notices & Circulars</span>
-                <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Live</span>
-              </h3>
+               </h3>
 
               {/* Notice Stream */}
               <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
@@ -334,8 +333,7 @@ const NoticesAndNews = () => {
             <div>
               <h3 className="font-cormorant text-xl sm:text-2xl font-bold text-primary leading-snug mb-3 pb-2 border-b border-slate-200 flex items-center justify-between">
                 <span>Latest Campus News</span>
-                <span className="text-xs font-lato font-semibold text-[#7d311f] bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">Updates</span>
-              </h3>
+             </h3>
 
               {/* News Stream */}
               <div className="max-h-[320px] overflow-y-auto pr-2 space-y-3 scrollbar-thin scrollbar-thumb-slate-300">
