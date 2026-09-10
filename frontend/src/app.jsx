@@ -10,11 +10,11 @@ import AdministrationRouted from './pages/AdministrationRouted';
 import FacilitiesRouted from './pages/FacilitiesRouted';
 import AdminDashboard from './pages/AdminDashboard';
 import LoginPage from './pages/LoginPage';
-import Notices from './pages/notice';
+import Notices, { NoticeDetails } from './pages/notice';
 import Contact from './pages/contact';
 import AdminContentGuide from './pages/adminreadme'; 
 import Feedback from './pages/Feedback';
-import News from './pages/News';
+import News, { NewsDetails } from './pages/News';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import { getToken, isAdmin as isAdminSession, verifySessionWithServer } from './utils/auth';
@@ -100,9 +100,11 @@ function App() {
        
         {/* notice */}
         <Route path="/Notices" element={<LayoutWrapper><Notices/></LayoutWrapper>} />
+        <Route path="/Notices/:id" element={<LayoutWrapper><NoticeDetails/></LayoutWrapper>} />
 
         {/* news */}
         <Route path="/News" element={<LayoutWrapper><News/></LayoutWrapper>} />
+        <Route path="/News/:id" element={<LayoutWrapper><NewsDetails/></LayoutWrapper>} />
 
         {/* contact */}
         <Route path="/Contact" element={<LayoutWrapper><Contact/></LayoutWrapper>} />
