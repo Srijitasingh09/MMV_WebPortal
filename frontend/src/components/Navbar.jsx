@@ -35,6 +35,7 @@ const academicsItems = [
       { label: "Science", path: "/academics/syllabus/ug/science" },
       { label: "Social Science", path: "/academics/syllabus/ug/socialscience" },
       { label: "Arts", path: "/academics/syllabus/ug/arts" },
+      { label: "B.F.A.", path: "/academics/syllabus/ug/bfa" },
     ]},
     { label: "Post Graduate", children: [
       { label: "Bioinformatics", path: "/academics/syllabus/pg/bioinformatics" },
@@ -49,6 +50,12 @@ const academicsItems = [
     { label: "Social Science", path: "/academics/section-incharge/socialscience" },
     { label: "Arts", path: "/academics/section-incharge/arts" },
   ]},
+  { label: "Time Table", children: [
+      { label: "Science", path: "/academics/time-table/science" },
+      { label: "Social Science", path: "/academics/time-table/socialscience" },
+      { label: "Arts", path: "/academics/time-table/arts" },
+      { label: "B.F.A.", path: "/academics/time-table/bfa" },
+    ]},
   { label: "Academic Calendar", path: "/academics/calendar" },
   { label: "Holiday List", path: "/academics/holidays" },
 ];

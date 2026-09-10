@@ -14,17 +14,21 @@ const pages = {
   },
 
   // ── Syllabus ────────────────────────────────────────────────────────────────
-   'syllabus/ug/science': {
-    title: 'Syllabus -UG Science',
+  'syllabus/ug/science': {
+    title: 'Syllabus - UG Science',
     pageType: 'pdf-list-table',
     tableColumns: ['Subject', 'Syllabus']
   },
   'syllabus/ug/socialscience': {
-    title: 'Syllabus -UG Social Science',
+    title: 'Syllabus - UG Social Science',
     pageType: 'pdf-list-table'
   },
   'syllabus/ug/arts': {
-    title: 'Syllabus -UG Arts',
+    title: 'Syllabus - UG Arts',
+    pageType: 'pdf-list-table'
+  },
+  'syllabus/ug/bfa': {
+    title: 'Syllabus - B.F.A.',
     pageType: 'pdf-list-table'
   },
 
@@ -75,9 +79,25 @@ const pages = {
     pageType: 'table',
     tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
- 
-  
 
+  // ────────────────────── Time Table ────────────────────────────────────────────
+  'time-table/science': {
+    title: 'Time Table - Science',
+    pageType: 'pdf-list-table',
+  },
+  'time-table/socialscience': {
+    title: 'Time Table - Social Science',
+    pageType: 'pdf-list-table'
+  },
+  'time-table/arts': {
+    title: 'Time Table - Arts',
+    pageType: 'pdf-list-table'
+  },
+  'time-table/bfa': {
+    title: 'Time Table - B.F.A.',
+    pageType: 'pdf-list-table'
+  },
+ 
   // ── Calendar & Holidays ───────────────────────────────────────────────────
   'calendar': {
     title: 'Academic Calendar',
