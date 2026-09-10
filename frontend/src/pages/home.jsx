@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 // Navy   #0D1F3C / #0F3358 — institution authority, headings, dark surfaces
@@ -290,7 +290,8 @@ const NoticesAndNews = () => {
                   notices.map((n) => (
                     <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
                       <Link
-                        to={`/notices?id=${n.id}`}
+                        to={`/notices/${n.id}`}
+                        state={{ from: 'home' }}
                         className="font-lato text-xs sm:text-sm font-semibold text-primary hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
                       >
                         {n.title}
@@ -305,7 +306,8 @@ const NoticesAndNews = () => {
                           )}
                         </div>
                         <Link
-                          to={`/notices?id=${n.id}`}
+                          to={`/notices/${n.id}`}
+                          state={{ from: 'home' }}
                           className="text-[#7d311f] font-bold text-xs hover:underline"
                         >
                           Read More →
@@ -352,7 +354,8 @@ const NoticesAndNews = () => {
                   news.map((n) => (
                     <div key={n.id} className="border-b border-dotted border-slate-200 pb-3">
                       <Link
-                        to={`/news?id=${n.id}`}
+                        to={`/news/${n.id}`}
+                        state={{ from: 'home' }}
                         className="font-lato text-xs sm:text-sm font-semibold text-primary hover:text-[#7d311f] transition-colors leading-snug line-clamp-2 block mb-1"
                       >
                         {n.title}
@@ -367,7 +370,8 @@ const NoticesAndNews = () => {
                           )}
                         </div>
                         <Link
-                          to={`/news?id=${n.id}`}
+                          to={`/news/${n.id}`}
+                          state={{ from: 'home' }}
                           className="text-[#7d311f] font-bold text-xs hover:underline"
                         >
                           Read More →
@@ -570,15 +574,34 @@ const Administration = () => (
 
 
 // ─── HOME PAGE ────────────────────────────────────────────────────────────────
-const Home = () => (
-  <div className="font-lato">
-    <Hero />
-    <NoticesAndNews />
-    <About />
-    <Facilities />
-    <Academics />
-    <Administration />
-  </div>
-);
+const Home = () => {
+  const location = useLocation();
+
+  // When arriving via a link that points at a specific section (e.g. the
+  // "Back to Home" link from a notice/news details page uses
+  // /home#live-notices-news), scroll straight to that section instead of
+  // the top of the page.
+  useEffect(() => {
+    if (location.hash) {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+    window.scrollTo(0, 0);
+  }, [location.hash]);
+
+  return (
+    <div className="font-lato">
+      <Hero />
+      <NoticesAndNews />
+      <About />
+      <Facilities />
+      <Academics />
+      <Administration />
+    </div>
+  );
+};
 
 export default Home;

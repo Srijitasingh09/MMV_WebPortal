@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 
@@ -119,26 +119,15 @@ const NewsAttachments = ({ news }) => {
 };
 
 // ============================================
-// MODAL -full news view (+ admin edit)
+// NEWS DETAILS CARD -full news view (+ admin edit)
+// Rendered on its own dedicated page (/news/:id), the way the official
+// BHU portal opens a full "Event/News Details" page instead of a popup.
 // ============================================
-const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
+const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(toEditableText(news));
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      window.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [onClose]);
 
   const handleSave = async () => {
     if (!editText.trim()) return;
@@ -160,42 +149,17 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
     setDeleting(true);
     try {
       await onDelete(news.id);
-      onClose();
+      if (onDeleted) onDeleted();
     } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[10050] flex items-center justify-center p-4 sm:p-6"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="news-modal-title"
-    >
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]"
-        onClick={onClose}
-      />
-
-      <div
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto animate-[slideUp_0.2s_ease-out]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
-
-        <div className="p-6 sm:p-8">
+    <div className="relative bg-white rounded-xl shadow-md border border-slate-200 w-full max-w-5xl mx-auto">
+      <div className="p-6 sm:p-8">
           {isEditing ? (
-            <div className="space-y-4 pr-8">
+            <div className="space-y-4">
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">
@@ -257,13 +221,12 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
                 )}
               </div>
 
-              <h3
-                id="news-modal-title"
-                className="text-2xl sm:text-3xl font-bold text-primary mb-4 leading-snug pr-8"
+              <h1
+                className="text-2xl sm:text-3xl font-bold text-primary mb-4 leading-snug"
                 style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
               >
                 {news.title}
-              </h3>
+              </h1>
 
               {news.content && (
                 <p
@@ -277,7 +240,134 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
               <NewsAttachments news={news} />
             </>
           )}
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// NEWS DETAILS PAGE -dedicated route (/news/:id)
+// ============================================
+const NewsDetails = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const cameFromHome = location.state?.from === 'home';
+  const backTo = cameFromHome ? '/home#live-notices-news' : '/news';
+  const backLabel = cameFromHome ? 'Back to Home' : 'Back to all News';
+
+  const [news, setNews] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const isAdmin = isAdminSession();
+  const token = getToken();
+
+  // Always open this page scrolled to the top, regardless of where the
+  // user scrolled to on the page they navigated from (e.g. the Home page).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchNews = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE}/news`);
+        if (!res.ok) throw new Error('Failed to load news');
+        const data = await res.json();
+        const found = data.find((n) => String(n.id) === String(id));
+        if (!cancelled) {
+          setNews(found || null);
+          setError(found ? null : 'This news item could not be found. It may have been removed.');
+        }
+      } catch (err) {
+        if (!cancelled) setError('Could not load this news item right now. Please try again in a moment.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchNews();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  const handleDeleteNews = async (newsId) => {
+    try {
+      await axios.delete(`${API_BASE}/admin/news/${newsId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
+      alert('Delete failed: ' + (err.response?.data?.detail || err.message));
+      throw err;
+    }
+  };
+
+  const handleSaveNews = async (newsId, text) => {
+    try {
+      const res = await axios.put(`${API_BASE}/admin/news/${newsId}`, { text }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const updated = res.data || {};
+      setNews((prev) => (prev ? { ...prev, ...updated } : prev));
+    } catch (err) {
+      alert('Save failed: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#EAEFF5]">
+      <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
+        {/* Page heading, consistent with the News list page */}
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+              News Details
+            </h1>
+          </div>
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+            <Link to="/home" className="text-slate-400 hover:text-[#7d311f]">Home</Link>
+            <span className="text-slate-300">/</span>
+            <Link to="/news" className="text-slate-400 hover:text-[#7d311f]">News</Link>
+            <span className="text-slate-300">/</span>
+            <span className="text-[#7d311f] font-semibold">Details</span>
+          </div>
         </div>
+
+        <div className="max-w-5xl mx-auto mb-4">
+          <button
+            onClick={() => navigate(backTo)}
+            className="inline-flex items-center gap-1.5 font-lato text-sm font-bold text-crimson hover:text-[#C4561A] transition-colors"
+          >
+            <span className="text-base font-bold">←</span>
+            <span>{backLabel}</span>
+          </button>
+        </div>
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-[#174873] rounded-full animate-spin mb-3" />
+            <p className="text-sm">Loading news...</p>
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="text-center py-20">
+            <p className="text-red-600 font-medium mb-1">Something went wrong</p>
+            <p className="text-gray-500 text-sm">{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && news && (
+          <NewsDetailsCard
+            news={news}
+            isAdmin={isAdmin}
+            onDelete={handleDeleteNews}
+            onSave={handleSaveNews}
+            onDeleted={() => navigate(backTo)}
+          />
+        )}
       </div>
     </div>
   );
@@ -286,7 +376,7 @@ const NewsModal = ({ news, isAdmin, onClose, onDelete, onSave }) => {
 // ============================================
 // LIGHT NEWS ROW (matches the Notices list styling)
 // ============================================
-const NewsRow = ({ news, isAdmin, onExpand, onDelete }) => {
+const NewsRow = ({ news, isAdmin, onDelete }) => {
   const isNew = (() => {
     if (!news.created_at) return true;
     const diffDays = (new Date() - new Date(news.created_at)) / (1000 * 60 * 60 * 24);
@@ -296,6 +386,7 @@ const NewsRow = ({ news, isAdmin, onExpand, onDelete }) => {
   const [deleting, setDeleting] = useState(false);
   const hasPhotos = (news.photos || []).length > 0;
   const hasPdfs = (news.pdfs || []).length > 0;
+  const navigate = useNavigate();
 
   const handleDeleteClick = async (e) => {
     e.stopPropagation();
@@ -310,7 +401,7 @@ const NewsRow = ({ news, isAdmin, onExpand, onDelete }) => {
 
   return (
     <div
-      onClick={() => onExpand(news)}
+      onClick={() => navigate(`/news/${news.id}`)}
       className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-[#174873] hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
     >
       <div className="flex items-start justify-between gap-3">
@@ -329,7 +420,7 @@ const NewsRow = ({ news, isAdmin, onExpand, onDelete }) => {
           {isAdmin && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); onExpand(news); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/news/${news.id}`); }}
                 title="Edit news"
                 className="p-1 rounded text-[#174873] hover:bg-[#174873]/10 transition-colors"
               >
@@ -378,10 +469,10 @@ const News = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeNews, setActiveNews] = useState(null);
   const [visibleCount, setVisibleCount] = useState(20);
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isAdmin = isAdminSession();
   const token = getToken();
@@ -408,19 +499,15 @@ const News = () => {
     fetchNews();
   }, []);
 
-  // Direct news navigation via URL parameter ?id=... (same pattern as notices)
+  // Legacy links used ?id=... to pop open a modal -now that a news item
+  // opens on its own dedicated page, send those straight to /news/:id.
   useEffect(() => {
-    if (newsItems.length > 0) {
-      const params = new URLSearchParams(location.search);
-      const targetId = params.get('id');
-      if (targetId) {
-        const found = newsItems.find((n) => String(n.id) === String(targetId));
-        if (found) {
-          setActiveNews(found);
-        }
-      }
+    const params = new URLSearchParams(location.search);
+    const targetId = params.get('id');
+    if (targetId) {
+      navigate(`/news/${targetId}`, { replace: true });
     }
-  }, [location.search, newsItems]);
+  }, [location.search, navigate]);
 
   const handleDeleteNews = async (id) => {
     try {
@@ -428,22 +515,8 @@ const News = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNewsItems((prev) => prev.filter((n) => n.id !== id));
-      setActiveNews((prev) => (prev && prev.id === id ? null : prev));
     } catch (err) {
       alert('Delete failed: ' + (err.response?.data?.detail || err.message));
-    }
-  };
-
-  const handleSaveNews = async (id, text) => {
-    try {
-      const res = await axios.put(`${API_BASE}/admin/news/${id}`, { text }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const updated = res.data || {};
-      setNewsItems((prev) => prev.map((n) => (n.id === id ? { ...n, ...updated } : n)));
-      setActiveNews((prev) => (prev && prev.id === id ? { ...prev, ...updated } : prev));
-    } catch (err) {
-      alert('Save failed: ' + (err.response?.data?.detail || err.message));
     }
   };
 
@@ -547,7 +620,6 @@ const News = () => {
                       key={item.id}
                       news={item}
                       isAdmin={isAdmin}
-                      onExpand={setActiveNews}
                       onDelete={handleDeleteNews}
                     />
                   ))}
@@ -580,18 +652,9 @@ const News = () => {
           </div>
         )}
       </div>
-
-      {activeNews && (
-        <NewsModal
-          news={activeNews}
-          isAdmin={isAdmin}
-          onClose={() => setActiveNews(null)}
-          onDelete={handleDeleteNews}
-          onSave={handleSaveNews}
-        />
-      )}
     </div>
   );
 };
 
 export default News;
+export { NewsDetails };

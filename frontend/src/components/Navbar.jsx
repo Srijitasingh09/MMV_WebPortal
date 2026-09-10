@@ -715,7 +715,7 @@ const Navbar = () => {
                     [...notices, ...notices].map((n, idx) => (
                       <Link
                         key={`${n.id || idx}-${idx}`}
-                        to={`/notices?id=${n.id}`}
+                        to={`/notices/${n.id}`}
                         className="inline-flex items-center gap-2 mx-6 text-slate-100 hover:text-[#d4af37] transition-colors font-medium cursor-pointer"
                       >
                         <span className="bg-secondary text-[#d4af37] px-2 py-0.5 rounded text-[10px] uppercase font-bold border border-[#d4af37]/30 shadow-xs">
