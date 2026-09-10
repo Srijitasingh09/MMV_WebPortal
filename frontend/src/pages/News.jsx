@@ -54,8 +54,8 @@ const MetaRow = ({ news }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#eef3fa] text-[#174873]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#174873]" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#eef3fa] text-secondary">
+          <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
           News
         </span>
         <time className="text-xs text-gray-500 font-medium" dateTime={displayDate}>
@@ -85,10 +85,10 @@ const PdfLink = ({ pdf }) => (
     target="_blank"
     rel="noopener noreferrer"
     onClick={(e) => e.stopPropagation()}
-    className="group flex items-center justify-between p-3.5 rounded-xl bg-blue-50/70 border-2 border-[#174873]/30 hover:border-[#174873] hover:bg-blue-100/60 shadow-xs transition-all duration-200"
+    className="group flex items-center justify-between p-3.5 rounded-xl bg-blue-50/70 border-2 border-secondary/30 hover:border-secondary hover:bg-blue-100/60 shadow-xs transition-all duration-200"
   >
     <div className="flex items-center gap-3 min-w-0">
-      <div className="w-9 h-9 rounded-lg bg-[#174873] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+      <div className="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
@@ -102,7 +102,7 @@ const PdfLink = ({ pdf }) => (
       </div>
     </div>
 
-    <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#174873] px-2.5 py-1 rounded-lg border border-[#174873]/30 group-hover:bg-[#174873] group-hover:text-white transition-colors shadow-2xs">
+    <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-secondary px-2.5 py-1 rounded-lg border border-secondary/30 group-hover:bg-secondary group-hover:text-white transition-colors shadow-2xs">
       View PDF ↗
     </span>
   </a>
@@ -233,7 +233,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                   maxLength={NEWS_TEXT_MAX_LENGTH}
                   onChange={(e) => setEditText(e.target.value)}
                   rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-[#174873] resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-secondary resize-y"
                   placeholder={'Heading goes on the first line...\nEverything after this is the full story.'}
                 />
               </div>
@@ -247,7 +247,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                     type="datetime-local"
                     value={dates.display_date}
                     onChange={(e) => setDates({ ...dates, display_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
                   />
                   <span className="text-[10px] text-slate-400">Public fake/back date</span>
                 </div>
@@ -259,7 +259,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                     type="datetime-local"
                     value={dates.start_date}
                     onChange={(e) => setDates({ ...dates, start_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
                   />
                   <span className="text-[10px] text-slate-400">Release scheduling</span>
                 </div>
@@ -271,7 +271,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                     type="datetime-local"
                     value={dates.end_date}
                     onChange={(e) => setDates({ ...dates, end_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-[#174873]"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
                   />
                   <span className="text-[10px] text-slate-400">Leaves home after date</span>
                 </div>
@@ -295,7 +295,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-4 py-2 bg-[#174873] text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
+                  className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -309,7 +309,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                   <div className="flex gap-2 shrink-0 -mt-3">
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-3 py-1.5 border-2 border-[#174873] text-[#174873] rounded-lg text-xs font-semibold hover:bg-[#174873] hover:text-white transition-colors"
+                      className="px-3 py-1.5 border-2 border-secondary text-secondary rounded-lg text-xs font-semibold hover:bg-secondary hover:text-white transition-colors"
                     >
                       Edit
                     </button>
@@ -423,17 +423,17 @@ const NewsDetails = () => {
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
             <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               News Details
             </h1>
           </div>
           <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
-            <Link to="/home" className="text-slate-400 hover:text-[#7d311f]">Home</Link>
+            <Link to="/home" className="text-slate-400 hover:text-crimson">Home</Link>
             <span className="text-slate-300">/</span>
-            <Link to="/news" className="text-slate-400 hover:text-[#7d311f]">News</Link>
+            <Link to="/news" className="text-slate-400 hover:text-crimson">News</Link>
             <span className="text-slate-300">/</span>
-            <span className="text-[#7d311f] font-semibold">Details</span>
+            <span className="text-crimson font-semibold">Details</span>
           </div>
         </div>
 
@@ -449,7 +449,7 @@ const NewsDetails = () => {
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-[#174873] rounded-full animate-spin mb-3" />
+            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-secondary rounded-full animate-spin mb-3" />
             <p className="text-sm">Loading news...</p>
           </div>
         )}
@@ -505,11 +505,11 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
   return (
     <div
       onClick={() => navigate(`/news/${news.id}`)}
-      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-[#174873] hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
+      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-[#174873] leading-snug transition-colors flex flex-wrap items-center gap-1.5">
+          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors flex flex-wrap items-center gap-1.5">
             <span>{news.title}</span>
             {isNew && news.status !== 'scheduled' && (
               <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
@@ -535,7 +535,7 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
               <button
                 onClick={(e) => { e.stopPropagation(); navigate(`/news/${news.id}`); }}
                 title="Edit news"
-                className="p-1 rounded text-[#174873] hover:bg-[#174873]/10 transition-colors"
+                className="p-1 rounded text-secondary hover:bg-secondary/10 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
@@ -562,7 +562,7 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
         </time>
 
         {(hasPhotos || hasPdfs) && (
-          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-[#174873] border border-[#174873]/30 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#174873] group-hover:text-white transition-colors">
+          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-secondary border border-secondary/30 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-secondary group-hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
@@ -656,7 +656,7 @@ const News = () => {
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
         <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-[#7d311f] rounded-full shrink-0" />
+            <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
             <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
               News
             </h1>
@@ -664,7 +664,7 @@ const News = () => {
           <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
             <span className="text-slate-400">Home</span>
             <span className="text-slate-300">/</span>
-            <span className="text-[#7d311f] font-semibold">News</span>
+            <span className="text-crimson font-semibold">News</span>
           </div>
         </div>
 
@@ -680,13 +680,13 @@ const News = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search news..."
-            className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#174873] focus:border-transparent w-full sm:w-56"
+            className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
           />
         </div>
 
         {loading && (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-[#174873] rounded-full animate-spin mb-3" />
+            <div className="w-8 h-8 border-[3px] border-gray-200 border-t-secondary rounded-full animate-spin mb-3" />
             <p className="text-sm">Loading news...</p>
           </div>
         )}
@@ -714,8 +714,8 @@ const News = () => {
           <div className="space-y-5">
             {Object.entries(groupedNews).map(([monthYear, items]) => (
               <section key={monthYear} className="space-y-2">
-                <div className="border-b border-[#174873]/30 pb-1 flex items-center justify-between">
-                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-[#174873] tracking-wide">
+                <div className="border-b border-secondary/30 pb-1 flex items-center justify-between">
+                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide">
                     {monthYear}
                   </h2>
                   <span className="text-[11px] text-slate-400 font-medium">
@@ -741,7 +741,7 @@ const News = () => {
                 <div className="flex flex-col items-center gap-2">
                   <button
                     onClick={() => setVisibleCount((prev) => prev + 20)}
-                    className="px-6 py-2.5 bg-primary hover:bg-[#174873] active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
+                    className="px-6 py-2.5 bg-primary hover:bg-secondary active:scale-95 text-white text-sm font-semibold rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 cursor-pointer border border-[#d4af37]/40 group"
                   >
                     <span>View More News</span>
                     <span className="text-xs bg-[#d4af37] text-primary font-bold px-2 py-0.5 rounded-full group-hover:bg-amber-300 transition-colors">
