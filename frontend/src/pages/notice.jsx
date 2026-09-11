@@ -7,6 +7,72 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const TITLE_MAX_LENGTH = 100;
 const CONTENT_MAX_LENGTH = 1000;
 
+// ============================================
+// ATTACHMENT DISPLAY (inlined — local to Notice only)
+// A PDF or photo attachment card, plus a section wrapper that groups
+// several of them under a shared heading.
+// ============================================
+const DocumentIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
+const ImageIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+);
+
+const AttachmentCard = ({ url, name, type = 'document', fallbackLabel = 'Attached File' }) => {
+  if (!url) return null;
+  const isImage = type === 'image';
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+          {isImage ? <ImageIcon /> : <DocumentIcon />}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
+            {name || fallbackLabel}
+          </p>
+          <p className="text-[11px] text-slate-500">Click to view / download file</p>
+        </div>
+      </div>
+
+      <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
+        <span>Open</span>
+        <span>↗</span>
+      </span>
+    </a>
+  );
+};
+
+const AttachmentSection = ({ title, children }) => (
+  <div className="space-y-2">
+    <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+      {title}
+    </div>
+    <div className="grid gap-2">
+      {children}
+    </div>
+  </div>
+);
+
 const CATEGORIES = ['All', 'Exam', 'Holiday', 'Admission', 'Event', 'General'];
 const EDITABLE_CATEGORIES = CATEGORIES.filter((c) => c !== 'All');
 
@@ -72,11 +138,7 @@ const MetaRow = ({ notice }) => {
         <time className="text-xs text-gray-500 font-medium" dateTime={displayDate}>
           {formatDate(displayDate)}
         </time>
-        {notice.status === 'archived' && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-            Archived
-          </span>
-        )}
+       
         {notice.status === 'scheduled' && (
           <span className="text-[10px] font-bold uppercase tracking-wide text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
             Scheduled
@@ -88,45 +150,60 @@ const MetaRow = ({ notice }) => {
 };
 
 // ============================================
-// HIGHLIGHTED ATTACHMENT CARD
+// HIGHLIGHTED ATTACHMENTS (PDFs & PHOTOS)
+// Supports any number of attached PDFs/images. Falls back to the legacy
+// single attachment_url/attachment_name fields for older notices that
+// haven't been re-saved under the new multi-attachment format.
 // ============================================
-const AttachmentLink = ({ notice }) => {
-  if (!notice.attachment_url) return null;
-  return (
-    <div className="mt-6 pt-5 border-t border-slate-200/80">
-      <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-        Attached Document
-      </div>
-      <a
-        href={`${API_BASE}${notice.attachment_url}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={(e) => e.stopPropagation()}
-        className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-              <polyline points="10 9 9 9 8 9" />
-            </svg>
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
-              {notice.attachment_name || 'Official Notice Document'}
-            </p>
-            <p className="text-[11px] text-slate-500">Click to view / download file</p>
-          </div>
-        </div>
+const isImageAttachment = (name, url) => /\.(png|jpe?g|webp|gif)$/i.test(name || url || '');
 
-        <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
-          <span>Open</span>
-          <span>↗</span>
-        </span>
-      </a>
+const NoticeAttachments = ({ notice }) => {
+  const pdfs = notice.pdfs || [];
+  const photos = notice.photos || [];
+  const hasLegacyAttachment = !pdfs.length && !photos.length && Boolean(notice.attachment_url);
+
+  if (!pdfs.length && !photos.length && !hasLegacyAttachment) return null;
+
+  return (
+    <div className="mt-6 pt-5 border-t border-slate-200/80 space-y-4">
+      {pdfs.length > 0 && (
+        <AttachmentSection title={`Attached Documents (${pdfs.length})`}>
+          {pdfs.map((p) => (
+            <AttachmentCard
+              key={p.id}
+              url={`${API_BASE}${p.pdf_url}`}
+              name={p.pdf_name}
+              type="document"
+              fallbackLabel="Official Notice Document"
+            />
+          ))}
+        </AttachmentSection>
+      )}
+
+      {photos.length > 0 && (
+        <AttachmentSection title={`Photo Gallery (${photos.length})`}>
+          {photos.map((p) => (
+            <AttachmentCard
+              key={p.id}
+              url={`${API_BASE}${p.photo_url}`}
+              name={p.photo_name}
+              type="image"
+              fallbackLabel="Notice Photo Attachment"
+            />
+          ))}
+        </AttachmentSection>
+      )}
+
+      {hasLegacyAttachment && (
+        <AttachmentSection title="Attached Document">
+          <AttachmentCard
+            url={`${API_BASE}${notice.attachment_url}`}
+            name={notice.attachment_name}
+            type={isImageAttachment(notice.attachment_name, notice.attachment_url) ? 'image' : 'document'}
+            fallbackLabel="Official Notice Document"
+          />
+        </AttachmentSection>
+      )}
     </div>
   );
 };
@@ -136,27 +213,76 @@ const AttachmentLink = ({ notice }) => {
 // ============================================
 const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const toDateTimeLocal = (d) => {
+  const toDateOnly = (d) => {
     if (!d) return '';
     const dateObj = new Date(d);
     if (isNaN(dateObj.getTime())) return '';
     const offset = dateObj.getTimezoneOffset() * 60000;
-    return new Date(dateObj.getTime() - offset).toISOString().slice(0, 16);
+    return new Date(dateObj.getTime() - offset).toISOString().slice(0, 10);
   };
 
   const [editForm, setEditForm] = useState({
     title: notice.title || '',
     content: notice.content || '',
     category: notice.category || 'General',
-    display_date: toDateTimeLocal(notice.display_date),
-    start_date: toDateTimeLocal(notice.start_date),
-    end_date: toDateTimeLocal(notice.end_date),
+    display_date: toDateOnly(notice.display_date),
+    start_date: toDateOnly(notice.start_date),
+    end_date: toDateOnly(notice.end_date),
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Attachment editing: any number of existing photos/pdfs can be removed
+  // individually, and any number of new PDFs/images can be picked to be
+  // uploaded alongside on save. The legacy single attachment_url field
+  // (for notices saved before multi-attachment support) can also be
+  // removed individually the same way.
+  const [removedPhotoIds, setRemovedPhotoIds] = useState([]);
+  const [removedPdfIds, setRemovedPdfIds] = useState([]);
+  const [removeLegacyAttachment, setRemoveLegacyAttachment] = useState(false);
+  const [newAttachments, setNewAttachments] = useState([]);
+  const newAttachmentInputRef = React.useRef(null);
+
+  const visiblePhotos = (notice.photos || []).filter((p) => !removedPhotoIds.includes(p.id));
+  const visiblePdfs = (notice.pdfs || []).filter((p) => !removedPdfIds.includes(p.id));
+  const hasLegacyAttachment = Boolean(notice.attachment_url) && !(notice.photos || []).length && !(notice.pdfs || []).length;
+
+  const handleNewAttachmentsChange = (e) => {
+    const picked = Array.from(e.target.files || []);
+    setNewAttachments((prev) => [...prev, ...picked]);
+    if (newAttachmentInputRef.current) newAttachmentInputRef.current.value = '';
+  };
+
+  const removeNewAttachment = (index) => {
+    setNewAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const markPhotoForRemoval = (photoId) => {
+    setRemovedPhotoIds((prev) => [...prev, photoId]);
+  };
+
+  const markPdfForRemoval = (pdfId) => {
+    setRemovedPdfIds((prev) => [...prev, pdfId]);
+  };
+
+  const markLegacyAttachmentForRemoval = () => {
+    setRemoveLegacyAttachment(true);
+  };
+
+  const undoRemoveLegacyAttachment = () => {
+    setRemoveLegacyAttachment(false);
+  };
+
+  const resetAttachmentState = () => {
+    setRemovedPhotoIds([]);
+    setRemovedPdfIds([]);
+    setRemoveLegacyAttachment(false);
+    setNewAttachments([]);
+    if (newAttachmentInputRef.current) newAttachmentInputRef.current.value = '';
+  };
+
   const handleSave = async () => {
-    if (!editForm.title.trim() || !editForm.content.trim()) return;
+    if (!editForm.title.trim()) return;
 
     if (editForm.title.length > TITLE_MAX_LENGTH || editForm.content.length > CONTENT_MAX_LENGTH) {
       alert(`Title must be within ${TITLE_MAX_LENGTH} characters and content within ${CONTENT_MAX_LENGTH} characters.`);
@@ -165,8 +291,15 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
 
     setSaving(true);
     try {
-      await onSave(notice.id, editForm);
+      await onSave(notice.id, {
+        ...editForm,
+        remove_attachment: removeLegacyAttachment,
+        removedPhotoIds,
+        removedPdfIds,
+        newAttachments,
+      });
       setIsEditing(false);
+      resetAttachmentState();
     } finally {
       setSaving(false);
     }
@@ -207,7 +340,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                     Upload Date (visible to users)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={editForm.display_date}
                     onChange={(e) => setEditForm((f) => ({ ...f, display_date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
@@ -219,7 +352,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                     Start Date (Goes Live)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={editForm.start_date}
                     onChange={(e) => setEditForm((f) => ({ ...f, start_date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
@@ -231,13 +364,108 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                     End Date (Home Expiry)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={editForm.end_date}
                     onChange={(e) => setEditForm((f) => ({ ...f, end_date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
                   />
                   <span className="text-[10px] text-slate-400">Leaves home after date</span>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                  Attachments
+                </label>
+
+                {(visiblePdfs.length > 0 || visiblePhotos.length > 0 || (hasLegacyAttachment && !removeLegacyAttachment)) && (
+                  <div className="space-y-1.5 mb-2">
+                    {visiblePdfs.map((pdf) => (
+                      <div key={`pdf-${pdf.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
+                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                          {pdf.pdf_name || 'PDF attachment'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => markPdfForRemoval(pdf.id)}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {visiblePhotos.map((photo) => (
+                      <div key={`photo-${photo.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
+                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                          {photo.photo_name || 'Photo attachment'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => markPhotoForRemoval(photo.id)}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {hasLegacyAttachment && !removeLegacyAttachment && (
+                      <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
+                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                          {notice.attachment_name || 'Current attachment'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={markLegacyAttachmentForRemoval}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {(removedPhotoIds.length > 0 || removedPdfIds.length > 0 || removeLegacyAttachment) && (
+                  <p className="text-[10px] text-red-500 mb-2">
+                    {removedPhotoIds.length + removedPdfIds.length + (removeLegacyAttachment ? 1 : 0)} attachment(s) will be removed when you save.
+                    {removeLegacyAttachment && (
+                      <button
+                        type="button"
+                        onClick={undoRemoveLegacyAttachment}
+                        className="ml-2 font-semibold text-secondary hover:text-primary"
+                      >
+                        Undo
+                      </button>
+                    )}
+                  </p>
+                )}
+
+                <input
+                  ref={newAttachmentInputRef}
+                  type="file"
+                  accept=".pdf,image/*"
+                  multiple
+                  onChange={handleNewAttachmentsChange}
+                  className="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white hover:file:bg-primary"
+                />
+                <span className="text-[10px] text-slate-400">Add new PDFs or images — any number.</span>
+
+                {newAttachments.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    {newAttachments.map((file, idx) => (
+                      <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                        <span className="text-xs font-medium text-emerald-700 truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeNewAttachment(idx)}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
@@ -258,7 +486,9 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">Content</label>
+                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">
+                    Content <span className="normal-case font-normal text-slate-400">(optional)</span>
+                  </label>
                   <span className={`text-xs ${editForm.content.length >= CONTENT_MAX_LENGTH ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
                     {editForm.content.length}/{CONTENT_MAX_LENGTH}
                   </span>
@@ -269,7 +499,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                   onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
                   rows={8}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-secondary resize-y"
-                  placeholder="Notice content"
+                  placeholder="Notice content (optional)"
                 />
               </div>
 
@@ -280,10 +510,11 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                       title: notice.title || '',
                       content: notice.content || '',
                       category: notice.category || 'General',
-                      display_date: toDateTimeLocal(notice.display_date),
-                      start_date: toDateTimeLocal(notice.start_date),
-                      end_date: toDateTimeLocal(notice.end_date),
+                      display_date: toDateOnly(notice.display_date),
+                      start_date: toDateOnly(notice.start_date),
+                      end_date: toDateOnly(notice.end_date),
                     });
+                    resetAttachmentState();
                     setIsEditing(false);
                   }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
@@ -329,14 +560,16 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => 
                 {notice.title}
               </h1>
 
-              <p
-                className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
-                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-              >
-                {notice.content}
-              </p>
+              {notice.content && (
+                <p
+                  className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
+                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+                >
+                  {notice.content}
+                </p>
+              )}
 
-              <AttachmentLink notice={notice} />
+              <NoticeAttachments notice={notice} />
             </>
           )}
       </div>
@@ -403,12 +636,50 @@ const NoticeDetails = () => {
   };
 
   const handleSaveNotice = async (noticeId, updates) => {
+    const {
+      removedPhotoIds = [],
+      removedPdfIds = [],
+      newAttachments = [],
+      ...fields
+    } = updates;
     try {
-      const res = await axios.put(`${API_BASE}/admin/notice/${noticeId}`, updates, {
+      let latest = null;
+
+      const res = await axios.put(`${API_BASE}/admin/notice/${noticeId}`, fields, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const updated = res.data || { ...updates };
-      setNotice((prev) => (prev ? { ...prev, ...updated } : prev));
+      latest = res.data;
+
+      for (const photoId of removedPhotoIds) {
+        await axios.delete(`${API_BASE}/admin/notice/photo/${photoId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      for (const pdfId of removedPdfIds) {
+        await axios.delete(`${API_BASE}/admin/notice/pdf/${pdfId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      if (newAttachments.length > 0) {
+        const formData = new FormData();
+        newAttachments.forEach((file) => formData.append('attachments', file));
+        const uploadRes = await axios.post(`${API_BASE}/admin/notice/${noticeId}/attachments`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        latest = uploadRes.data || latest;
+      }
+
+      setNotice((prev) => {
+        if (!prev) return prev;
+        const base = { ...prev, ...fields };
+        if (latest) return { ...base, ...latest };
+        return {
+          ...base,
+          photos: (prev.photos || []).filter((p) => !removedPhotoIds.includes(p.id)),
+          pdfs: (prev.pdfs || []).filter((p) => !removedPdfIds.includes(p.id)),
+        };
+      });
     } catch (err) {
       alert('Save failed: ' + (err.response?.data?.detail || err.message));
     }
@@ -486,6 +757,7 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
   const style = getCategoryStyle(notice.category);
   const [deleting, setDeleting] = useState(false);
   const navigate = useNavigate();
+  const hasAttachments = Boolean(notice.attachment_url) || (notice.pdfs || []).length > 0 || (notice.photos || []).length > 0;
 
   const handleDeleteClick = async (e) => {
     e.stopPropagation();
@@ -517,11 +789,7 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
                 scheduled
               </span>
             )}
-            {notice.status === 'archived' && (
-              <span className="bg-slate-100 text-slate-500 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
-                archived
-              </span>
-            )}
+           
           </h3>
         </div>
 
@@ -561,7 +829,7 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
           {formatNoticeDate(displayDate)}
         </time>
 
-        {notice.attachment_url && (
+        {hasAttachments && (
           <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
@@ -644,7 +912,7 @@ const Notices = () => {
     const matchesSearch =
       searchTerm.trim() === '' ||
       n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      n.content.toLowerCase().includes(searchTerm.toLowerCase());
+      (n.content || '').toLowerCase().includes(searchTerm.toLowerCase());
 
     let matchesDate = true;
     if (rangeStart || rangeEnd) {

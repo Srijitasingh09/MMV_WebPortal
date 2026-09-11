@@ -9,7 +9,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
-from sqlalchemy import text, func, inspect, or_
+from sqlalchemy import text, func, inspect, or_, and_
 from typing import Optional, List
 import datetime as dt
 from datetime import datetime, timezone, timedelta
@@ -112,6 +112,43 @@ def compute_item_status(start_date, end_date, now=None):
     return "active"
 
 
+# Home page always shows at least HOME_MIN_ITEMS notices/news (backfilling
+# with the most recent non-active items if there aren't enough currently
+# "live" ones), but never more than HOME_MAX_ITEMS.
+HOME_MIN_ITEMS = 15
+HOME_MAX_ITEMS = 25
+
+
+def select_home_items(db: Session, model, base_filter, active_only_filter, order_cols):
+    active_items = (
+        db.query(model)
+        .filter(base_filter, active_only_filter)
+        .order_by(*order_cols)
+        .limit(HOME_MAX_ITEMS)
+        .all()
+    )
+    if len(active_items) >= HOME_MIN_ITEMS:
+        return active_items
+
+    existing_ids = [item.id for item in active_items]
+    remaining = HOME_MAX_ITEMS - len(active_items)
+
+    backfill_query = db.query(model).filter(base_filter)
+    if existing_ids:
+        backfill_query = backfill_query.filter(~model.id.in_(existing_ids))
+
+    backfill_items = (
+        backfill_query
+        .order_by(*order_cols)
+        .limit(remaining)
+        .all()
+    )
+
+    combined = active_items + backfill_items
+    combined.sort(key=lambda item: item.display_date or item.created_at, reverse=True)
+    return combined[:HOME_MAX_ITEMS]
+
+
 def serialize_notice(n: "models.Notice"):
     status = compute_item_status(n.start_date, n.end_date)
     return {
@@ -126,6 +163,14 @@ def serialize_notice(n: "models.Notice"):
         "end_date": n.end_date,
         "status": status,
         "created_at": n.created_at,
+        "photos": [
+            {"id": p.id, "photo_name": p.photo_name, "photo_url": p.photo_url}
+            for p in n.photos
+        ],
+        "pdfs": [
+            {"id": p.id, "pdf_name": p.pdf_name, "pdf_url": p.pdf_url}
+            for p in n.pdfs
+        ],
     }
 
 
@@ -211,6 +256,12 @@ def ensure_news_table():
         models.NewsPdf.__table__,
     ], checkfirst=True)
 
+def ensure_notice_attachments_table():
+    models.Base.metadata.create_all(bind=engine, tables=[
+        models.NoticePhoto.__table__,
+        models.NoticePdf.__table__,
+    ], checkfirst=True)
+
 def ensure_profile_cards_table():
     models.Base.metadata.create_all(bind=engine, tables=[
         models.ProfileCard.__table__,
@@ -227,6 +278,7 @@ ensure_notice_columns()
 ensure_news_columns()
 ensure_facility_content_table()
 ensure_news_table()
+ensure_notice_attachments_table()
 ensure_profile_cards_table()
 ensure_feedback_table()
 ensure_password_reset_tokens_table()
@@ -493,24 +545,12 @@ def get_notices(
     )
 
     if home_only:
-        active_notices = (
-            db.query(models.Notice)
-            .filter(
-                or_(models.Notice.start_date <= now_utc, models.Notice.start_date.is_(None)),
-                or_(models.Notice.end_date >= now_utc, models.Notice.end_date.is_(None))
-            )
-            .order_by(models.Notice.display_date.desc(), models.Notice.created_at.desc())
-            .all()
+        active_only_filter = or_(models.Notice.end_date >= now_utc, models.Notice.end_date.is_(None))
+        items = select_home_items(
+            db, models.Notice, visibility_filter, active_only_filter,
+            (models.Notice.display_date.desc(), models.Notice.created_at.desc())
         )
-        if not active_notices:
-            active_notices = (
-                db.query(models.Notice)
-                .filter(or_(models.Notice.start_date <= now_utc, models.Notice.start_date.is_(None)))
-                .order_by(models.Notice.display_date.desc(), models.Notice.created_at.desc())
-                .limit(5)
-                .all()
-            )
-        return [serialize_notice(n) for n in active_notices]
+        return [serialize_notice(n) for n in items]
 
     rows = (
         db.query(models.Notice)
@@ -524,12 +564,13 @@ def get_notices(
 @app.post("/admin/notice")
 async def add_notice(
     title: str = Form(...),
-    content: str = Form(...),
+    content: Optional[str] = Form(""),
     category: str = Form("General"),
     display_date: Optional[str] = Form(None),
     start_date: Optional[str] = Form(None),
     end_date: Optional[str] = Form(None),
-    attachment: UploadFile = File(None),
+    attachment: Optional[UploadFile] = File(None),
+    attachments: Optional[List[UploadFile]] = File(None),
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -539,6 +580,7 @@ async def add_notice(
         display_date, start_date, end_date
     )
 
+    # Legacy single-file field — kept so any older admin form still works.
     attachment_url = None
     attachment_name = None
     if attachment and attachment.filename:
@@ -553,7 +595,7 @@ async def add_notice(
 
     new_notice = models.Notice(
         title=title,
-        content=content,
+        content=(content or "").strip(),
         category=category,
         display_date=resolved_display,
         start_date=resolved_start,
@@ -562,6 +604,36 @@ async def add_notice(
         attachment_name=attachment_name,
     )
     db.add(new_notice)
+    db.commit()
+    db.refresh(new_notice)
+
+    # New multi-file field — any number of PDFs/images, split by type.
+    for file in (attachments or []):
+        if not file or not file.filename:
+            continue
+        if file.content_type in ALLOWED_IMAGE_TYPES:
+            await validate_upload(file, ALLOWED_IMAGE_TYPES)
+            unique_name = f"notice_photo_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NoticePhoto(
+                notice_id=new_notice.id,
+                photo_name=file.filename,
+                photo_url=f"/uploads/{unique_name}",
+            ))
+        elif file.content_type in ALLOWED_PDF_TYPES:
+            await validate_upload(file, ALLOWED_PDF_TYPES)
+            unique_name = f"notice_pdf_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NoticePdf(
+                notice_id=new_notice.id,
+                pdf_name=file.filename,
+                pdf_url=f"/uploads/{unique_name}",
+            ))
+
     db.commit()
     db.refresh(new_notice)
     return serialize_notice(new_notice)
@@ -582,6 +654,14 @@ def delete_notice(
         stored_path = os.path.join(UPLOADS_DIR, stored_name)
         if os.path.exists(stored_path):
             os.remove(stored_path)
+    for photo in notice.photos:
+        stored_path = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
+    for pdf in notice.pdfs:
+        stored_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
     db.delete(notice)
     db.commit()
     return {"message": "Notice deleted"}
@@ -599,9 +679,12 @@ def update_notice(
     if not notice:
         raise HTTPException(status_code=404, detail="Notice not found")
 
-    for field in ["title", "content", "category"]:
-        if field in payload:
-            setattr(notice, field, payload[field])
+    if "title" in payload:
+        notice.title = payload["title"]
+    if "content" in payload:
+        notice.content = payload["content"]
+    if "category" in payload:
+        notice.category = payload["category"]
 
     if "display_date" in payload:
         parsed = parse_local_datetime_to_utc(payload["display_date"])
@@ -616,9 +699,106 @@ def update_notice(
         if parsed:
             notice.end_date = parsed
 
+    # Legacy single-attachment removal (notices saved before multi-attachment
+    # support). New-style attachments are added/removed via the dedicated
+    # /admin/notice/{id}/attachments and /admin/notice/photo|pdf/{id} routes.
+    if payload.get("remove_attachment") and notice.attachment_url:
+        stored_path = os.path.join(UPLOADS_DIR, os.path.basename(notice.attachment_url))
+        if os.path.exists(stored_path):
+            os.remove(stored_path)
+        notice.attachment_url = None
+        notice.attachment_name = None
+
     db.commit()
     db.refresh(notice)
     return serialize_notice(notice)
+
+
+@app.post("/admin/notice/{notice_id}/attachments")
+async def add_notice_attachments(
+    notice_id: int,
+    attachments: List[UploadFile] = File(...),
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Adds one or more photo/PDF attachments to an existing notice.
+    Used when editing a notice to add new attachments alongside the ones already there."""
+    ensure_admin(user)
+    notice = db.query(models.Notice).filter(models.Notice.id == notice_id).first()
+    if not notice:
+        raise HTTPException(status_code=404, detail="Notice not found")
+
+    for file in (attachments or []):
+        if not file or not file.filename:
+            continue
+        if file.content_type in ALLOWED_IMAGE_TYPES:
+            await validate_upload(file, ALLOWED_IMAGE_TYPES)
+            unique_name = f"notice_photo_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NoticePhoto(
+                notice_id=notice.id,
+                photo_name=file.filename,
+                photo_url=f"/uploads/{unique_name}",
+            ))
+        elif file.content_type in ALLOWED_PDF_TYPES:
+            await validate_upload(file, ALLOWED_PDF_TYPES)
+            unique_name = f"notice_pdf_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NoticePdf(
+                notice_id=notice.id,
+                pdf_name=file.filename,
+                pdf_url=f"/uploads/{unique_name}",
+            ))
+
+    db.commit()
+    db.refresh(notice)
+    return serialize_notice(notice)
+
+
+@app.delete("/admin/notice/photo/{photo_id}")
+def delete_notice_photo(
+    photo_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Removes a single photo attachment from a notice while editing."""
+    ensure_admin(user)
+    photo = db.query(models.NoticePhoto).filter(models.NoticePhoto.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    stored_path = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
+    if os.path.exists(stored_path):
+        os.remove(stored_path)
+
+    db.delete(photo)
+    db.commit()
+    return {"message": "Photo deleted"}
+
+
+@app.delete("/admin/notice/pdf/{pdf_id}")
+def delete_notice_pdf(
+    pdf_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Removes a single PDF attachment from a notice while editing."""
+    ensure_admin(user)
+    pdf = db.query(models.NoticePdf).filter(models.NoticePdf.id == pdf_id).first()
+    if not pdf:
+        raise HTTPException(status_code=404, detail="PDF not found")
+
+    stored_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
+    if os.path.exists(stored_path):
+        os.remove(stored_path)
+
+    db.delete(pdf)
+    db.commit()
+    return {"message": "PDF deleted"}
 
 
 # ===================== NEWS =====================
@@ -637,24 +817,12 @@ def get_news(
     )
 
     if home_only:
-        active_news = (
-            db.query(models.News)
-            .filter(
-                or_(models.News.start_date <= now_utc, models.News.start_date.is_(None)),
-                or_(models.News.end_date >= now_utc, models.News.end_date.is_(None))
-            )
-            .order_by(models.News.display_date.desc(), models.News.created_at.desc())
-            .all()
+        active_only_filter = or_(models.News.end_date >= now_utc, models.News.end_date.is_(None))
+        items = select_home_items(
+            db, models.News, visibility_filter, active_only_filter,
+            (models.News.display_date.desc(), models.News.created_at.desc())
         )
-        if not active_news:
-            active_news = (
-                db.query(models.News)
-                .filter(or_(models.News.start_date <= now_utc, models.News.start_date.is_(None)))
-                .order_by(models.News.display_date.desc(), models.News.created_at.desc())
-                .limit(5)
-                .all()
-            )
-        return [serialize_news(r) for r in active_news]
+        return [serialize_news(r) for r in items]
 
     rows = (
         db.query(models.News)
@@ -773,6 +941,93 @@ def update_news(
     db.commit()
     db.refresh(news)
     return serialize_news(news)
+
+
+@app.post("/admin/news/{news_id}/attachments")
+async def add_news_attachments(
+    news_id: int,
+    attachments: List[UploadFile] = File(...),
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Adds one or more photo/PDF attachments to an existing news item.
+    Used when editing a news item to add new attachments alongside the ones already there."""
+    ensure_admin(user)
+    news = db.query(models.News).filter(models.News.id == news_id).first()
+    if not news:
+        raise HTTPException(status_code=404, detail="News not found")
+
+    for file in (attachments or []):
+        if not file or not file.filename:
+            continue
+        if file.content_type in ALLOWED_IMAGE_TYPES:
+            await validate_upload(file, ALLOWED_IMAGE_TYPES)
+            unique_name = f"news_photo_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NewsPhoto(
+                news_id=news.id,
+                photo_name=file.filename,
+                photo_url=f"/uploads/{unique_name}",
+            ))
+        elif file.content_type in ALLOWED_PDF_TYPES:
+            await validate_upload(file, ALLOWED_PDF_TYPES)
+            unique_name = f"news_pdf_{uuid.uuid4().hex}_{file.filename.replace(' ', '_')}"
+            file_path = os.path.join(UPLOADS_DIR, unique_name)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(file.file, buffer)
+            db.add(models.NewsPdf(
+                news_id=news.id,
+                pdf_name=file.filename,
+                pdf_url=f"/uploads/{unique_name}",
+            ))
+
+    db.commit()
+    db.refresh(news)
+    return serialize_news(news)
+
+
+@app.delete("/admin/news/photo/{photo_id}")
+def delete_news_photo(
+    photo_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Removes a single photo attachment from a news item while editing."""
+    ensure_admin(user)
+    photo = db.query(models.NewsPhoto).filter(models.NewsPhoto.id == photo_id).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    stored_path = os.path.join(UPLOADS_DIR, os.path.basename(photo.photo_url))
+    if os.path.exists(stored_path):
+        os.remove(stored_path)
+
+    db.delete(photo)
+    db.commit()
+    return {"message": "Photo deleted"}
+
+
+@app.delete("/admin/news/pdf/{pdf_id}")
+def delete_news_pdf(
+    pdf_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Removes a single PDF attachment from a news item while editing."""
+    ensure_admin(user)
+    pdf = db.query(models.NewsPdf).filter(models.NewsPdf.id == pdf_id).first()
+    if not pdf:
+        raise HTTPException(status_code=404, detail="PDF not found")
+
+    stored_path = os.path.join(UPLOADS_DIR, os.path.basename(pdf.pdf_url))
+    if os.path.exists(stored_path):
+        os.remove(stored_path)
+
+    db.delete(pdf)
+    db.commit()
+    return {"message": "PDF deleted"}
 
 
 @app.delete("/admin/news/{news_id}")
