@@ -101,6 +101,7 @@ function formatDate(dateString) {
     day: '2-digit',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
 }
 
@@ -112,6 +113,7 @@ function formatNoticeDate(dateString) {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
 }
 
@@ -119,7 +121,7 @@ function getNoticeMonthYear(dateString) {
   if (!dateString) return 'General Notices';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'General Notices';
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
 }
 
 // ============================================
@@ -211,8 +213,8 @@ const NoticeAttachments = ({ notice }) => {
 // ============================================
 // NOTICE DETAILS CARD - full notice view (+ admin edit)
 // ============================================
-const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted }) => {
-  const [isEditing, setIsEditing] = useState(false);
+const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, startInEdit = false }) => {
+  const [isEditing, setIsEditing] = useState(Boolean(startInEdit && isAdmin));
   const toDateOnly = (d) => {
     if (!d) return '';
     const dateObj = new Date(d);
@@ -587,6 +589,7 @@ const NoticeDetails = () => {
   const cameFromHome = location.state?.from === 'home';
   const backTo = cameFromHome ? '/home#live-notices-news' : '/notices';
   const backLabel = cameFromHome ? 'Back to Home' : 'Back to all Notices';
+  const startInEdit = Boolean(location.state?.edit);
 
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -735,6 +738,7 @@ const NoticeDetails = () => {
             onDelete={handleDeleteNotice}
             onSave={handleSaveNotice}
             onDeleted={() => navigate(backTo)}
+            startInEdit={startInEdit}
           />
         )}
       </div>
@@ -801,7 +805,7 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
           {isAdmin && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/notices/${notice.id}`); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/notices/${notice.id}`, { state: { edit: true } }); }}
                 title="Edit notice"
                 className="p-1 rounded text-secondary hover:bg-secondary/10 transition-colors"
               >

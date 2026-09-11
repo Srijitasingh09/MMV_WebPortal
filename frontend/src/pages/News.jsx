@@ -85,6 +85,7 @@ function formatDate(dateString) {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
 }
 
@@ -96,6 +97,7 @@ function formatNewsDate(dateString) {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   });
 }
 
@@ -103,7 +105,7 @@ function getNewsMonthYear(dateString) {
   if (!dateString) return 'General News';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return 'General News';
-  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' });
 }
 
 function toEditableText(news) {
@@ -184,8 +186,8 @@ const NewsAttachments = ({ news }) => {
 // ============================================
 // NEWS DETAILS CARD - full news view (+ admin edit)
 // ============================================
-const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
-  const [isEditing, setIsEditing] = useState(false);
+const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted, startInEdit = false }) => {
+  const [isEditing, setIsEditing] = useState(Boolean(startInEdit && isAdmin));
   const [editText, setEditText] = useState(toEditableText(news));
 
   const toDateOnly = (d) => {
@@ -490,6 +492,7 @@ const NewsDetails = () => {
   const cameFromHome = location.state?.from === 'home';
   const backTo = cameFromHome ? '/home#live-notices-news' : '/news';
   const backLabel = cameFromHome ? 'Back to Home' : 'Back to all News';
+  const startInEdit = Boolean(location.state?.edit);
 
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -631,6 +634,7 @@ const NewsDetails = () => {
             onDelete={handleDeleteNews}
             onSave={handleSaveNews}
             onDeleted={() => navigate(backTo)}
+            startInEdit={startInEdit}
           />
         )}
       </div>
@@ -692,7 +696,7 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
           {isAdmin && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/news/${news.id}`); }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/news/${news.id}`, { state: { edit: true } }); }}
                 title="Edit news"
                 className="p-1 rounded text-secondary hover:bg-secondary/10 transition-colors"
               >
@@ -741,6 +745,8 @@ const News = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [visibleCount, setVisibleCount] = useState(20);
 
   const location = useLocation();
@@ -751,7 +757,7 @@ const News = () => {
 
   useEffect(() => {
     setVisibleCount(20);
-  }, [searchTerm]);
+  }, [searchTerm, dateFrom, dateTo]);
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -792,15 +798,34 @@ const News = () => {
     }
   };
 
+  const rangeStart = dateFrom ? new Date(`${dateFrom}T00:00:00`) : null;
+  const rangeEnd = dateTo ? new Date(`${dateTo}T23:59:59.999`) : null;
+
   const filteredNews = newsItems.filter((n) => {
     const matchesSearch =
       searchTerm.trim() === '' ||
       (n.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (n.content || '').toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+
+    let matchesDate = true;
+    if (rangeStart || rangeEnd) {
+      const newsDate = new Date(getNewsDisplayDate(n));
+      if (!isNaN(newsDate.getTime())) {
+        if (rangeStart && newsDate < rangeStart) matchesDate = false;
+        if (rangeEnd && newsDate > rangeEnd) matchesDate = false;
+      }
+    }
+
+    return matchesSearch && matchesDate;
   });
 
   const visibleNews = filteredNews.slice(0, visibleCount);
+
+  const hasActiveDateFilter = Boolean(dateFrom || dateTo);
+  const clearDateFilter = () => {
+    setDateFrom('');
+    setDateTo('');
+  };
 
   const groupedNews = visibleNews.reduce((acc, item) => {
     const rawDate = getNewsDisplayDate(item);
@@ -833,14 +858,52 @@ const News = () => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end mb-6">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search news..."
-            className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
-          />
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+              Filter by date
+            </span>
+            <label className="flex items-center gap-1.5 text-xs text-slate-500">
+              From
+              <input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                max={dateTo || undefined}
+                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              />
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-slate-500">
+              To
+              <input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                min={dateFrom || undefined}
+                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
+              />
+            </label>
+            {hasActiveDateFilter && (
+              <button
+                onClick={clearDateFilter}
+                className="text-xs font-semibold text-crimson hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search news..."
+              className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
+            />
+          </div>
+
+          
         </div>
 
         {loading && (
@@ -863,7 +926,7 @@ const News = () => {
             <p className="text-gray-400 text-sm">
               {newsItems.length === 0
                 ? 'There is no news posted yet. Check back soon.'
-                : 'Try a different search term.'}
+                : 'Try a different search term or date range.'}
             </p>
           </div>
         )}
