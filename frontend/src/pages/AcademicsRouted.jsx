@@ -16,20 +16,19 @@ const pages = {
   // ── Syllabus ────────────────────────────────────────────────────────────────
   'syllabus/ug/science': {
     title: 'Syllabus - UG Science',
-    pageType: 'pdf-list-table',
-    tableColumns: ['Subject', 'Syllabus']
+    pageType: 'table',
   },
   'syllabus/ug/socialscience': {
     title: 'Syllabus - UG Social Science',
-    pageType: 'pdf-list-table'
+    pageType: 'table'
   },
   'syllabus/ug/arts': {
     title: 'Syllabus - UG Arts',
-    pageType: 'pdf-list-table'
+    pageType: 'table'
   },
   'syllabus/ug/bfa': {
     title: 'Syllabus - B.F.A.',
-    pageType: 'pdf-list-table'
+    pageType: 'table'
   },
 
   // ── Syllabus -PG (three separate pages, not one combined key) ────────────
@@ -37,15 +36,15 @@ const pages = {
   // A single 'syllabus/pg' key would never match those URLs.
   
   'syllabus/pg/bioinformatics': {
-    title: 'Syllabus -PG Bioinformatics',
+    title: 'Syllabus - PG Bioinformatics',
     pageType: 'pdf-list'
   },
   'syllabus/pg/homescience': {
-    title: 'Syllabus -PG Home Science',
+    title: 'Syllabus - PG Home Science',
     pageType: 'pdf-list'
   },
   'syllabus/pg/education': {
-    title: 'Syllabus -PG Education',
+    title: 'Syllabus - PG Education',
     pageType: 'pdf-list'
   },
 
@@ -65,37 +64,34 @@ const pages = {
   // ── Section In-Charge ───────────────────────────────────────────────────
  
   'section-incharge/science': {
-    title: 'Incharge -Science',
+    title: 'Incharge - Science',
     pageType: 'table',
-    tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/socialscience': {
-    title: 'Incharge -Social Science',
+    title: 'Incharge - Social Science',
     pageType: 'table',
-    tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
   'section-incharge/arts': {
-    title: 'Incharge -Arts',
+    title: 'Incharge - Arts',
     pageType: 'table',
-    tableColumns: ['Name', 'Designation', 'Department', 'Contact']
   },
 
   // ────────────────────── Time Table ────────────────────────────────────────────
   'time-table/science': {
     title: 'Time Table - Science',
-    pageType: 'pdf-list-table',
+    pageType: 'table',
   },
   'time-table/socialscience': {
     title: 'Time Table - Social Science',
-    pageType: 'pdf-list-table'
+    pageType: 'table'
   },
   'time-table/arts': {
     title: 'Time Table - Arts',
-    pageType: 'pdf-list-table'
+    pageType: 'table'
   },
   'time-table/bfa': {
     title: 'Time Table - B.F.A.',
-    pageType: 'pdf-list-table'
+    pageType: 'table'
   },
  
   // ── Calendar & Holidays ───────────────────────────────────────────────────

@@ -684,7 +684,7 @@ const Navbar = () => {
               {/* Mobile / Tablet / Small Screen (< 1024px) At Center: MMV Saarthi Logo & At Right side : Hamburger Button */}
               <div className="lg:hidden flex items-center gap-2 sm:gap-3 ml-auto shrink-0">
                 <img
-                  src="mmv-saarthi-logo.png"
+                  src="/bhu/mmv-saarthi-logo.png"
                   alt="MMV Sarthi Logo"
                   className="h-8 sm:h-11 w-auto rounded-xl object-contain"
                 />

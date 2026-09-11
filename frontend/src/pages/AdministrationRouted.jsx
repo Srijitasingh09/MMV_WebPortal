@@ -16,21 +16,17 @@ const pages = {
   'examination/mmvexam': { 
     title: 'Controller of Examination - MMV',       
     pageType: 'table',
-    tableColumns: ['Name', 'Department', 'Contact', 'Email Id']
   },
 
   'staff': { 
     title: 'MMV Office Staff',                              
-    pageType: 'table',
-    tableColumns: ['Name', 'Designation', 'Contact', 'Email Id', 'Nature Of Work'] 
+    pageType: 'table'
   },
 
   'committee': { 
     title: 'MMV Committee', 
     pageType: 'description' 
   },
-
-
 };
 
 const AdministrationRouted = () => {
