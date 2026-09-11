@@ -73,6 +73,20 @@ def parse_local_datetime_to_utc(dt_str: Optional[str]) -> Optional[datetime]:
         return None
 
 
+def to_utc_iso(value: Optional[datetime]) -> Optional[str]:
+    """
+    Our stored datetimes are naive but always represent UTC instants
+    (see parse_local_datetime_to_utc). When serialized without a 'Z'/offset,
+    JS `new Date(...)` on the frontend treats them as local time instead of
+    UTC, which silently shifts the displayed calendar day. Appending 'Z'
+    makes the instant unambiguous for every client, regardless of the
+    viewer's own timezone.
+    """
+    if value is None:
+        return None
+    return value.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+
+
 def split_news_title_and_body(raw_text: str):
     normalized = (raw_text or "").replace("\r\n", "\n").strip("\n")
     if not normalized.strip():
@@ -158,11 +172,11 @@ def serialize_notice(n: "models.Notice"):
         "category": n.category,
         "attachment_url": n.attachment_url,
         "attachment_name": n.attachment_name,
-        "display_date": n.display_date or n.created_at,
-        "start_date": n.start_date or n.created_at,
-        "end_date": n.end_date,
+        "display_date": to_utc_iso(n.display_date or n.created_at),
+        "start_date": to_utc_iso(n.start_date or n.created_at),
+        "end_date": to_utc_iso(n.end_date),
         "status": status,
-        "created_at": n.created_at,
+        "created_at": to_utc_iso(n.created_at),
         "photos": [
             {"id": p.id, "photo_name": p.photo_name, "photo_url": p.photo_url}
             for p in n.photos
@@ -180,11 +194,11 @@ def serialize_news(n: "models.News"):
         "id": n.id,
         "title": n.title,
         "content": n.content,
-        "display_date": n.display_date or n.created_at,
-        "start_date": n.start_date or n.created_at,
-        "end_date": n.end_date,
+        "display_date": to_utc_iso(n.display_date or n.created_at),
+        "start_date": to_utc_iso(n.start_date or n.created_at),
+        "end_date": to_utc_iso(n.end_date),
         "status": status,
-        "created_at": n.created_at,
+        "created_at": to_utc_iso(n.created_at),
         "photos": [
             {"id": p.id, "photo_name": p.photo_name, "photo_url": p.photo_url}
             for p in n.photos
