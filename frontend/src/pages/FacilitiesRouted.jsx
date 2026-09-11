@@ -19,6 +19,7 @@ const pages = {
   },
   'hostels/coordinator': {
     title: 'Hostel Coordinator',
+    pageType: 'profile'          // data stored as profile object in details JSON
   },
   'hostels/swastikunj': {
     title: 'Swasti Kunj Hostel',
