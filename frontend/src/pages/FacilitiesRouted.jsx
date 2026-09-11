@@ -19,33 +19,26 @@ const pages = {
   },
   'hostels/coordinator': {
     title: 'Hostel Coordinator',
-    pageType: 'profile'          // data stored as profile object in details JSON
   },
   'hostels/swastikunj': {
     title: 'Swasti Kunj Hostel',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
-   
   },
   'hostels/kirtikunj': {
     title: 'Kirti Kunj Hostel',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
   'hostels/kundandevi': {
     title: 'Kundan Devi Malviya Hostel',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
   'hostels/pragyakunj': {
     title: 'Pragya Kunj Hostel',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
   'hostels/jyotikunj': {
     title: 'Jyoti Kunj Hostel',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
 
   // ── Library ───────────────────────────────────────────────────────────────
@@ -81,13 +74,11 @@ const pages = {
   // },
   'sports/mmvsports': {
     title: 'MMV Sports Board',
-    pageType: 'slideshow-description',
-    photoAlign: 'center'
+    pageType: 'profile-slideshow-description',
   },
   'sports/gym': {
     title: 'Gym',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
 
   // ── Well-being ────────────────────────────────────────────────────────────
@@ -100,7 +91,6 @@ const pages = {
   'wellbeing/mmvwell': {
     title: 'MMV PAHAL',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
 
   // ── Training & Placement ──────────────────────────────────────────────────
@@ -123,14 +113,10 @@ const pages = {
   'samarth': {
     title: 'Samarth Portal',
     pageType: 'description',
-    photoAlign: 'center'
   },
   'namaste': {
     title: 'Namaste BHU App',
-    pageType: 'photo-description',
-    photoAlign: 'center',
-    photoWidth: '100%',
-    photoHeight: 'full'
+    pageType: 'description',
   },
 
   // ── Medical ───────────────────────────────────────────────────────────────
@@ -138,7 +124,6 @@ const pages = {
 'medical': {
     title: 'Medical Facilities',
     pageType: 'slideshow-description',
-    
   },
   // 'medical/ssh': {                
   //   title: 'Sir Sundarlal Hospital',
@@ -160,8 +145,7 @@ const pages = {
  
   'extracurricular': {
     title: 'Extra-curricular',
-    pageType: 'description',
-    
+    pageType: 'description', 
   },
   // 'extracurricular/ncc': {
   //   title: 'National Cadet Corps (NCC)',
@@ -175,10 +159,10 @@ const pages = {
     title: 'Nurturing Life Skills Cell (NLSC)',
     pageType: 'description'
   },
-  'extracurricular/diplomacourses': {
-    title: 'Diploma & Certificate Courses',
-    pageType: 'pdf-list-description'
-  },
+  // 'extracurricular/diplomacourses': {
+  //   title: 'Diploma & Certificate Courses',
+  //   pageType: 'pdf-list-description'
+  // },
   // 'extracurricular/clubs': {
   //   title: 'Clubs',
   //   pageType: 'description-table',
@@ -190,12 +174,10 @@ const pages = {
   'canteen/universitycanteen': {
     title: 'University Canteen',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
   'canteen/mmvcanteen': {
     title: 'MMV Canteen',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
 
   // ── City & Other ──────────────────────────────────────────────────────────
@@ -208,7 +190,6 @@ const pages = {
   'other': {
     title: 'Other Amenties',
     pageType: 'slideshow-description',
-    
   },
   // 'other/vt': {
   //   title: 'Vishwanath Temple',
@@ -223,12 +204,10 @@ const pages = {
   'other/transportation': {
     title: 'Transportation',
     pageType: 'photo-description',
-    photoAlign: 'center'
   },
   'other/banks': {
     title: 'Banks & Post Offices',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
   // 'other/guesthouses': {
   //   title: 'Guest Houses',
@@ -238,7 +217,6 @@ const pages = {
   'other/auditorium': {
     title: 'Auditorium',
     pageType: 'slideshow-description',
-    photoAlign: 'center'
   },
 };
 
