@@ -41,6 +41,38 @@ class Notice(Base):
     start_date = Column(DateTime, default=datetime.datetime.utcnow)
     end_date = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    photos = relationship(
+        "NoticePhoto",
+        back_populates="notice",
+        cascade="all, delete-orphan"
+    )
+    pdfs = relationship(
+        "NoticePdf",
+        back_populates="notice",
+        cascade="all, delete-orphan"
+    )
+
+
+class NoticePhoto(Base):
+    __tablename__ = "notice_photos"
+
+    id = Column(Integer, primary_key=True)
+    notice_id = Column(Integer, ForeignKey("notices.id"))
+    photo_name = Column(String)
+    photo_url = Column(String)
+
+    notice = relationship("Notice", back_populates="photos")
+
+
+class NoticePdf(Base):
+    __tablename__ = "notice_pdfs"
+
+    id = Column(Integer, primary_key=True)
+    notice_id = Column(Integer, ForeignKey("notices.id"))
+    pdf_name = Column(String)
+    pdf_url = Column(String)
+
+    notice = relationship("Notice", back_populates="pdfs")
 
 
 # --news --
@@ -286,4 +318,3 @@ class Feedback(Base):
     message    = Column(Text, nullable=False)
     page_url   = Column(String, nullable=True)        # path the user was on when they submitted, for context only
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    

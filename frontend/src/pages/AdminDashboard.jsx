@@ -15,7 +15,7 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('notice');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
-  const [noticeAttachment, setNoticeAttachment] = useState(null);
+  const [noticeAttachments, setNoticeAttachments] = useState([]);
 
   const [notice, setNotice] = useState({
     title: '',
@@ -81,6 +81,17 @@ const AdminDashboard = () => {
     setTimeout(() => setSuccess(''), 3000);
   };
 
+  const handleNoticeFilesChange = (e) => {
+    const picked = Array.from(e.target.files || []);
+    if (picked.length === 0) return;
+    setNoticeAttachments((prev) => [...prev, ...picked]);
+    if (noticeAttachmentInputRef.current) noticeAttachmentInputRef.current.value = '';
+  };
+
+  const removeNoticeAttachment = (index) => {
+    setNoticeAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmitNotice = async (e) => {
     e.preventDefault();
     if (notice.title.length > NOTICE_TITLE_MAX || notice.content.length > NOTICE_CONTENT_MAX) {
@@ -104,9 +115,9 @@ const AdminDashboard = () => {
       if (notice.end_date && notice.end_date.trim()) {
         formData.append('end_date', notice.end_date.trim());
       }
-      if (noticeAttachment) {
-        formData.append('attachment', noticeAttachment);
-      }
+      noticeAttachments.forEach((file) => {
+        formData.append('attachments', file);
+      });
 
       await axios.post(`${API_BASE}/admin/notice`, formData, {
         headers: {
@@ -123,7 +134,7 @@ const AdminDashboard = () => {
         start_date: '',
         end_date: ''
       });
-      setNoticeAttachment(null);
+      setNoticeAttachments([]);
       if (noticeAttachmentInputRef.current) noticeAttachmentInputRef.current.value = '';
       showSuccess('Notice published successfully!');
     } catch (err) {
@@ -302,17 +313,36 @@ const AdminDashboard = () => {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
-                <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachment (PDF/Image)
+                <Paperclip size={14} className="mr-2 text-[#7d311f]" /> Attachments (Images / PDFs — any number)
               </label>
               <input
                 ref={noticeAttachmentInputRef}
                 type="file"
+                multiple
                 accept=".pdf,.png,.jpg,.jpeg,.webp"
-                onChange={(e) => setNoticeAttachment(e.target.files?.[0] || null)}
+                onChange={handleNoticeFilesChange}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl outline-none text-sm"
               />
-              {noticeAttachment && (
-                <p className="text-xs text-slate-500">Selected file: {noticeAttachment.name}</p>
+
+              {noticeAttachments.length > 0 && (
+                <ul className="space-y-1.5 pt-1">
+                  {noticeAttachments.map((file, idx) => (
+                    <li
+                      key={`${file.name}-${idx}`}
+                      className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-slate-700"
+                    >
+                      <span className="truncate">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeNoticeAttachment(idx)}
+                        className="p-1 rounded-full text-red-500 hover:bg-red-50 shrink-0"
+                        title="Remove"
+                      >
+                        <X size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
           </div>
@@ -321,10 +351,10 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                Display Date (Back-dating)
+                Display Date (Visible to users)
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={notice.display_date}
                 onChange={(e) => setNotice({ ...notice, display_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
@@ -337,7 +367,7 @@ const AdminDashboard = () => {
                 Start Date (Goes Live)
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={notice.start_date}
                 onChange={(e) => setNotice({ ...notice, start_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
@@ -350,7 +380,7 @@ const AdminDashboard = () => {
                 End Date (Home Expiry)
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={notice.end_date}
                 onChange={(e) => setNotice({ ...notice, end_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
@@ -362,7 +392,7 @@ const AdminDashboard = () => {
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                Notice Details / Content
+                Notice Details / Content <span className="normal-case font-normal text-slate-400">(optional)</span>
               </label>
               <span className={`text-xs ${notice.content.length >= NOTICE_CONTENT_MAX ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
                 {notice.content.length}/{NOTICE_CONTENT_MAX}
@@ -374,7 +404,7 @@ const AdminDashboard = () => {
               value={notice.content}
               onChange={(e) => setNotice({ ...notice, content: e.target.value })}
               className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20"
-              placeholder="Enter full notice announcement text..."
+              placeholder="Enter full notice announcement text (optional)..."
             />
           </div>
 
@@ -423,10 +453,10 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                Display Date (Back-dating)
+                Display Date (Visible to users)
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={newsDates.display_date}
                 onChange={(e) => setNewsDates({ ...newsDates, display_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
@@ -439,7 +469,7 @@ const AdminDashboard = () => {
                 Start Date (Goes Live)
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={newsDates.start_date}
                 onChange={(e) => setNewsDates({ ...newsDates, start_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"
@@ -452,7 +482,7 @@ const AdminDashboard = () => {
                 End Date (Home Expiry)
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 value={newsDates.end_date}
                 onChange={(e) => setNewsDates({ ...newsDates, end_date: e.target.value })}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none text-xs"

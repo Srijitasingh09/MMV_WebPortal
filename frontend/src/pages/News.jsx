@@ -6,6 +6,72 @@ import { getToken, isAdmin as isAdminSession } from '../utils/auth';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const NEWS_TEXT_MAX_LENGTH = 2000;
 
+// ============================================
+// ATTACHMENT DISPLAY (inlined — local to News only)
+// A PDF or photo attachment card, plus a section wrapper that groups
+// several of them under a shared heading.
+// ============================================
+const DocumentIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <polyline points="10 9 9 9 8 9" />
+  </svg>
+);
+
+const ImageIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+);
+
+const AttachmentCard = ({ url, name, type = 'document', fallbackLabel = 'Attached File' }) => {
+  if (!url) return null;
+  const isImage = type === 'image';
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={(e) => e.stopPropagation()}
+      className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
+    >
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+          {isImage ? <ImageIcon /> : <DocumentIcon />}
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
+            {name || fallbackLabel}
+          </p>
+          <p className="text-[11px] text-slate-500">Click to view / download file</p>
+        </div>
+      </div>
+
+      <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
+        <span>Open</span>
+        <span>↗</span>
+      </span>
+    </a>
+  );
+};
+
+const AttachmentSection = ({ title, children }) => (
+  <div className="space-y-2">
+    <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
+      {title}
+    </div>
+    <div className="grid gap-2">
+      {children}
+    </div>
+  </div>
+);
+
 // User-facing display date resolver: fake/back-dated display_date takes first priority
 function getNewsDisplayDate(news) {
   return news.display_date || news.start_date || news.created_at;
@@ -66,11 +132,7 @@ const MetaRow = ({ news }) => {
             Scheduled
           </span>
         )}
-        {news.status === 'archived' && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200">
-            Archived
-          </span>
-        )}
+       
       </div>
     </div>
   );
@@ -78,36 +140,9 @@ const MetaRow = ({ news }) => {
 
 // ============================================
 // HIGHLIGHTED NEWS ATTACHMENTS (PDF & PHOTOS)
+// Uses the same AttachmentCard as Notices, so PDFs and photos look
+// identical whether they're attached to a Notice or a News item.
 // ============================================
-const PdfLink = ({ pdf }) => (
-  <a
-    href={`${API_BASE}${pdf.pdf_url}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    onClick={(e) => e.stopPropagation()}
-    className="group flex items-center justify-between p-3.5 rounded-xl bg-blue-50/70 border-2 border-secondary/30 hover:border-secondary hover:bg-blue-100/60 shadow-xs transition-all duration-200"
-  >
-    <div className="flex items-center gap-3 min-w-0">
-      <div className="w-9 h-9 rounded-lg bg-secondary text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-        </svg>
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs sm:text-sm font-bold text-[#0F3358] truncate">
-          {pdf.pdf_name || 'Official Attached PDF'}
-        </p>
-        <p className="text-[11px] text-slate-500">Document Attachment</p>
-      </div>
-    </div>
-
-    <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-secondary px-2.5 py-1 rounded-lg border border-secondary/30 group-hover:bg-secondary group-hover:text-white transition-colors shadow-2xs">
-      View PDF ↗
-    </span>
-  </a>
-);
-
 const NewsAttachments = ({ news }) => {
   const photos = news.photos || [];
   const pdfs = news.pdfs || [];
@@ -115,50 +150,32 @@ const NewsAttachments = ({ news }) => {
 
   return (
     <div className="mt-6 pt-5 border-t border-slate-200/80 space-y-4">
-      {/* Highlighted PDFs */}
       {pdfs.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Attached Documents ({pdfs.length})
-          </div>
-          <div className="grid gap-2">
-            {pdfs.map((p) => (
-              <PdfLink key={p.id} pdf={p} />
-            ))}
-          </div>
-        </div>
+        <AttachmentSection title={`Attached Documents (${pdfs.length})`}>
+          {pdfs.map((p) => (
+            <AttachmentCard
+              key={p.id}
+              url={`${API_BASE}${p.pdf_url}`}
+              name={p.pdf_name}
+              type="document"
+              fallbackLabel="Official Attached PDF"
+            />
+          ))}
+        </AttachmentSection>
       )}
 
-      {/* Highlighted Photo Gallery */}
       {photos.length > 0 && (
-        <div className="space-y-2 pt-2">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Photo Gallery ({photos.length})
-          </div>
-          <div className={`grid gap-3 ${photos.length === 1 ? 'grid-cols-1 max-w-lg' : 'grid-cols-2 sm:grid-cols-3'}`}>
-            {photos.map((p) => (
-              <a
-                key={p.id}
-                href={`${API_BASE}${p.photo_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="group relative block rounded-xl overflow-hidden border-2 border-slate-200 hover:border-[#D4AF37] shadow-xs hover:shadow-lg transition-all duration-200 bg-slate-50"
-              >
-                <img
-                  src={`${API_BASE}${p.photo_url}`}
-                  alt={p.photo_name || 'News attachment'}
-                  className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
-                  <span className="text-[11px] font-bold text-white tracking-wide truncate">
-                    {p.photo_name || 'Enlarge Photo'} ↗
-                  </span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
+        <AttachmentSection title={`Photo Gallery (${photos.length})`}>
+          {photos.map((p) => (
+            <AttachmentCard
+              key={p.id}
+              url={`${API_BASE}${p.photo_url}`}
+              name={p.photo_name}
+              type="image"
+              fallbackLabel="News Photo Attachment"
+            />
+          ))}
+        </AttachmentSection>
       )}
     </div>
   );
@@ -171,22 +188,57 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(toEditableText(news));
 
-  const toDateTimeLocal = (d) => {
+  const toDateOnly = (d) => {
     if (!d) return '';
     const dateObj = new Date(d);
     if (isNaN(dateObj.getTime())) return '';
     const offset = dateObj.getTimezoneOffset() * 60000;
-    return new Date(dateObj.getTime() - offset).toISOString().slice(0, 16);
+    return new Date(dateObj.getTime() - offset).toISOString().slice(0, 10);
   };
 
   const [dates, setDates] = useState({
-    display_date: toDateTimeLocal(news.display_date),
-    start_date: toDateTimeLocal(news.start_date),
-    end_date: toDateTimeLocal(news.end_date),
+    display_date: toDateOnly(news.display_date),
+    start_date: toDateOnly(news.start_date),
+    end_date: toDateOnly(news.end_date),
   });
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // Attachment editing: existing photos/pdfs can be removed individually,
+  // and new files can be picked to be uploaded alongside on save.
+  const [removedPhotoIds, setRemovedPhotoIds] = useState([]);
+  const [removedPdfIds, setRemovedPdfIds] = useState([]);
+  const [newAttachments, setNewAttachments] = useState([]);
+  const newAttachmentInputRef = React.useRef(null);
+
+  const visiblePhotos = (news.photos || []).filter((p) => !removedPhotoIds.includes(p.id));
+  const visiblePdfs = (news.pdfs || []).filter((p) => !removedPdfIds.includes(p.id));
+
+  const handleNewAttachmentsChange = (e) => {
+    const picked = Array.from(e.target.files || []);
+    setNewAttachments((prev) => [...prev, ...picked]);
+    if (newAttachmentInputRef.current) newAttachmentInputRef.current.value = '';
+  };
+
+  const removeNewAttachment = (index) => {
+    setNewAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const markPhotoForRemoval = (photoId) => {
+    setRemovedPhotoIds((prev) => [...prev, photoId]);
+  };
+
+  const markPdfForRemoval = (pdfId) => {
+    setRemovedPdfIds((prev) => [...prev, pdfId]);
+  };
+
+  const resetAttachmentState = () => {
+    setRemovedPhotoIds([]);
+    setRemovedPdfIds([]);
+    setNewAttachments([]);
+    if (newAttachmentInputRef.current) newAttachmentInputRef.current.value = '';
+  };
 
   const handleSave = async () => {
     if (!editText.trim()) return;
@@ -196,8 +248,15 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
     } 
     setSaving(true);
     try {
-      await onSave(news.id, { text: editText, ...dates });
+      await onSave(news.id, {
+        text: editText,
+        ...dates,
+        removedPhotoIds,
+        removedPdfIds,
+        newAttachments,
+      });
       setIsEditing(false);
+      resetAttachmentState();
     } finally {
       setSaving(false);
     }
@@ -244,7 +303,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                     Upload Date (visible to users)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={dates.display_date}
                     onChange={(e) => setDates({ ...dates, display_date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
@@ -256,7 +315,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                     Start Date (Goes Live)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={dates.start_date}
                     onChange={(e) => setDates({ ...dates, start_date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
@@ -268,7 +327,7 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                     End Date (Home Expiry)
                   </label>
                   <input
-                    type="datetime-local"
+                    type="date"
                     value={dates.end_date}
                     onChange={(e) => setDates({ ...dates, end_date: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
@@ -277,15 +336,88 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted }) => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                  Attachments
+                </label>
+
+                {(visiblePhotos.length > 0 || visiblePdfs.length > 0) && (
+                  <div className="space-y-1.5 mb-2">
+                    {visiblePdfs.map((pdf) => (
+                      <div key={`pdf-${pdf.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
+                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                          {pdf.pdf_name || 'PDF attachment'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => markPdfForRemoval(pdf.id)}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                    {visiblePhotos.map((photo) => (
+                      <div key={`photo-${photo.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
+                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                          {photo.photo_name || 'Photo attachment'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => markPhotoForRemoval(photo.id)}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(removedPhotoIds.length > 0 || removedPdfIds.length > 0) && (
+                  <p className="text-[10px] text-red-500 mb-2">
+                    {removedPhotoIds.length + removedPdfIds.length} attachment(s) will be removed when you save.
+                  </p>
+                )}
+
+                <input
+                  ref={newAttachmentInputRef}
+                  type="file"
+                  accept=".pdf,image/*"
+                  multiple
+                  onChange={handleNewAttachmentsChange}
+                  className="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white hover:file:bg-primary"
+                />
+                <span className="text-[10px] text-slate-400">Add new photos or PDFs — any number.</span>
+
+                {newAttachments.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    {newAttachments.map((file, idx) => (
+                      <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                        <span className="text-xs font-medium text-emerald-700 truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeNewAttachment(idx)}
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-3 justify-end pt-2 border-t">
                 <button
                   onClick={() => {
                     setEditText(toEditableText(news));
                     setDates({
-                      display_date: toDateTimeLocal(news.display_date),
-                      start_date: toDateTimeLocal(news.start_date),
-                      end_date: toDateTimeLocal(news.end_date),
+                      display_date: toDateOnly(news.display_date),
+                      start_date: toDateOnly(news.start_date),
+                      end_date: toDateOnly(news.end_date),
                     });
+                    resetAttachmentState();
                     setIsEditing(false);
                   }}
                   className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
@@ -407,12 +539,43 @@ const NewsDetails = () => {
   };
 
   const handleSaveNews = async (newsId, payload) => {
+    const { removedPhotoIds = [], removedPdfIds = [], newAttachments = [], ...fields } = payload;
     try {
-      const res = await axios.put(`${API_BASE}/admin/news/${newsId}`, payload, {
+      let latest = null;
+
+      const res = await axios.put(`${API_BASE}/admin/news/${newsId}`, fields, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const updated = res.data || {};
-      setNews((prev) => (prev ? { ...prev, ...updated } : prev));
+      latest = res.data;
+
+      for (const photoId of removedPhotoIds) {
+        await axios.delete(`${API_BASE}/admin/news/photo/${photoId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      for (const pdfId of removedPdfIds) {
+        await axios.delete(`${API_BASE}/admin/news/pdf/${pdfId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      if (newAttachments.length > 0) {
+        const formData = new FormData();
+        newAttachments.forEach((file) => formData.append('attachments', file));
+        const uploadRes = await axios.post(`${API_BASE}/admin/news/${newsId}/attachments`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        latest = uploadRes.data;
+      } else if (removedPhotoIds.length > 0 || removedPdfIds.length > 0) {
+        // Re-fetch so photo/pdf lists reflect the removals when no new upload response covers it.
+        const refreshed = await axios.get(`${API_BASE}/news`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+        const found = refreshed.data.find((n) => String(n.id) === String(newsId));
+        if (found) latest = found;
+      }
+
+      if (latest) setNews((prev) => (prev ? { ...prev, ...latest } : prev));
     } catch (err) {
       alert('Save failed: ' + (err.response?.data?.detail || err.message));
     }
@@ -521,11 +684,7 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
                 scheduled
               </span>
             )}
-            {news.status === 'archived' && (
-              <span className="bg-slate-100 text-slate-500 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
-                archived
-              </span>
-            )}
+           
           </h3>
         </div>
 
@@ -562,11 +721,11 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
         </time>
 
         {(hasPhotos || hasPdfs) && (
-          <span className="inline-flex items-center gap-1.5 bg-blue-50 text-secondary border border-secondary/30 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-secondary group-hover:text-white transition-colors">
+          <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
-            {hasPhotos && hasPdfs ? 'Photos & PDF' : hasPhotos ? 'Photos Attached' : 'PDF Attached'}
+            Attachment Available
           </span>
         )}
       </div>
