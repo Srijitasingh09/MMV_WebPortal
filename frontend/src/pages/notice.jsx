@@ -40,21 +40,21 @@ const AttachmentCard = ({ url, name, type = 'document', fallbackLabel = 'Attache
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
+      className="group flex items-center justify-between p-3 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200 gap-3"
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
           {isImage ? <ImageIcon /> : <DocumentIcon />}
         </div>
-        <div className="min-w-0">
-          <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] break-words [overflow-wrap:anywhere] transition-colors leading-tight">
             {name || fallbackLabel}
           </p>
-          <p className="text-[11px] text-slate-500">Click to view / download file</p>
+          <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Click to view / download file</p>
         </div>
       </div>
 
-      <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
+      <span className="shrink-0 ml-1 sm:ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
         <span>Open</span>
         <span>↗</span>
       </span>
@@ -234,11 +234,6 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Attachment editing: any number of existing photos/pdfs can be removed
-  // individually, and any number of new PDFs/images can be picked to be
-  // uploaded alongside on save. The legacy single attachment_url field
-  // (for notices saved before multi-attachment support) can also be
-  // removed individually the same way.
   const [removedPhotoIds, setRemovedPhotoIds] = useState([]);
   const [removedPdfIds, setRemovedPdfIds] = useState([]);
   const [removeLegacyAttachment, setRemoveLegacyAttachment] = useState(false);
@@ -320,7 +315,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
 
   return (
     <div className="relative bg-white rounded-xl shadow-md border border-slate-200 w-full max-w-5xl mx-auto">
-      <div className="p-6 sm:p-8">
+      <div className="p-4 sm:p-6 md:p-8">
           {isEditing ? (
             <div className="space-y-4">
               <div>
@@ -345,7 +340,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
                     type="date"
                     value={editForm.display_date}
                     onChange={(e) => setEditForm((f) => ({ ...f, display_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary bg-white"
                   />
                   <span className="text-[10px] text-slate-400">Public fake/back date</span>
                 </div>
@@ -357,7 +352,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
                     type="date"
                     value={editForm.start_date}
                     onChange={(e) => setEditForm((f) => ({ ...f, start_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary bg-white"
                   />
                   <span className="text-[10px] text-slate-400">Release scheduling</span>
                 </div>
@@ -369,7 +364,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
                     type="date"
                     value={editForm.end_date}
                     onChange={(e) => setEditForm((f) => ({ ...f, end_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary bg-white"
                   />
                   <span className="text-[10px] text-slate-400">Leaves home after date</span>
                 </div>
@@ -383,42 +378,42 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
                 {(visiblePdfs.length > 0 || visiblePhotos.length > 0 || (hasLegacyAttachment && !removeLegacyAttachment)) && (
                   <div className="space-y-1.5 mb-2">
                     {visiblePdfs.map((pdf) => (
-                      <div key={`pdf-${pdf.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
-                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                      <div key={`pdf-${pdf.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50 min-w-0">
+                        <span className="text-xs font-medium text-[#0F3358] break-words [overflow-wrap:anywhere] min-w-0">
                           {pdf.pdf_name || 'PDF attachment'}
                         </span>
                         <button
                           type="button"
                           onClick={() => markPdfForRemoval(pdf.id)}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
                         >
                           Remove
                         </button>
                       </div>
                     ))}
                     {visiblePhotos.map((photo) => (
-                      <div key={`photo-${photo.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
-                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                      <div key={`photo-${photo.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50 min-w-0">
+                        <span className="text-xs font-medium text-[#0F3358] break-words [overflow-wrap:anywhere] min-w-0">
                           {photo.photo_name || 'Photo attachment'}
                         </span>
                         <button
                           type="button"
                           onClick={() => markPhotoForRemoval(photo.id)}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
                         >
                           Remove
                         </button>
                       </div>
                     ))}
                     {hasLegacyAttachment && !removeLegacyAttachment && (
-                      <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
-                        <span className="text-xs font-medium text-[#0F3358] truncate">
+                      <div className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50 min-w-0">
+                        <span className="text-xs font-medium text-[#0F3358] break-words [overflow-wrap:anywhere] min-w-0">
                           {notice.attachment_name || 'Current attachment'}
                         </span>
                         <button
                           type="button"
                           onClick={markLegacyAttachmentForRemoval}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
                         >
                           Remove
                         </button>
@@ -455,12 +450,12 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
                 {newAttachments.length > 0 && (
                   <div className="mt-2 space-y-1.5">
                     {newAttachments.map((file, idx) => (
-                      <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
-                        <span className="text-xs font-medium text-emerald-700 truncate">{file.name}</span>
+                      <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-0">
+                        <span className="text-xs font-medium text-emerald-700 break-words [overflow-wrap:anywhere] min-w-0">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => removeNewAttachment(idx)}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
+                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
                         >
                           Remove
                         </button>
@@ -481,7 +476,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
                   value={editForm.title}
                   maxLength={TITLE_MAX_LENGTH}
                   onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-lg font-bold text-primary outline-none focus:ring-2 focus:ring-secondary"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-base sm:text-lg font-bold text-primary outline-none focus:ring-2 focus:ring-secondary"
                   placeholder="Notice title"
                 />
               </div>
@@ -534,10 +529,10 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                 <MetaRow notice={notice} />
                 {isAdmin && (
-                  <div className="flex gap-2 shrink-0 -mt-3">
+                  <div className="flex gap-2 shrink-0">
                     <button
                       onClick={() => setIsEditing(true)}
                       className="px-3 py-1.5 border-2 border-secondary text-secondary rounded-lg text-xs font-semibold hover:bg-secondary hover:text-white transition-colors"
@@ -556,7 +551,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
               </div>
 
               <h1
-                className="text-2xl sm:text-3xl font-bold text-primary mb-4 leading-snug"
+                className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-4 leading-snug break-all break-words [overflow-wrap:anywhere] whitespace-normal"
                 style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
               >
                 {notice.title}
@@ -564,7 +559,7 @@ const NoticeDetailsCard = ({ notice, isAdmin, onDelete, onSave, onDeleted, start
 
               {notice.content && (
                 <p
-                  className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
+                  className="text-gray-700 text-sm sm:text-base md:text-lg leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
                   style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
                 >
                   {notice.content}
@@ -691,14 +686,14 @@ const NoticeDetails = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
-            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none break-words min-w-0">
               Notice Details
             </h1>
           </div>
-          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex flex-wrap items-center gap-1 sm:gap-1.5 shrink-0">
             <Link to="/home" className="text-slate-400 hover:text-secondary">Home</Link>
             <span className="text-slate-300">/</span>
             <Link to="/notices" className="text-slate-400 hover:text-secondary">Notices</Link>
@@ -748,6 +743,7 @@ const NoticeDetails = () => {
 
 // ============================================
 // LIGHT NOTICE ROW (reduced size, matching BHU portal figure)
+// Category BEFORE title + 100% full width title display
 // ============================================
 const NoticeRow = ({ notice, isAdmin, onDelete }) => {
   const displayDate = getDisplayDate(notice);
@@ -777,64 +773,66 @@ const NoticeRow = ({ notice, isAdmin, onDelete }) => {
   return (
     <div
       onClick={() => navigate(`/notices/${notice.id}`)}
-      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
+      className="bg-white border border-slate-200/80 rounded-lg p-3 sm:p-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-2 group relative min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors flex flex-wrap items-center gap-1.5">
-            <span>{notice.title}</span>
-            {isNew && notice.status !== 'scheduled' && (
-              <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
-                new
-              </span>
-            )}
-            {notice.status === 'scheduled' && (
-              <span className="bg-blue-100 text-blue-700 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
-                scheduled
-              </span>
-            )}
-           
-          </h3>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${style.bg} ${style.text}`}>
-            <span className={`w-1 h-1 rounded-full ${style.dot}`} />
+      {/* Category Badge & Status Badges BEFORE Title */}
+      <div className="flex items-center justify-between gap-2 min-w-0">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
+          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${style.bg} ${style.text} shrink-0`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
             {notice.category || 'General'}
           </span>
-          {isAdmin && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); navigate(`/notices/${notice.id}`, { state: { edit: true } }); }}
-                title="Edit notice"
-                className="p-1 rounded text-secondary hover:bg-secondary/10 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                </svg>
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                disabled={deleting}
-                title="Delete notice"
-                className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-              >
-                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
-                </svg>
-              </button>
-            </>
+
+          {isNew && notice.status !== 'scheduled' && (
+            <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded shadow-2xs animate-pulse inline-flex items-center shrink-0">
+              new
+            </span>
+          )}
+          {notice.status === 'scheduled' && (
+            <span className="bg-blue-100 text-blue-700 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded inline-flex items-center shrink-0">
+              scheduled
+            </span>
           )}
         </div>
+
+        {isAdmin && (
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/notices/${notice.id}`, { state: { edit: true } }); }}
+              title="Edit notice"
+              className="p-1 rounded text-secondary hover:bg-secondary/10 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              disabled={deleting}
+              title="Delete notice"
+              className="p-1 rounded text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-0.5">
-        <time dateTime={displayDate} className="font-normal text-slate-500">
+      {/* Notice Title - 100% full width with break-all break-words to ensure complete visibility without cutting */}
+      <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors break-all break-words [overflow-wrap:anywhere] whitespace-normal w-full">
+        {notice.title}
+      </h3>
+
+      {/* Bottom Metadata: Date & Attachment indicator */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-500 pt-1.5 border-t border-slate-100/80 mt-0.5">
+        <time dateTime={displayDate} className="font-normal text-slate-500 shrink-0">
           {formatNoticeDate(displayDate)}
         </time>
 
         {hasAttachments && (
-          <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors">
+          <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors shrink-0">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
             </svg>
@@ -948,14 +946,14 @@ const Notices = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
-            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-cinzel font-bold text-primary tracking-tight leading-snug sm:leading-none break-words min-w-0">
               Notices &amp; Announcements
             </h1>
           </div>
-          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex flex-wrap items-center gap-1 sm:gap-1.5 shrink-0">
             <span className="text-slate-400">Home</span>
             <span className="text-slate-300">/</span>
             <span className="text-crimson font-semibold">Notices</span>
@@ -970,12 +968,12 @@ const Notices = () => {
 
         <div className="flex flex-col gap-3 mb-6">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-nowrap overflow-x-auto gap-2 pb-1 -mx-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
+                  className={`shrink-0 px-3 py-1.5 text-sm font-medium rounded-full border transition-colors
                     ${activeCategory === cat
                       ? 'bg-secondary text-white border-secondary'
                       : 'bg-[#FAF7F2] text-primary border-primary/20 hover:border-secondary hover:text-secondary'
@@ -994,38 +992,40 @@ const Notices = () => {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col gap-2 w-full">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
               Filter by date
             </span>
-            <label className="flex items-center gap-1.5 text-xs text-slate-500">
-              From
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                max={dateTo || undefined}
-                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-slate-500">
-              To
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                min={dateFrom || undefined}
-                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
-              />
-            </label>
-            {hasActiveDateFilter && (
-              <button
-                onClick={clearDateFilter}
-                className="text-xs font-semibold text-crimson hover:underline"
-              >
-                Clear
-              </button>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+                <span className="shrink-0">From</span>
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  max={dateTo || undefined}
+                  className="min-w-0 px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white"
+                />
+              </label>
+              <label className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+                <span className="shrink-0">To</span>
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  min={dateFrom || undefined}
+                  className="min-w-0 px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white"
+                />
+              </label>
+              {hasActiveDateFilter && (
+                <button
+                  onClick={clearDateFilter}
+                  className="text-xs font-semibold text-crimson hover:underline shrink-0 py-1 px-2 bg-red-50 rounded-md border border-red-200"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -1058,11 +1058,11 @@ const Notices = () => {
           <div className="space-y-5">
             {Object.entries(groupedNotices).map(([monthYear, items]) => (
               <section key={monthYear} className="space-y-2">
-                <div className="border-b border-secondary/30 pb-1 flex items-center justify-between">
-                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide">
+                <div className="border-b border-secondary/30 pb-1 flex items-center justify-between gap-2">
+                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide min-w-0 break-words">
                     {monthYear}
                   </h2>
-                  <span className="text-[11px] text-slate-400 font-medium">
+                  <span className="text-[11px] text-slate-400 font-medium shrink-0">
                     {items.length} {items.length === 1 ? 'Notice' : 'Notices'}
                   </span>
                 </div>

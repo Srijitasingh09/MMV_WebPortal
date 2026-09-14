@@ -8,8 +8,6 @@ const NEWS_TEXT_MAX_LENGTH = 2000;
 
 // ============================================
 // ATTACHMENT DISPLAY (inlined — local to News only)
-// A PDF or photo attachment card, plus a section wrapper that groups
-// several of them under a shared heading.
 // ============================================
 const DocumentIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -39,21 +37,21 @@ const AttachmentCard = ({ url, name, type = 'document', fallbackLabel = 'Attache
       target="_blank"
       rel="noopener noreferrer"
       onClick={(e) => e.stopPropagation()}
-      className="group flex items-center justify-between p-3.5 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200"
+      className="group flex items-center justify-between p-3 sm:p-4 rounded-xl bg-amber-50/70 border-2 border-[#D4AF37]/50 hover:border-[#C4561A] hover:bg-amber-100/60 shadow-xs hover:shadow-md transition-all duration-200 gap-3"
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-[#7D311F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
           {isImage ? <ImageIcon /> : <DocumentIcon />}
         </div>
-        <div className="min-w-0">
-          <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] truncate transition-colors">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs sm:text-sm font-bold text-[#0F3358] group-hover:text-[#7D311F] break-words [overflow-wrap:anywhere] transition-colors leading-tight">
             {name || fallbackLabel}
           </p>
-          <p className="text-[11px] text-slate-500">Click to view / download file</p>
+          <p className="text-[10px] sm:text-[11px] text-slate-500 mt-0.5">Click to view / download file</p>
         </div>
       </div>
 
-      <span className="shrink-0 ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-3 py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
+      <span className="shrink-0 ml-1 sm:ml-3 inline-flex items-center gap-1 text-xs font-bold bg-white text-[#7D311F] px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-lg border border-[#D4AF37]/60 group-hover:bg-[#7D311F] group-hover:text-white transition-colors shadow-2xs">
         <span>Open</span>
         <span>↗</span>
       </span>
@@ -122,10 +120,6 @@ const MetaRow = ({ news }) => {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-[#eef3fa] text-secondary">
-          <span className="w-1.5 h-1.5 rounded-full bg-secondary" />
-          News
-        </span>
         <time className="text-xs text-gray-500 font-medium" dateTime={displayDate}>
           {formatDate(displayDate)}
         </time>
@@ -134,7 +128,6 @@ const MetaRow = ({ news }) => {
             Scheduled
           </span>
         )}
-       
       </div>
     </div>
   );
@@ -142,8 +135,6 @@ const MetaRow = ({ news }) => {
 
 // ============================================
 // HIGHLIGHTED NEWS ATTACHMENTS (PDF & PHOTOS)
-// Uses the same AttachmentCard as Notices, so PDFs and photos look
-// identical whether they're attached to a Notice or a News item.
 // ============================================
 const NewsAttachments = ({ news }) => {
   const photos = news.photos || [];
@@ -207,8 +198,6 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted, startInEd
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Attachment editing: existing photos/pdfs can be removed individually,
-  // and new files can be picked to be uploaded alongside on save.
   const [removedPhotoIds, setRemovedPhotoIds] = useState([]);
   const [removedPdfIds, setRemovedPdfIds] = useState([]);
   const [newAttachments, setNewAttachments] = useState([]);
@@ -277,206 +266,206 @@ const NewsDetailsCard = ({ news, isAdmin, onDelete, onSave, onDeleted, startInEd
 
   return (
     <div className="relative bg-white rounded-xl shadow-md border border-slate-200 w-full max-w-5xl mx-auto">
-      <div className="p-6 sm:p-8">
-          {isEditing ? (
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">
-                    News Text (first line becomes the heading)
-                  </label>
-                  <span className={`text-xs ${editText.length >= NEWS_TEXT_MAX_LENGTH ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
-                    {editText.length}/{NEWS_TEXT_MAX_LENGTH}
-                  </span>
-                </div>
-                <textarea
-                  value={editText}
-                  maxLength={NEWS_TEXT_MAX_LENGTH}
-                  onChange={(e) => setEditText(e.target.value)}
-                  rows={10}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-secondary resize-y"
-                  placeholder={'Heading goes on the first line...\nEverything after this is the full story.'}
-                />
+      <div className="p-4 sm:p-6 md:p-8">
+        {isEditing ? (
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide">
+                  News Text (first line becomes the heading)
+                </label>
+                <span className={`text-xs ${editText.length >= NEWS_TEXT_MAX_LENGTH ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+                  {editText.length}/{NEWS_TEXT_MAX_LENGTH}
+                </span>
               </div>
+              <textarea
+                value={editText}
+                maxLength={NEWS_TEXT_MAX_LENGTH}
+                onChange={(e) => setEditText(e.target.value)}
+                rows={10}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm leading-relaxed outline-none focus:ring-2 focus:ring-secondary resize-y"
+                placeholder={'Heading goes on the first line...\nEverything after this is the full story.'}
+              />
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
-                    Upload Date (visible to users)
-                  </label>
-                  <input
-                    type="date"
-                    value={dates.display_date}
-                    onChange={(e) => setDates({ ...dates, display_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
-                  />
-                  <span className="text-[10px] text-slate-400">Public fake/back date</span>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
-                    Start Date (Goes Live)
-                  </label>
-                  <input
-                    type="date"
-                    value={dates.start_date}
-                    onChange={(e) => setDates({ ...dates, start_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
-                  />
-                  <span className="text-[10px] text-slate-400">Release scheduling</span>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
-                    End Date (Home Expiry)
-                  </label>
-                  <input
-                    type="date"
-                    value={dates.end_date}
-                    onChange={(e) => setDates({ ...dates, end_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary"
-                  />
-                  <span className="text-[10px] text-slate-400">Leaves home after date</span>
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
-                  Attachments
+                  Upload Date (visible to users)
                 </label>
-
-                {(visiblePhotos.length > 0 || visiblePdfs.length > 0) && (
-                  <div className="space-y-1.5 mb-2">
-                    {visiblePdfs.map((pdf) => (
-                      <div key={`pdf-${pdf.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
-                        <span className="text-xs font-medium text-[#0F3358] truncate">
-                          {pdf.pdf_name || 'PDF attachment'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => markPdfForRemoval(pdf.id)}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                    {visiblePhotos.map((photo) => (
-                      <div key={`photo-${photo.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50">
-                        <span className="text-xs font-medium text-[#0F3358] truncate">
-                          {photo.photo_name || 'Photo attachment'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => markPhotoForRemoval(photo.id)}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {(removedPhotoIds.length > 0 || removedPdfIds.length > 0) && (
-                  <p className="text-[10px] text-red-500 mb-2">
-                    {removedPhotoIds.length + removedPdfIds.length} attachment(s) will be removed when you save.
-                  </p>
-                )}
-
                 <input
-                  ref={newAttachmentInputRef}
-                  type="file"
-                  accept=".pdf,image/*"
-                  multiple
-                  onChange={handleNewAttachmentsChange}
-                  className="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white hover:file:bg-primary"
+                  type="date"
+                  value={dates.display_date}
+                  onChange={(e) => setDates({ ...dates, display_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary bg-white"
                 />
-                <span className="text-[10px] text-slate-400">Add new photos or PDFs — any number.</span>
-
-                {newAttachments.length > 0 && (
-                  <div className="mt-2 space-y-1.5">
-                    {newAttachments.map((file, idx) => (
-                      <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
-                        <span className="text-xs font-medium text-emerald-700 truncate">{file.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeNewAttachment(idx)}
-                          className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <span className="text-[10px] text-slate-400">Public fake/back date</span>
               </div>
-
-              <div className="flex gap-3 justify-end pt-2 border-t">
-                <button
-                  onClick={() => {
-                    setEditText(toEditableText(news));
-                    setDates({
-                      display_date: toDateOnly(news.display_date),
-                      start_date: toDateOnly(news.start_date),
-                      end_date: toDateOnly(news.end_date),
-                    });
-                    resetAttachmentState();
-                    setIsEditing(false);
-                  }}
-                  className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
-                >
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                  Start Date (Goes Live)
+                </label>
+                <input
+                  type="date"
+                  value={dates.start_date}
+                  onChange={(e) => setDates({ ...dates, start_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary bg-white"
+                />
+                <span className="text-[10px] text-slate-400">Release scheduling</span>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                  End Date (Home Expiry)
+                </label>
+                <input
+                  type="date"
+                  value={dates.end_date}
+                  onChange={(e) => setDates({ ...dates, end_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-secondary bg-white"
+                />
+                <span className="text-[10px] text-slate-400">Leaves home after date</span>
               </div>
             </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <MetaRow news={news} />
-                {isAdmin && (
-                  <div className="flex gap-2 shrink-0 -mt-3">
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="px-3 py-1.5 border-2 border-secondary text-secondary rounded-lg text-xs font-semibold hover:bg-secondary hover:text-white transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      disabled={deleting}
-                      className="px-3 py-1.5 border-2 border-red-500 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50"
-                    >
-                      {deleting ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                )}
-              </div>
 
-              <h1
-                className="text-2xl sm:text-3xl font-bold text-primary mb-4 leading-snug"
-                style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
-              >
-                {news.title}
-              </h1>
+            <div>
+              <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">
+                Attachments
+              </label>
 
-              {news.content && (
-                <p
-                  className="text-gray-700 text-base sm:text-lg leading-relaxed whitespace-pre-wrap"
-                  style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-                >
-                  {news.content}
+              {(visiblePhotos.length > 0 || visiblePdfs.length > 0) && (
+                <div className="space-y-1.5 mb-2">
+                  {visiblePdfs.map((pdf) => (
+                    <div key={`pdf-${pdf.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50 min-w-0">
+                      <span className="text-xs font-medium text-[#0F3358] break-words [overflow-wrap:anywhere] min-w-0">
+                        {pdf.pdf_name || 'PDF attachment'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => markPdfForRemoval(pdf.id)}
+                        className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  {visiblePhotos.map((photo) => (
+                    <div key={`photo-${photo.id}`} className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-amber-50/70 border border-[#D4AF37]/50 min-w-0">
+                      <span className="text-xs font-medium text-[#0F3358] break-words [overflow-wrap:anywhere] min-w-0">
+                        {photo.photo_name || 'Photo attachment'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => markPhotoForRemoval(photo.id)}
+                        className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {(removedPhotoIds.length > 0 || removedPdfIds.length > 0) && (
+                <p className="text-[10px] text-red-500 mb-2">
+                  {removedPhotoIds.length + removedPdfIds.length} attachment(s) will be removed when you save.
                 </p>
               )}
 
-              <NewsAttachments news={news} />
-            </>
-          )}
+              <input
+                ref={newAttachmentInputRef}
+                type="file"
+                accept=".pdf,image/*"
+                multiple
+                onChange={handleNewAttachmentsChange}
+                className="w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-secondary file:text-white hover:file:bg-primary"
+              />
+              <span className="text-[10px] text-slate-400">Add new photos or PDFs — any number.</span>
+
+              {newAttachments.length > 0 && (
+                <div className="mt-2 space-y-1.5">
+                  {newAttachments.map((file, idx) => (
+                    <div key={`${file.name}-${idx}`} className="flex items-center justify-between gap-3 p-2 rounded-lg bg-emerald-50 border border-emerald-200 min-w-0">
+                      <span className="text-xs font-medium text-emerald-700 break-words [overflow-wrap:anywhere] min-w-0">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeNewAttachment(idx)}
+                        className="shrink-0 text-xs font-semibold text-red-600 hover:text-red-700 ml-2"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-end pt-2 border-t">
+              <button
+                onClick={() => {
+                  setEditText(toEditableText(news));
+                  setDates({
+                    display_date: toDateOnly(news.display_date),
+                    start_date: toDateOnly(news.start_date),
+                    end_date: toDateOnly(news.end_date),
+                  });
+                  resetAttachmentState();
+                  setIsEditing(false);
+                }}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-4 py-2 bg-secondary text-white rounded-lg text-sm font-semibold hover:bg-primary disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+              <MetaRow news={news} />
+              {isAdmin && (
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-3 py-1.5 border-2 border-secondary text-secondary rounded-lg text-xs font-semibold hover:bg-secondary hover:text-white transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="px-3 py-1.5 border-2 border-red-500 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-500 hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <h1
+              className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-4 leading-snug break-all break-words [overflow-wrap:anywhere] whitespace-normal"
+              style={{ fontFamily: "'Mirava', 'Mirava Sans', 'Plus Jakarta Sans', sans-serif" }}
+            >
+              {news.title}
+            </h1>
+
+            {news.content && (
+              <p
+                className="text-gray-700 text-sm sm:text-base md:text-lg leading-relaxed whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
+              >
+                {news.content}
+              </p>
+            )}
+
+            <NewsAttachments news={news} />
+          </>
+        )}
       </div>
     </div>
   );
@@ -570,7 +559,6 @@ const NewsDetails = () => {
         });
         latest = uploadRes.data;
       } else if (removedPhotoIds.length > 0 || removedPdfIds.length > 0) {
-        // Re-fetch so photo/pdf lists reflect the removals when no new upload response covers it.
         const refreshed = await axios.get(`${API_BASE}/news`, {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
@@ -587,14 +575,14 @@ const NewsDetails = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
-            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none break-words min-w-0">
               News Details
             </h1>
           </div>
-          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex flex-wrap items-center gap-1 sm:gap-1.5 shrink-0">
             <Link to="/home" className="text-slate-400 hover:text-crimson">Home</Link>
             <span className="text-slate-300">/</span>
             <Link to="/news" className="text-slate-400 hover:text-crimson">News</Link>
@@ -643,7 +631,7 @@ const NewsDetails = () => {
 };
 
 // ============================================
-// LIGHT NEWS ROW (matches the Notices list styling)
+// LIGHT NEWS ROW (List View - Gap-Free Compact Card)
 // ============================================
 const NewsRow = ({ news, isAdmin, onDelete }) => {
   const displayDate = getNewsDisplayDate(news);
@@ -672,29 +660,41 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
   return (
     <div
       onClick={() => navigate(`/news/${news.id}`)}
-      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1 group relative"
+      className="bg-white border border-slate-200/80 rounded-md py-2.5 px-3.5 sm:py-3 sm:px-4 hover:border-secondary hover:shadow-xs transition-all duration-150 cursor-pointer flex flex-col gap-1.5 group relative min-w-0"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors flex flex-wrap items-center gap-1.5">
-            <span>{news.title}</span>
-            {isNew && news.status !== 'scheduled' && (
-              <span className="bg-red-600 text-white text-[9px] font-extrabold uppercase px-1 py-0.2 rounded shadow-2xs animate-pulse inline-flex items-center">
-                new
-              </span>
-            )}
-            {news.status === 'scheduled' && (
-              <span className="bg-blue-100 text-blue-700 text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded inline-flex items-center">
-                scheduled
-              </span>
-            )}
-           
-          </h3>
-        </div>
+      {/* News Title with NEW/SCHEDULED Badge right beside heading end */}
+      <h3 className="text-xs sm:text-sm md:text-[15px] font-bold text-primary group-hover:text-secondary leading-snug transition-colors break-all break-words [overflow-wrap:anywhere] whitespace-normal w-full m-0 p-0">
+        <span>{news.title}</span>
+        {isNew && news.status !== 'scheduled' && (
+          <span className="inline-flex items-center ml-1.5 bg-red-600 text-white text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded shadow-2xs animate-pulse align-middle shrink-0">
+            new
+          </span>
+        )}
+        {news.status === 'scheduled' && (
+          <span className="inline-flex items-center ml-1.5 bg-blue-100 text-blue-700 text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded align-middle shrink-0">
+            scheduled
+          </span>
+        )}
+      </h3>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+      {/* Bottom Metadata: Date, Attachment Indicator & Admin Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs text-slate-500 pt-1.5 border-t border-slate-100/80 mt-0.5">
+        <time dateTime={displayDate} className="font-normal text-slate-500 shrink-0">
+          {formatNewsDate(displayDate)}
+        </time>
+
+        <div className="flex items-center gap-2 shrink-0 ml-auto">
+          {(hasPhotos || hasPdfs) && (
+            <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+              </svg>
+              Attachment Available
+            </span>
+          )}
+
           {isAdmin && (
-            <>
+            <div className="flex items-center gap-1 border-l border-slate-200 pl-2">
               <button
                 onClick={(e) => { e.stopPropagation(); navigate(`/news/${news.id}`, { state: { edit: true } }); }}
                 title="Edit news"
@@ -714,24 +714,9 @@ const NewsRow = ({ news, isAdmin, onDelete }) => {
                   <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6h16z"/>
                 </svg>
               </button>
-            </>
+            </div>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center justify-between text-[11px] sm:text-xs text-slate-500 mt-0.5">
-        <time dateTime={displayDate} className="font-normal text-slate-500">
-          {formatNewsDate(displayDate)}
-        </time>
-
-        {(hasPhotos || hasPdfs) && (
-          <span className="inline-flex items-center gap-1.5 bg-amber-100/80 text-[#7D311F] border border-[#D4AF37]/50 font-bold text-[11px] px-2 py-0.5 rounded-md shadow-2xs group-hover:bg-[#7D311F] group-hover:text-white transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-            </svg>
-            Attachment Available
-          </span>
-        )}
       </div>
     </div>
   );
@@ -838,15 +823,15 @@ const News = () => {
   return (
     <div className="min-h-screen bg-[#EAEFF5]">
       <div className="max-w-5xl mx-auto px-4 pt-6 sm:pt-8 pb-12">
-        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-row items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
+        <div className="border-b-2 border-[#d4af37] pb-2.5 sm:pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2.5 sm:gap-4 mb-6 sm:mb-8">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-1.5 sm:w-2 h-5 sm:h-8 md:h-9 bg-crimson rounded-full shrink-0" />
-            <h1 className="text-primary font-cinzel font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl tracking-tight leading-snug sm:leading-none truncate sm:whitespace-normal">
+            <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl font-cinzel font-bold text-primary tracking-tight leading-snug sm:leading-none break-words min-w-0">
               News
             </h1>
           </div>
-          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex items-center gap-1 sm:gap-1.5 shrink-0 text-right">
-            <span className="text-slate-400">Home</span>
+          <div className="text-[10px] sm:text-xs text-slate-500 font-medium tracking-wide flex flex-wrap items-center gap-1 sm:gap-1.5 shrink-0">
+            <Link to="/home" className="text-slate-400 hover:text-crimson">Home</Link>
             <span className="text-slate-300">/</span>
             <span className="text-crimson font-semibold">News</span>
           </div>
@@ -859,41 +844,43 @@ const News = () => {
         )}
 
         <div className="flex flex-col gap-3 mb-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Filter by date
-            </span>
-            <label className="flex items-center gap-1.5 text-xs text-slate-500">
-              From
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                max={dateTo || undefined}
-                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-slate-500">
-              To
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                min={dateFrom || undefined}
-                className="px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary"
-              />
-            </label>
-            {hasActiveDateFilter && (
-              <button
-                onClick={clearDateFilter}
-                className="text-xs font-semibold text-crimson hover:underline"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-          
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-start sm:justify-between">
+            <div className="flex flex-col gap-2 w-full sm:w-auto">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                Filter by date
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+                  <span className="shrink-0">From</span>
+                  <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                    max={dateTo || undefined}
+                    className="min-w-0 px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white"
+                  />
+                </label>
+                <label className="flex items-center gap-1.5 text-xs text-slate-500 shrink-0">
+                  <span className="shrink-0">To</span>
+                  <input
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                    min={dateFrom || undefined}
+                    className="min-w-0 px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary bg-white"
+                  />
+                </label>
+                {hasActiveDateFilter && (
+                  <button
+                    onClick={clearDateFilter}
+                    className="text-xs font-semibold text-crimson hover:underline shrink-0 py-1 px-2 bg-red-50 rounded-md border border-red-200"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
             <input
               type="text"
               value={searchTerm}
@@ -902,8 +889,6 @@ const News = () => {
               className="px-4 py-2 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent w-full sm:w-56"
             />
           </div>
-
-          
         </div>
 
         {loading && (
@@ -936,11 +921,11 @@ const News = () => {
           <div className="space-y-5">
             {Object.entries(groupedNews).map(([monthYear, items]) => (
               <section key={monthYear} className="space-y-2">
-                <div className="border-b border-secondary/30 pb-1 flex items-center justify-between">
-                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide">
+                <div className="border-b border-secondary/30 pb-1 flex items-center justify-between gap-2">
+                  <h2 className="text-sm sm:text-base font-cinzel font-bold text-secondary tracking-wide min-w-0 break-words">
                     {monthYear}
                   </h2>
-                  <span className="text-[11px] text-slate-400 font-medium">
+                  <span className="text-[11px] text-slate-400 font-medium shrink-0">
                     {items.length} {items.length === 1 ? 'Story' : 'Stories'}
                   </span>
                 </div>
