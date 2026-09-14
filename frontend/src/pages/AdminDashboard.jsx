@@ -329,9 +329,9 @@ const AdminDashboard = () => {
                   {noticeAttachments.map((file, idx) => (
                     <li
                       key={`${file.name}-${idx}`}
-                      className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-slate-700"
+                      className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-slate-700 min-w-0"
                     >
-                      <span className="truncate">{file.name}</span>
+                      <span className="truncate min-w-0">{file.name}</span>
                       <button
                         type="button"
                         onClick={() => removeNoticeAttachment(idx)}
@@ -509,9 +509,9 @@ const AdminDashboard = () => {
                 {newsAttachments.map((file, idx) => (
                   <li
                     key={`${file.name}-${idx}`}
-                    className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-slate-700"
+                    className="flex items-center justify-between gap-3 px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm text-slate-700 min-w-0"
                   >
-                    <span className="truncate">{file.name}</span>
+                    <span className="truncate min-w-0">{file.name}</span>
                     <button
                       type="button"
                       onClick={() => removeNewsAttachment(idx)}
